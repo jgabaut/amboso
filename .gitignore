@@ -2,5 +2,12 @@
 *.o
 # ignore all files in all subdirs of bin
 #bin/*/*.exe or whatever
-# also explicitly ignore our executable
+
+# You should put this .gitignore into the folder, then "git add .gitignore" :
+#*
+#!.gitignore
+#
+#The * line tells git to ignore all files in the folder, but !.gitignore tells git to still include the .gitignore file. This way, your local repository and any other clones of the repository all get both the empty folder and the .gitignore it needs.
+#
+# also explicitly ignore our executable for good measure
 hello_world
