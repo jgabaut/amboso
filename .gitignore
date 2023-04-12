@@ -1,0 +1,6 @@
+# ignore object files
+*.o
+# ignore all files in all subdirs of bin
+#bin/*/*.exe or whatever
+# also explicitly ignore our executable
+hello_world
