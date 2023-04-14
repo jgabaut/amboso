@@ -83,13 +83,13 @@ function usage {
   echo -e "                Prints help message and quits.\n"
 }
 
-function git_mode_checks {
+function git_mode_check {
   is_git_repo=0
   #Check if we're inside a repo
   git rev-parse --is-inside-work-tree 2>/dev/null 1>&2
   is_git_repo="$?"
-  [[ $is_git_repo -gt 0 ]] && echo -e "\n[DEBUG]    Not running in a valid git repo." && exit 1
-  echo -e "\n[INFO]    Running in git mode."
+  [[ $is_git_repo -gt 0 ]] && echo -e "\n\033[1;31m[ERROR]    Not running in a git repo. Try running with -B to use base mode.\e[0m\n" && exit 1
+  [[ $verbose_flag -gt 0 ]] && echo -e "\n[INFO]    Running in git mode." >&2
 }
 
 #Prepare flag values to default value
@@ -107,9 +107,10 @@ bighelp_flag=0
 smallhelp_flag=0
 vers_make_flag=0
 makefile_version=""
-git_mode_flag=0
+git_mode_flag=1 #By default we run in git mode
+base_mode_flag=0
 
-while getopts "M:S:E:D:gvbpHhri" opt; do
+while getopts "M:S:E:D:BgvbpHhri" opt; do
   case $opt in
     S )
       source_name="$OPTARG"
@@ -133,9 +134,11 @@ while getopts "M:S:E:D:gvbpHhri" opt; do
     h )
       smallhelp_flag=1
       ;;
+    B )
+      base_mode_flag=1
+      ;;
     g )
       git_mode_flag=1
-      git_mode_checks #Quit immediately if not running in a git repo
       ;;
     v )
       verbose_flag=1
@@ -165,6 +168,10 @@ while getopts "M:S:E:D:gvbpHhri" opt; do
   esac
 tot_opts=$OPTIND
 done
+
+#We check again if basemode was requested, as the only flag checked in build stage is git_mode_flag
+[[ $base_mode_flag -gt 0 ]] && git_mode_flag=0
+[[ $git_mode_flag -gt 0 ]] && git_mode_check #We are now sure we can quit immediately if not running in a git repo
 
 #We always notify of missing -D argument
 [[ ! $dir_flag -gt 0 ]] && milestones_dir="$(pwd)/bin/" && echo -e "\n\033[1;33m[DEBUG]    No -D flag, using ./bin for target dir. Run with -v to see more.\e[0m" >&2 #&& usage && exit 1
@@ -228,12 +235,14 @@ if [[ $init_flag -gt 0 ]] ; then {
     #Build this vers
     #Init mode ALWAYS tries building, even if we have the binary already ATM
     #Save verbose flag
-    verb="v"
+    verb=""
     gitm=""
+    basem=""
     [[ $verbose_flag -gt 0 ]] && verb="v" && echo -e "\n[INIT]    Try building ( $init_vers )" >&2
+    [[ $base_mode_flag -gt 0 ]] && basem="B" #We make sure to pass on eventual base mode to the subcalls
     [[ $git_mode_flag -gt 0 ]] && gitm="g" #We make sure to pass on eventual git mode to the subcalls
     #First pass sets the verbose flag but redirects stderr to /dev/null
-    $prog_name -M "$makefile_version" -S "$source_name" -E "$exec_entrypoint" -D "$scripts_dir" -b"$verb""$gitm" "$init_vers" 2>/dev/null
+    $prog_name -M "$makefile_version" -S "$source_name" -E "$exec_entrypoint" -D "$scripts_dir" -b"$verb""$gitm""$basem" "$init_vers" 2>/dev/null
     if [[ $? -eq 0 ]] ; then {
       [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;32m[INIT]    $init_vers binary ready.\e[0m" >&2
       count_bins=$(($count_bins +1))
@@ -246,7 +255,7 @@ if [[ $init_flag -gt 0 ]] ; then {
       #we could just pass -v to the first call if we have it on
       if [[ $verbose_flag -gt 0 ]]; then {
 	echo -e "[INIT]    Checking errors, running \033[1;33m$(basename "$prog_name") -bv $init_vers\e[0m." >&2
-	("$prog_name" -M "$makefile_version" -S "$source_name" -D "$scripts_dir" -E "$exec_entrypoint" -bv"$gitm" "$init_vers") >&2
+	("$prog_name" -M "$makefile_version" -S "$source_name" -D "$scripts_dir" -E "$exec_entrypoint" -bv"$gitm""$basem" "$init_vers") >&2
       }
       fi
     }
@@ -362,10 +371,13 @@ if [[ ! -f "$script_path/$exec_entrypoint" && ! -z $version ]] ; then {
             echo -e "\033[1;31m[ERROR]    $exec_entrypoint not found at ($pwd).\e[0m" #>&2
           } else {
             mv "./$exec_entrypoint" "$script_path" #All files generated during the build should be ignored by the repo, to avoid conflict when checking out
-            [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;33m[BUILD]    Moved $exec_entrypointmode to $script_path.\e[0m" #>&2
+            [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;33m[BUILD]    Moved $exec_entrypoint to $script_path.\e[0m" #>&2
           }
           fi
-          git switch - #We get back to starting repo state
+          git switch - 2>/dev/null #We get back to starting repo state
+          switch_res="$?"
+          [[ $switch_res -gt 0 ]] && echo -e "\n\033[1;31m[ERROR]    Can't finish checkin out ($version). Abort." && exit 1
+          [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;32m[BUILD]    Switched back to starting commit.\e[0m" >&2
         }
         fi
       }
@@ -396,7 +408,10 @@ if [[ ! -f "$script_path/$exec_entrypoint" && ! -z $version ]] ; then {
           gcc "./$source_name" -o "$script_path"/"$exec_entrypoint" -lm 2>&2 #Never try to build if checkout fails
           comp_res=$?
           #All files generated during the build should be ignored by the repo, to avoid conflict when checking out
-          git switch - #We get back to starting repo state
+          git switch - 2>/dev/null #We get back to starting repo state
+          switch_res="$?"
+          [[ $switch_res -gt 0 ]] && echo -e "\n\033[1;31m[ERROR]    Can't finish checkin out ($version). Abort." && exit 1
+          [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;32m[BUILD]    Switched back to starting commit.\e[0m" >&2
         }
         fi
       }
