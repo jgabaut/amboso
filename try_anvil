@@ -123,11 +123,11 @@ HINT " STEP 9/10
 read </dev/tty
 clear
 
-./anvil -rpbV 1.0.0
+./anvil -rpiV 1.0.0
 HINT " STEP 10/10
 
     Run in git mode. 1.0.0 is the first compliant tag for amboso itself.
-    Run, build 1.0.0 and purge, as we didnt clean before.
+    Init, run 1.0.0 and purge, as we didnt clean before.
     When running in git mode, make clean is never called for any tag, so
       the script only removes the target executable from its directory in bin.
     We also removed the symlink to anvil we created before.
