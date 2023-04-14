@@ -1,8 +1,5 @@
 # ignore object files
 *.o
-# ignore all files in all subdirs of bin
-#bin/*/*.exe or whatever
-
 # You should put this .gitignore into the folder, then "git add .gitignore" :
 #*
 #!.gitignore
@@ -11,3 +8,5 @@
 #
 # also explicitly ignore our executable for good measure
 hello_world
+# also explicitly ignore our debug executable for good measure
+hello_world_debug
