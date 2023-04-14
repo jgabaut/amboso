@@ -354,6 +354,7 @@ if [[ ! -f "$script_path/$exec_entrypoint" && ! -z $version ]] ; then {
           echo -e "\033[1;31m[ERROR]    Checkout of ( $version ) failed, stego.lock may be listing a tag name not in the repo.\e[0m" #>&2
           comp_res=1
         } else { #Checkout successful, we build
+          git submodule update --init --recursive #We set all submodules to commit state
           make >&2 #Never try to build if checkout fails
           comp_res=$?
           #Output is expected to be in the main dir:
@@ -391,6 +392,7 @@ if [[ ! -f "$script_path/$exec_entrypoint" && ! -z $version ]] ; then {
           echo -e "\033[1;31m[ERROR]    Checkout of ( $version ) failed, stego.lock may be listing a tag name not on the repo.\e[0m"
           comp_res=1
         } else {
+          git submodule update --init --recursive #We set all submodules to commit state
           gcc "./$source_name" -o "$script_path"/"$exec_entrypoint" -lm 2>&2 #Never try to build if checkout fails
           comp_res=$?
           #All files generated during the build should be ignored by the repo, to avoid conflict when checking out
