@@ -228,7 +228,7 @@ if [[ $init_flag -gt 0 ]] ; then {
     #Build this vers
     #Init mode ALWAYS tries building, even if we have the binary already ATM
     #Save verbose flag
-    verb=""
+    verb="v"
     gitm=""
     [[ $verbose_flag -gt 0 ]] && verb="v" && echo -e "\n[INIT]    Try building ( $init_vers )" >&2
     [[ $git_mode_flag -gt 0 ]] && gitm="g" #We make sure to pass on eventual git mode to the subcalls
@@ -343,25 +343,25 @@ if [[ ! -f "$script_path/$exec_entrypoint" && ! -z $version ]] ; then {
       curr_dir=$(realpath .)
       start_t=`date +%s.%N`
       if [[ $git_mode_flag -eq 0 ]] ; then { #Building in base mode, we cd into target directory before make
-        [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;33m[BUILD]    Running in base mode, expecting full source in $script_path.\e[0m" >&2
+        [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;33m[BUILD]    Running in base mode, expecting full source in $script_path.\e[0m" #>&2
         cd $script_path; make >&2
         comp_res=$?
       } else { #Building in git mode, we checkout the tag and move the binary after the build
-        [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;33m[BUILD]    Running in git mode, checking out ( $version ).\e[0m" >&2
+        [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;33m[BUILD]    Running in git mode, checking out ( $version ).\e[0m" #>&2
         git checkout "$version" 2>/dev/null #Repo goes back to tagged state
         checkout_res=$?
         if [[ $checkout_res -gt 0 ]] ; then { #Checkout failed, we don't build and we set comp_res
-          echo -e "\033[1;31m[ERROR]    Checkout of ( $version ) failed, stego.lock may be listing a tag name not in the repo.\e[0m" >&2
+          echo -e "\033[1;31m[ERROR]    Checkout of ( $version ) failed, stego.lock may be listing a tag name not in the repo.\e[0m" #>&2
           comp_res=1
         } else { #Checkout successful, we build
           make >&2 #Never try to build if checkout fails
           comp_res=$?
           #Output is expected to be in the main dir:
           if [[ ! -e ./$exec_entrypoint ]] ; then {
-            echo -e "\033[1;31m[ERROR]    $exec_entrypoint not found at ($pwd).\e[0m" >&2
+            echo -e "\033[1;31m[ERROR]    $exec_entrypoint not found at ($pwd).\e[0m" #>&2
           } else {
             mv "./$exec_entrypoint" "$script_path" #All files generated during the build should be ignored by the repo, to avoid conflict when checking out
-            [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;33m[BUILD]    Moved $exec_entrypointmode to $script_path.\e[0m" >&2
+            [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;33m[BUILD]    Moved $exec_entrypointmode to $script_path.\e[0m" #>&2
           }
           fi
           git switch - #We get back to starting repo state
@@ -380,15 +380,15 @@ if [[ ! -f "$script_path/$exec_entrypoint" && ! -z $version ]] ; then {
 
       start_t=`date +%s.%N`
       if [[ $git_mode_flag -eq 0 ]] ; then { #Building in base mode, we cd into target directory before make
-        [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;33m[BUILD]    Running in base mode, expecting full source in $script_path.\e[0m" >&2
+        [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;33m[BUILD]    Running in base mode, expecting full source in $script_path.\e[0m" #>&2
         gcc "$script_path"/"$source_name" -o "$script_path"/"$exec_entrypoint" -lm 2>&2
         comp_res=$?
       } else { #Building in git mode, we checkout the tag and move the binary after the build
-        [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;33m[BUILD]    Running in git mode, checking out ( $version ).\e[0m" >&2
+        [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;33m[BUILD]    Running in git mode, checking out ( $version ).\e[0m" #>&2
         git checkout "$version" 2>/dev/null #Repo goes back to tagged state
         checkout_res=$?
         if [[ $checkout_res -gt 0 ]] ; then { #Checkout failed, we set comp_res and don't build
-          echo -e "\033[1;31m[ERROR]    Checkout of ( $version ) failed, stego.lock may be listing a tag name not on the repo.\e[0m" >&2
+          echo -e "\033[1;31m[ERROR]    Checkout of ( $version ) failed, stego.lock may be listing a tag name not on the repo.\e[0m"
           comp_res=1
         } else {
           gcc "./$source_name" -o "$script_path"/"$exec_entrypoint" -lm 2>&2 #Never try to build if checkout fails
@@ -449,7 +449,7 @@ if [[ purge_flag -gt 0 ]]; then
     clean_res=1
     has_makeclean=0
     purge_vers=${supported_versions[i]}
-    if [[ $purge_vers > "0.6.6-linux" || $purge_vers = "0.6.6-linux" ]] ; then
+    if [[ $purge_vers > "$makefile_version" || $purge_vers = "$makefile_version" ]] ; then
       has_makeclean=1
     fi
     if [[ $has_makeclean -gt 0 ]] ; then {
