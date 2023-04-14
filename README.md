@@ -28,6 +28,14 @@ This file contains user-defined tags for supported versions and fundamental CLI 
 
 Defined tags are terminated by a **mandatory** # character, which marks start of comment.
 
+You can define either git-mode tags or base-mode tags , each supported when running in the corresponding mode.
+
+Definition of a base-mode tag **must** start with a '?', like so
+```
+?my_value=1# A nice comment
+```
+The '?' character will not be a part of your tag name, it only marks base-mode tags when at the start of a tag name.
+
 ## Beware of spaces:
 
 Space is a valid separator for tag names, so when you want to write a comment (after using #), make sure you put the hashtag directly after your value, like so:
@@ -41,13 +49,14 @@ my_value=1# A nice comment
 ```
 my_value=1 # A bad comment
 ```
-That extra space will hit you hard.
 
 ## try-anvil
 
 Backtraced script running `./anvil` with various flags using the provided ./bin example references.
 
 This command hints you to symlinking `./amboso` to `super_repo/anvil`, and shows differents outputs based on the queries made.
+
+It can now also show how the repo itself complies with amboso specs to run in git mode.
 
 ## bin/
 
@@ -96,7 +105,7 @@ Sticking to a source file name and a target executable name should be pretty eas
 I can't recommend using the -D flag everytime just to tell amboso where to look, but I guess a fallback option to provide a different default directory name than `./bin` could be easily added. TODO coming soon tm
 
 ### git checkout tag && git switch -
-To successfull use git mode, you must assure idempotency of the switch back to the main version. This is accomplished by correctly setting up your `.gitignore`, so that all object files & the executable are always ignored in all supported versions, and by always having the needed directory for any tag ready inside the tagged commit.
+To successfully use git mode, you must assure idempotency of the switch back to the main version. This is accomplished by correctly setting up your `.gitignore`, so that all object files & the executable are always ignored in all supported versions, and by always having the needed directory for any tag ready inside the tagged commit.
 This must be done for the first version you want to support in git mode, and can stay pretty much untouched after.
 Your repo `.gitignore` should include some lines like this:
 
