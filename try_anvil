@@ -5,7 +5,7 @@ function HINT {
 
 clear
 ln -s ./amboso ./anvil
-HINT " STEP 0/9    We symlinked the script to anvil to avoid referring to many places around here as amboso.
+HINT " STEP 0/10    We symlinked the script to anvil to avoid referring to many places around here as amboso.
 
     try_amboso    a tester for amboso functions
 
@@ -29,7 +29,7 @@ clear
 cd .
 pwd
 ls -lA
-HINT " STEP 1/9
+HINT " STEP 1/10
 
     cd to project dir (we are here already!), we will test how amboso behaves when it runs without any flags.
 
@@ -44,7 +44,7 @@ clear
 
 
 mv ./bin/ ./some_bin_name/
-HINT " STEP 2/9
+HINT " STEP 2/10
 
     We renamed the compliant bin folder.
 
@@ -54,7 +54,7 @@ clear
 
 ./anvil -v
 ./anvil -B
-HINT " STEP 3/9
+HINT " STEP 3/10
 
     We run with -B to showcase base mode, where every build needs full sources in a separate folder.
     No -D provided. ./bin does not exist, right? (hence does not contain a valid stego.lock file. Who cares its actually there if you didnt tell amboso in which directory it is?)
@@ -64,7 +64,7 @@ read </dev/tty
 clear
 
 mv ./some_bin_name/ ./bin/
-HINT " STEP 4/9
+HINT " STEP 4/10
 
     NOW we rename back our compliant directory to ./bin, and it also contains a stego.lock file!
 
@@ -73,7 +73,7 @@ read </dev/tty
 clear
 
 ./anvil -B
-HINT " STEP 5/9
+HINT " STEP 5/10
 
     No args run, no -D provided. ./bin does exist now ( and the contained stego.lock file will be used to set -SEDM flags ), so we get an error for not giving a version query as argument.
 
@@ -82,7 +82,7 @@ read </dev/tty
 clear
 
 ./anvil -BV 0.1.0
-HINT " STEP 6/9
+HINT " STEP 6/10
 
     Verbose query, should succeed in reporting unbuilt version
 
@@ -91,7 +91,7 @@ read </dev/tty
 clear
 
 ./anvil -Brbp 0.1.0
-HINT " STEP 7/9
+HINT " STEP 7/10
 
     Build, run, purge 0.1.0. Tests single file compilation & execution. Purge done just before quitting
 
@@ -100,7 +100,7 @@ read </dev/tty
 clear
 
 ./anvil -Brb 0.9.0
-HINT " STEP 8/9
+HINT " STEP 8/10
 
     Build, run 0.9.0. Tests make compilation & execution. No purge done, binary stays in the directory for future queries
 
@@ -108,17 +108,32 @@ HINT " STEP 8/9
 read </dev/tty
 clear
 
-./anvil -BprbiV 0.1.0
-rm ./anvil # We remove the symlink, you should put your own one outside of the repo dir.
-HINT " STEP 9/9
+./anvil -BprbiV 1.0.0
+HINT " STEP 9/10
 
-    Verbose Init, Build, Run and Purge 0.1.0.
-    Tests compilation for ALL tags & executes 0.1.0.
+    Verbose Init, Build, Run and Purge 1.0.0.
+    Tests compilation for ALL tags & executes 1.0.0.
     Init is done as the first operation, trying to build all tags.
-    We can see 0.9.0 was not built again, as it was not purged after the last command builded it.
+    As you can see, we fail the build for 1.0.0, as in this repo that tag does not work in base mode.
+    We can see 0.9.0 was not built again, as it was not purged after the last command did a successful build.
     Purge is done just before quitting, and always tests cleanup for ALL tags.
+    This time it didnt run as when failing a build, we exit early and dont try to run or purge.
 
     [Press Enter to continue, end of testing.] "
+read </dev/tty
+clear
+
+./anvil -rpbV 1.0.0
+HINT " STEP 10/10
+
+    Run in git mode. 1.0.0 is the first compliant tag for amboso itself.
+    Run, build 1.0.0 and purge, as we didnt clean before.
+    When running in git mode, make clean is never called for any tag, so
+      the script only removes the target executable from its directory in bin.
+    We also removed the symlink to anvil we created before.
+
+    [Press Enter to continue, end of testing.] "
+rm ./anvil # We remove the symlink, you should put your own one outside of the repo dir.
 read </dev/tty
 
 clear

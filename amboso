@@ -269,7 +269,7 @@ if [[ $init_flag -gt 0 ]] ; then {
       #we could just pass -v to the first call if we have it on
       if [[ $verbose_flag -gt 0 ]]; then {
 	echo -e "[INIT]    Checking errors, running \033[1;33m$(basename "$prog_name") -bV $init_vers\e[0m." >&2
-	("$prog_name" -M "$makefile_version" -S "$source_name" -D "$scripts_dir" -E "$exec_entrypoint" -bv"$gitm""$basem" "$init_vers") >&2
+	("$prog_name" -M "$makefile_version" -S "$source_name" -D "$scripts_dir" -E "$exec_entrypoint" -bV"$gitm""$basem" "$init_vers") >&2
       }
       fi
     }
@@ -374,7 +374,7 @@ if [[ ! -f "$script_path/$exec_entrypoint" && ! -z $version ]] ; then {
         git checkout "$version" 2>/dev/null #Repo goes back to tagged state
         checkout_res=$?
         if [[ $checkout_res -gt 0 ]] ; then { #Checkout failed, we don't build and we set comp_res
-          echo -e "\033[1;31m[ERROR]    Checkout of ( $version ) failed, stego.lock may be listing a tag name not in the repo.\e[0m" #>&2
+          echo -e "\033[1;31m[ERROR]    Checkout of ( $version ) failed, this stego.lock tag does not work for the repo.\e[0m" #>&2
           comp_res=1
         } else { #Checkout successful, we build
           git submodule update --init --recursive #We set all submodules to commit state
@@ -501,7 +501,7 @@ if [[ purge_flag -gt 0 ]]; then
       tool_txt="rm"
       has_bin=0
       if [[ -x $scripts_dir"/v$purge_vers"/"$exec_entrypoint" ]] ; then {
-        has_bin=1 && [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;32m[PURGE]    $purge_vers has an executable.\e[0m\n" >&2
+        has_bin=1 && [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;32m[PURGE]    $purge_vers has an executable.\e[0m" >&2
       }
       fi
       rm $(realpath "$scripts_dir"/"v$purge_vers/$exec_entrypoint") 2>/dev/null
