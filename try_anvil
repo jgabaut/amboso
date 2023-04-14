@@ -52,10 +52,12 @@ HINT " STEP 2/9
 read </dev/tty
 clear
 
-./anvil
+./anvil -v
+./anvil -B
 HINT " STEP 3/9
 
-    No args run, no -D provided. ./bin does not exist, right? (hence does not contain a valid stego.lock file. Who cares its actually there if you didnt tell amboso in which directory it is?)
+    We run with -B to showcase base mode, where every build needs full sources in a separate folder.
+    No -D provided. ./bin does not exist, right? (hence does not contain a valid stego.lock file. Who cares its actually there if you didnt tell amboso in which directory it is?)
 
     [Press Enter to continue] "
 read </dev/tty
@@ -70,7 +72,7 @@ HINT " STEP 4/9
 read </dev/tty
 clear
 
-./anvil
+./anvil -B
 HINT " STEP 5/9
 
     No args run, no -D provided. ./bin does exist now ( and the contained stego.lock file will be used to set -SEDM flags ), so we get an error for not giving a version query as argument.
@@ -79,7 +81,7 @@ HINT " STEP 5/9
 read </dev/tty
 clear
 
-./anvil -v 0.1.0
+./anvil -BV 0.1.0
 HINT " STEP 6/9
 
     Verbose query, should succeed in reporting unbuilt version
@@ -88,7 +90,7 @@ HINT " STEP 6/9
 read </dev/tty
 clear
 
-./anvil -rbp 0.1.0
+./anvil -Brbp 0.1.0
 HINT " STEP 7/9
 
     Build, run, purge 0.1.0. Tests single file compilation & execution. Purge done just before quitting
@@ -97,7 +99,7 @@ HINT " STEP 7/9
 read </dev/tty
 clear
 
-./anvil -rb 0.9.0
+./anvil -Brb 0.9.0
 HINT " STEP 8/9
 
     Build, run 0.9.0. Tests make compilation & execution. No purge done, binary stays in the directory for future queries
@@ -106,7 +108,7 @@ HINT " STEP 8/9
 read </dev/tty
 clear
 
-./anvil -prbiv 0.1.0
+./anvil -BprbiV 0.1.0
 rm ./anvil # We remove the symlink, you should put your own one outside of the repo dir.
 HINT " STEP 9/9
 
