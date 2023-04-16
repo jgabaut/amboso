@@ -2,7 +2,7 @@
 # Bash script to run a milestone build providing the version number.
 
 prog_name="$0"
-amboso_version="amboso version 1.1.0"
+amboso_version="amboso version 1.1.1-devel"
 
 function echo_amboso_version {
   echo "$amboso_version"
@@ -88,37 +88,50 @@ function set_source_info {
   #echo "source info array contents are: ( ${sources_info[@]} )" >&2
 }
 
-function usage {
-  mode_txt="\033[1;34mgit\e[0m"
-  [[ $base_mode_flag -gt 0 ]] && mode_txt="\033[1;31mbase\e[0m"
-  echo -e "Usage: $(basename $prog_name) [OPTION]... VERSION_QUERY\n"
-  echo "    Query for a build version"
-  echo -e "\n    $tot_vers Supported tags for current mode ( $mode_txt )."
-  for i in $(seq 0 $(($tot_vers-1))); do { #Print currently supported versions (only ones conforming to mode)
-    (( $i % 4 == 0)) && echo -en "\n        "
-    echo -en "\033[1;32m${supported_versions[i]}\e[0m  "
-  }
-  done
+function echo_othermode_tags {
+  dir="$1"
+  set_supported_versions "$dir"
+
   #Print remaining read versions not available in current mode
   if [[ $base_mode_flag -gt 0 ]] ; then {
     mode_txt="\033[1;34mgit\e[0m"
-    echo -e "\n    $count_git_versions Supported tags, when running in ( $mode_txt ) mode ."
+    echo -e "  ( $count_git_versions ) supported tags when running in ( $mode_txt ) mode."
+    echo -e "  Run again in ( $mode_txt ) mode to use them."
     for i in $(seq 0 $(($count_git_versions-1))); do {
-      (( $i % 4 == 0)) && echo -en "\n        "
-      echo -en "\033[0;33m${read_git_mode_tags[i]}\e[0m  "
+      (( $i % 4 == 0)) && [[ $i -ne 0 ]] && echo -en "\n        "
+      echo -en "    \033[0;33m${read_git_mode_tags[i]}\e[0m"
     }
     done
   } else {
     mode_txt="\033[1;31mbase\e[0m"
-    echo -e "\n    $count_base_versions Supported local versions, when in ( $mode_txt ) mode."
+    echo -e "  ( $count_base_versions ) supported tags when running in ( $mode_txt ) mode."
+    echo -e "  Run again in ( $mode_txt ) mode to use them."
     for i in $(seq 0 $(($count_base_versions-1))); do {
-      (( $i % 4 == 0)) && echo -en "\n        "
-      echo -en "\033[0;33m${read_base_mode_tags[i]}\e[0m  "
+      (( $i % 4 == 0)) && [[ $i -ne 0 ]] && echo -en "\n        "
+      echo -en "    \033[0;33m${read_base_mode_tags[i]}\e[0m"
     }
     done
   }
   fi
-  echo -e "\n\n    [OPTIONS]:\n"
+  echo "" >&2
+}
+
+function echo_supported_tags {
+  mode_txt="\033[1;34mgit\e[0m"
+  [[ $base_mode_flag -gt 0 ]] && mode_txt="\033[1;31mbase\e[0m"
+  dir="$1"
+  set_supported_versions "$dir"
+  echo -e "  ( $tot_vers ) supported tags for current mode ( $mode_txt )."
+  for i in $(seq 0 $(($tot_vers-1))); do { #Print currently supported versions (only ones conforming to mode)
+    (( $i % 4 == 0)) && [[ $i -ne 0 ]] && echo -en "\n        "
+    echo -en "    \033[1;32m${supported_versions[i]}\e[0m"
+  }
+  done
+  echo "" >&2
+}
+
+function echo_options {
+  echo -e "\n    [OPTIONS]:\n"
   echo -e "        -D TARGET_DIR        directory\n"
   echo -e "                Specifies target directory\n"
   echo -e "        -E TARGET_EXEC       executable\n"
@@ -143,6 +156,10 @@ function usage {
   echo -e "                Removes all tags binaries and quits.\n"
   echo -e "        -V        verbose\n"
   echo -e "                More debug output.\n"
+  echo -e "        -l        list\n"
+  echo -e "                Prints supported tags for current mode and quits.\n"
+  echo -e "        -L        list\n"
+  echo -e "                Prints supported tags for any mode and quits.\n"
   echo -e "        -h        help\n"
   echo -e "                Prints help info in paged format.\n"
   echo -e "        -H        help\n"
@@ -158,6 +175,15 @@ function git_mode_check {
   is_git_repo="$?"
   [[ $is_git_repo -gt 0 ]] && echo -e "\n\033[1;31m[ERROR]    Not running in a git repo. Try running with -B to use base mode.\e[0m\n" && exit 1
   [[ $verbose_flag -gt 0 ]] && echo -e "\033[1;34m[AMBOSO-MODE]    Running in git mode.\e[0m" >&2
+}
+
+function usage {
+  echo -e "Usage: $(basename $prog_name) [OPTION]... VERSION_QUERY\n"
+  echo "    Query for a build version"
+  echo_supported_tags "$milestones_dir"
+  echo ""
+  echo_othermode_tags "$milestones_dir"
+  echo_options
 }
 
 #Prepare flag values to default value
@@ -178,8 +204,10 @@ vers_make_flag=0
 makefile_version=""
 git_mode_flag=1 #By default we run in git mode
 base_mode_flag=0
+big_list_flag=0
+small_list_flag=0
 
-while getopts "M:S:E:D:BgVbpHhrivd" opt; do
+while getopts "M:S:E:D:BgVbpHhrivdlL" opt; do
   case $opt in
     S )
       source_name="$OPTARG"
@@ -196,6 +224,12 @@ while getopts "M:S:E:D:BgVbpHhrivd" opt; do
     M )
       vers_make_flag=1
       makefile_version="$OPTARG"
+      ;;
+    L )
+      big_list_flag=1
+      ;;
+    l )
+      small_list_flag=1
       ;;
     H )
       bighelp_flag=1
@@ -232,13 +266,11 @@ while getopts "M:S:E:D:BgVbpHhrivd" opt; do
       init_flag=1
       ;;
     \? )
-      echo "Invalid option: -$OPTARG" >&2
-      usage
+      echo "Invalid option: -$OPTARG. Run with -h for help." >&2
       exit 1
       ;;
     : )
-      echo "Option -$OPTARG requires an argument." >&2
-      usage
+      echo "Option -$OPTARG requires an argument. Run with -h for help." >&2
       exit 1
       ;;
   esac
@@ -252,6 +284,21 @@ done
 
 #We always notify of missing -D argument
 [[ ! $dir_flag -gt 0 ]] && milestones_dir="$(pwd)/bin/" && echo -e "\033[1;33m[DEBUG]    No -D flag, using ./bin for target dir. Run with -V to see more.\e[0m" >&2 #&& usage && exit 1
+
+#Check if we are printing tag list for current mode and exiting early
+if [[ $small_list_flag -gt 0 ]]; then {
+  echo_supported_tags "$milestones_dir"
+  exit 0
+}
+fi
+
+#Check if we are printing tag list for both modes and exiting early
+if [[ $big_list_flag -gt 0 ]]; then {
+  echo_supported_tags "$milestones_dir"
+  echo_othermode_tags "$milestones_dir"
+  exit 0
+}
+fi
 
 #Check if we are printing help info and exiting early
 if [[ $smallhelp_flag -gt 0 ]]; then {
