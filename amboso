@@ -23,13 +23,13 @@ function set_supported_versions {
 
     was_git_tag=0
     was_base_tag=0
-    for tag in $(echo "$line" | grep -v '^?' | cut -d '#' -f 1 | grep -v '^$'); do {
+    for tag in $(echo "$line" | grep -v '^?' | cut -d '#' -f 1 | cut -d ' ' -f 1 | grep -v '^$'); do {
       read_git_mode_tags[git_tags_count]="$tag"
       git_tags_count=$(($git_tags_count+1))
       was_git_tag=1
     }
     done
-    for tag in $(echo "$line" | grep '^?'| cut -d '?' -f2 | cut -d '#' -f 1 | grep -v '^$'); do {
+    for tag in $(echo "$line" | grep '^?'| cut -d '?' -f2 | cut -d '#' -f 1 | cut -d ' ' -f1 | grep -v '^$'); do {
       read_base_mode_tags[base_tags_count]="$tag"
       base_tags_count=$(($base_tags_count+1))
       was_base_tag=1
@@ -78,7 +78,7 @@ function set_source_info {
 
     #echo "Text read from file: ( $line )"
     #echo "Text read from file, no comments: ( $( echo "$line" | cut -d '#' -f 1 ) )"
-    sources_info[k]=$(echo "$line" | cut -d '#' -f 1)
+    sources_info[k]=$(echo "$line" | cut -d '#' -f 1 | cut -d ' ' -f 1 )
     k=$((k+1))
     [[ $k -eq 3 ]] && break #we only read the first two lines
   done < "$dir/stego.lock" 2>/dev/null
@@ -123,7 +123,7 @@ function echo_supported_tags {
   set_supported_versions "$dir"
   echo -e "  ( $tot_vers ) supported tags for current mode ( $mode_txt )."
   for i in $(seq 0 $(($tot_vers-1))); do { #Print currently supported versions (only ones conforming to mode)
-    (( $i % 4 == 0)) && [[ $i -ne 0 ]] && echo -en "\n        "
+    (( $i % 4 == 0)) && [[ $i -ne 0 ]] && echo -en "\n"
     echo -en "    \033[1;32m${supported_versions[i]}\e[0m"
   }
   done
@@ -131,19 +131,12 @@ function echo_supported_tags {
 }
 
 function echo_options {
-  echo -e "\n    [OPTIONS]:\n"
-  echo -e "        -D TARGET_DIR        directory\n"
-  echo -e "                Specifies target directory\n"
-  echo -e "        -E TARGET_EXEC       executable\n"
-  echo -e "                Specifies target executable name\n"
-  echo -e "        -S TARGET_SOURCE       sourcename\n"
-  echo -e "                Specifies sourcefile name for single file mode.\n"
-  echo -e "        -M MAKEFILE_SUPPORT       tagname\n"
-  echo -e "                Specifies a tag name for lowest version to support make.\n"
+  echo -e "\n    [RUNMODES]:\n"
   echo -e "        -B        base mode\n"
   echo -e "                Uses full source builds. Not recommended.\n"
   echo -e "        -g        git mode\n"
   echo -e "                Uses git checkouts of supported tags. Enabled by default.\n"
+  echo -e "    [OPERATIONS]:\n"
   echo -e "        -b        build\n"
   echo -e "                Tries building the binary if it's not available.\n"
   echo -e "        -r        run\n"
@@ -154,16 +147,22 @@ function echo_options {
   echo -e "                Tries building all supported versions.\n"
   echo -e "        -p        purge\n"
   echo -e "                Removes all tags binaries and quits.\n"
+  echo -e "    [OPTIONS]:\n"
+  echo -e "        -D TARGET_DIR        directory\n"
+  echo -e "                Specifies target directory\n"
+  echo -e "        -E TARGET_EXEC       executable\n"
+  echo -e "                Specifies target executable name\n"
+  echo -e "        -S TARGET_SOURCE       sourcename\n"
+  echo -e "                Specifies sourcefile name for single file mode.\n"
+  echo -e "        -M MAKEFILE_SUPPORT       tagname\n"
+  echo -e "                Specifies a tag name for lowest version to support make.\n"
+  echo -e "    [INFO]:\n"
+  echo -e "        -l/L        list\n"
+  echo -e "                Prints supported tags for current mode (all modes if L) and quits.\n"
   echo -e "        -V        verbose\n"
   echo -e "                More debug output.\n"
-  echo -e "        -l        list\n"
-  echo -e "                Prints supported tags for current mode and quits.\n"
-  echo -e "        -L        list\n"
-  echo -e "                Prints supported tags for any mode and quits.\n"
-  echo -e "        -h        help\n"
-  echo -e "                Prints help info in paged format.\n"
-  echo -e "        -H        help\n"
-  echo -e "                Prints help message and quits.\n"
+  echo -e "        -h/H        help\n"
+  echo -e "                Prints help info (paged if -h) and quits.\n"
   echo -e "        -v        version\n"
   echo -e "                Prints version message and quits.\n"
 }
@@ -180,9 +179,9 @@ function git_mode_check {
 function usage {
   echo -e "Usage: $(basename $prog_name) [OPTION]... VERSION_QUERY\n"
   echo "    Query for a build version"
-  echo_supported_tags "$milestones_dir"
-  echo ""
-  echo_othermode_tags "$milestones_dir"
+  #echo_supported_tags "$milestones_dir"
+  #echo ""
+  #echo_othermode_tags "$milestones_dir"
   echo_options
 }
 
@@ -283,7 +282,7 @@ done
 [[ $git_mode_flag -gt 0 ]] && git_mode_check #We are now sure we can quit immediately if not running in a git repo
 
 #We always notify of missing -D argument
-[[ ! $dir_flag -gt 0 ]] && milestones_dir="$(pwd)/bin/" && echo -e "\033[1;33m[DEBUG]    No -D flag, using ./bin for target dir. Run with -V to see more.\e[0m" >&2 #&& usage && exit 1
+[[ ! $dir_flag -gt 0 ]] && milestones_dir="$(pwd)/bin/" && echo -e "\033[1;33m[DEBUG]    No -D flag, using ( $milestones_dir ) for target dir. Run with -V to see more.\e[0m" >&2 #&& usage && exit 1
 
 #Check if we are printing tag list for current mode and exiting early
 if [[ $small_list_flag -gt 0 ]]; then {
