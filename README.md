@@ -2,11 +2,13 @@
 
 ## A make frontend with some git integration, powered by bash.
 
-I wanted to build some project versions I tagged on github but of which I tought I couldn't get the commits anymore, while still having the full versions source. (???)
+I wanted to build some older tagged version of a C project I was building using make, but for some of them I didn't have a proper past commit.
 
-I wanted to **only** handle git tags and build any release I tagged, supporting commits instead of full source versionswhere you must have every tag sources as a separate folder. But the thrill of wasting space was too much.
+I decided to try a little script to help me do this in the future, one command to prepare any tagged version I'd want, even tough I think this probably makes no sense to use over other build systems.
 
-I did not want to learn how to write nice makefiles or chaining a couple git commands to checkout... Wait, you might still need to do that? Sigh...
+Still, the added benefit of this little tool was worth the time for me.
+
+I did not want to learn how to write nice makefiles or chaining a couple git commands to checkout... Wait, you might still need to do that for this? Sigh...
 
 ### I wanted to name a build tool `anvil`, while also making it sound like I'm  bozo for doing this poor `make` frontend.
 
@@ -17,8 +19,7 @@ $ ./try_anvil
 ```
 
 I'll tell you that even the help option can fail, if you don't point this child to where your targets are and rely on naming your compliant folder "./bin/".
-You have a bin/ directory in the repo to test this behaviour. I want to remind you that testing amboso with the provided helloworld requires running the script with -B flag, to ensure base mode.
-I guess I may have a couple valid tags myself soon and then this will no longer be needed, as this repo would have compliant tags to use git mode also for the demo (`try_anvil`), using its own tags.
+You have a bin/ directory in the repo to test this behaviour.
 
 You should rely on your `stego.lock` file to ensure you don't have to retype arguments you're 100% positive are correct, just to get the damn thing to build.
 
@@ -38,7 +39,9 @@ The '?' character will not be a part of your tag name, it only marks base-mode t
 
 ## Beware of spaces:
 
-Space is a valid separator for tag names, so when you want to write a comment (after using #), make sure you put the hashtag directly after your value, like so:
+Space is a valid separator for `stego.lock` lines, so ie. you can't have a tag name containing spaces.
+
+I suggest you write your comments like this, even if not strictly needed:
 
 ```
 my_value=1# A nice comment
@@ -63,16 +66,26 @@ It can now also show how the repo itself complies with amboso specs to run in gi
 ### Contains a directory for each supported tag (directories **must** start with an extra v prepended to the tag name, like so:
 
 ```
-`super_repo`
+super-repo
 ├── amboso
-├── bin
-│   ├── `stego.lock`
-│   ├── v0.1.0
-│   │   └── `hello_world.c`
-│   └── v0.9.0
-│       ├── `hello_world.c`
-│       └── `Makefile`
-├── `anvil` -> amboso/amboso
+│   ├── amboso
+│   ├── bin
+│   │   ├── stego.lock
+│   │   ├── v0.1.0
+│   │   │   └── hello_world.c
+│   │   ├── v0.9.0
+│   │   │   ├── hello_world.c
+│   │   │   └── Makefile
+│   │   ├── v1.0.0
+│   │   └── v1.1.0
+│   │   └── v1.1.1
+│   ├── CODEOWNERS
+│   ├── hello_world.c
+│   ├── LICENSE
+│   ├── Makefile
+│   ├── README.md
+│   └── try_anvil
+
 ```
 
 ```
@@ -80,6 +93,7 @@ bin/vTAG_NAME/executable
 ```
 ie. directory bin contains a directory named "vMYTAG" for each supported version with name "MYTAG".
 It also contains the stego.lock file.
+
 Having to prepend every tag directory with 'v' may not be the best, but it's something we could change support for in the future.
 
 The script **always** needs to know the directory containing the target builds, so **if you don't define one yourself** when running, by using -D :
@@ -96,7 +110,7 @@ Using amboso in a project requires some costraints to be valid both from the rep
 
 ### For the repo:
 
-I guess it may not be necessarily, 100% true, but you pretty much **always** need a `stego.lock` file to keep the main compliance checks stable.
+I guess you pretty much need a `stego.lock` file to keep the main compliance checks stable.
 It will store the source file name for single file mode and the target binary name.
 It also stores the lowest version providing a Makefile so that you can easily jump into a small project and not set up make right away (why not I guess).
 Even tought it only takes a couple minutes to do that, we like to postpone.
@@ -150,5 +164,3 @@ Tags supported by amboso running in git mode would be a subset of ` git tag -l `
 ## Why would I use this when I can generate a Makefile automatically, or something?
 
 Good question, you shouldn't. No reason at all. Go back to your serious build system and leave these silly kid scripts to me.
-
-That's it, I guess. Coming soon with that dang commit support.
