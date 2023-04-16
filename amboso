@@ -2,7 +2,7 @@
 # Bash script to run a milestone build providing the version number.
 
 prog_name="$0"
-amboso_version="amboso version 1.1.1"
+amboso_version="amboso version 1.1.2"
 
 function echo_amboso_version {
   echo "$amboso_version"
@@ -98,7 +98,7 @@ function echo_othermode_tags {
     echo -e "  ( $count_git_versions ) supported tags when running in ( $mode_txt ) mode."
     echo -e "  Run again in ( $mode_txt ) mode to use them."
     for i in $(seq 0 $(($count_git_versions-1))); do {
-      (( $i % 4 == 0)) && [[ $i -ne 0 ]] && echo -en "\n        "
+      (( $i % 4 == 0)) && [[ $i -ne 0 ]] && echo -en "\n"
       echo -en "    \033[0;33m${read_git_mode_tags[i]}\e[0m"
     }
     done
@@ -107,7 +107,7 @@ function echo_othermode_tags {
     echo -e "  ( $count_base_versions ) supported tags when running in ( $mode_txt ) mode."
     echo -e "  Run again in ( $mode_txt ) mode to use them."
     for i in $(seq 0 $(($count_base_versions-1))); do {
-      (( $i % 4 == 0)) && [[ $i -ne 0 ]] && echo -en "\n        "
+      (( $i % 4 == 0)) && [[ $i -ne 0 ]] && echo -en "\n"
       echo -en "    \033[0;33m${read_base_mode_tags[i]}\e[0m"
     }
     done

@@ -5,6 +5,6 @@
 int main(void) {
   printf("Hello, World!\n");
   printf("Built using make.\n");
-  printf("Amboso v1.1.0.\n");
+  printf("Amboso v1.1.2.\n");
   return 0;
 }
