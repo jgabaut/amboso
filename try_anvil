@@ -90,10 +90,10 @@ HINT " STEP 6/10
 read </dev/tty
 clear
 
-./anvil -Brbp 0.1.0
+./anvil -Brbd 0.1.0
 HINT " STEP 7/10
 
-    Build, run, purge 0.1.0. Tests single file compilation & execution. Purge done just before quitting
+    Build, run, delete 0.1.0. Tests single file compilation & execution. Delete is done just before quitting and cleans our binary.
 
     [Press Enter to continue] "
 read </dev/tty
@@ -102,7 +102,7 @@ clear
 ./anvil -Brb 0.9.0
 HINT " STEP 8/10
 
-    Build, run 0.9.0. Tests make compilation & execution. No purge done, binary stays in the directory for future queries
+    Build, run 0.9.0. Tests make compilation & execution. No delete here, so the binary stays in the directory for future queries
 
     [Press Enter to continue] "
 read </dev/tty
@@ -114,16 +114,15 @@ HINT " STEP 9/10
     Verbose Init, Build, Run and Purge 1.0.0.
     Tests compilation for ALL tags & executes 1.0.0.
     Init is done as the first operation, trying to build all tags.
-    As you can see, we fail the build for 1.0.0, as in this repo that tag does not work in base mode.
+    As you can see, we fail the build for 1.0.0, as we are running in base mode and that tag is not valid for this mode, as defined in stego.lock .
     We can see 0.9.0 was not built again, as it was not purged after the last command did a successful build.
-    Purge is done just before quitting, and always tests cleanup for ALL tags.
-    This time it didnt run as when failing a build, we exit early and dont try to run or purge.
+    Purge is done just before quitting, and runs delete on ALL tags corresponding to current mode.
 
     [Press Enter to continue, end of testing.] "
 read </dev/tty
 clear
 
-./anvil -rpiV 1.0.0
+./anvil -rdiV 1.0.0
 HINT " STEP 10/10
 
     Run in git mode. 1.0.0 is the first compliant tag for amboso itself.
