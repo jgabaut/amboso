@@ -2,7 +2,9 @@
 # Bash script to run a milestone build providing the version number.
 
 prog_name="$0"
-amboso_version="amboso version 1.1.2"
+amboso_currvers="1.2.0"
+amboso_testflag_version="1.1.2"
+amboso_version="amboso version $amboso_currvers"
 
 function echo_amboso_version {
   echo "$amboso_version"
@@ -10,7 +12,7 @@ function echo_amboso_version {
 
 function set_supported_versions {
   dir=$1
-  [[ ! -f $dir/stego.lock ]] && echo -e "[ERROR]    Can't find \"stego.lock\" in ( $dir ).\n" && exit 1
+  [[ ! -f $dir/stego.lock ]] && echo -e "\033[1;31m[ERROR]    Can't find \"stego.lock\" in ( $dir ).\e[0m\n" && exit 1
   git_tags_count=0
   base_tags_count=0
   j=0
@@ -18,8 +20,8 @@ function set_supported_versions {
   i=0
 
   while IFS= read -r line; do {
-    #Skip the first four lines, reserved for header, source file and target executable names, and versions header
-    [[ $j -lt 5 ]] && j=$((j+1)) && continue
+    #Skip the first five lines, reserved for header, source file and target executable names, test folder, and versions header
+    [[ $j -lt 6 ]] && j=$((j+1)) && continue
 
     was_git_tag=0
     was_base_tag=0
@@ -69,7 +71,7 @@ function set_supported_versions {
 
 function set_source_info {
   dir=$1
-  [[ ! -f $dir/stego.lock ]] && echo -e "[ERROR]    Can't find \"stego.lock\" in ( $dir ). Try running with -D to specify the right directory.\n" && exit 1
+  [[ ! -f $dir/stego.lock ]] && echo -e "\033[1;31m[ERROR]    Can't find \"stego.lock\" in ( $dir ). Try running with -D to specify the right directory.\e[0m\n" && exit 1
   j=0
   k=0
   while IFS= read -r line; do
@@ -80,12 +82,113 @@ function set_source_info {
     #echo "Text read from file, no comments: ( $( echo "$line" | cut -d '#' -f 1 ) )"
     sources_info[k]=$(echo "$line" | cut -d '#' -f 1 | cut -d ' ' -f 1 )
     k=$((k+1))
-    [[ $k -eq 3 ]] && break #we only read the first two lines
+    [[ $k -eq 4 ]] && break #we only read the first three lines
   done < "$dir/stego.lock" 2>/dev/null
   #echo "source info array size is " "${#sources_info[@]}" >&2
   count_source_infos="${#sources_info[@]}"
   #echo "$count_source_infos"
   #echo "source info array contents are: ( ${sources_info[@]} )" >&2
+}
+
+function set_tests_info {
+  dir="$1"
+  [[ ! -f "$dir"/kazoj.lock ]] && echo -e "\033[1;31m[ERROR]    Can't find \"kazoj.lock\" in ( $dir ). Try running with -T to specify the right directory.\e[0m\n" && exit 1
+  j=0
+  k=0
+  while IFS="\n" read -r line; do
+    #Skip the first and third line header
+    [[ $j -lt 1 || $j -eq 2 ]] && j=$((j+1)) && continue
+    #echo "Text read from file: ( $line )"
+    #echo "Text read from file, no comments: ( $( echo "$line" | cut -d '#' -f 1 ) )"
+    tests_info[k]=$(echo "$line" | cut -d '#' -f 1 | cut -d ' ' -f 1 )
+    k=$((k+1))
+    j=$((j+1))
+    [[ $k -lt 2 ]] || break #we only read two values
+  done < "$dir/kazoj.lock" 2>/dev/null
+  #echo "test info array size is " "${#tests_info[@]}" >&2
+  count_tests_infos="${#tests_info[@]}"
+  #echo "$count_tests_infos"
+  #echo "test info array contents are: ( ${tests_info[@]} )" >&2
+}
+
+function set_supported_tests {
+  kazoj_dir=$1
+  set_tests_info "$1"
+  cases_dir="${tests_info[0]}"
+  errors_dir="${tests_info[1]}"
+  tests_filecount=0
+  errors_filecount=0
+  skipped=0
+  i=0
+
+  #tests loop
+  cases_path="$kazoj_dir/$cases_dir"
+  errorcases_path="$kazoj_dir/$errors_dir"
+  for FILE in $(ls "$cases_path"); do {
+    test_fp="$cases_path/$FILE"
+    if ! [[ -f $test_fp && -x $test_fp ]] ; then {
+      skipped=$((skipped+1))
+      [[ $verbose_flag -gt 0 ]] && echo -e "\033[1;33m[TEST]    Skip test $FILE (at $test_fp), not an executable file.\e[0m" >&2
+      continue
+    }
+    fi
+    read_tests_files["$tests_filecount"]="$FILE"
+    tests_filecount=$(($tests_filecount+1))
+  }
+  done
+  #errors loop
+  for FILE in $(ls "$errorcases_path"); do {
+    test_fp="$errorcases_path/$FILE"
+    if ! [[ -f $test_fp && -x $test_fp ]] ; then {
+      skipped=$((skipped+1))
+      [[ $verbose_flag -gt 0 ]] && echo -e "\033[1;33m[TEST]    Skip errtest $FILE (at $test_fp), not an executable file.\e[0m" >&2
+      continue
+    }
+    fi
+    read_errortests_files["$errors_filecount"]="$FILE"
+    errors_filecount=$(($errors_filecount+1))
+  }
+  done
+  #echo "version array size is " "${#read_versions[@]}" >&2
+  count_tests_names="${#read_tests_files[@]}"
+  count_errortests_names="${#read_errortests_files[@]}"
+  for i in $(seq 0 $(($count_tests_names-1))); do
+    supported_tests[i]=${read_tests_files[$i]}
+  done
+  for i in $(seq 0 $(($count_errortests_names-1))); do
+    supported_tests[$(($i + $count_tests_names))]=${read_errortests_files[$i]}
+  done
+  tot_tests=${#supported_tests[@]}
+  #echo "tot tests: $tot_tests"
+}
+
+function echo_tests_info {
+  kazoj_dir="$1"
+  set_supported_tests "$kazoj_dir" 2>/dev/null
+  echoed_cases_dir="${tests_info[0]}"
+  echoed_errors_dir="${tests_info[1]}"
+  echo -e "\033[1;33m[DEBUG]    Tests dir is: ( $kazoj_dir ).\e[0m" >&2
+  echo -e "\033[1;33m[DEBUG]    Cases dir is: ( $echoed_cases_dir ).\e[0m" >&2
+  echo -e "\033[1;33m[DEBUG]      ( $count_tests_names ) cases ready.\e[0m" >&2
+  if [[ $big_list_flag -gt 0 ]] ; then {
+    for i in $(seq 0 $(($count_tests_names-1))) ; do {
+      echo -e "\033[1;33m[DEBUG]      ( ${read_tests_files[$i]} ).\e[0m" >&2
+    }
+    done
+  }
+  fi
+  echo -e "\033[1;33m[DEBUG]    Errors dir is: ( $echoed_errors_dir ).\e[0m" >&2
+  echo -e "\033[1;33m[DEBUG]      ( $count_errortests_names ) error cases ready.\e[0m" >&2
+  if [[ $big_list_flag -gt 0 ]] ; then {
+    for i in $(seq 0 $(($count_errortests_names-1))) ; do {
+      echo -e "\033[1;33m[DEBUG]      ( ${read_errortests_files[$i]} ).\e[0m" >&2
+    }
+    done
+  }
+  fi
+  echo -e "\033[1;33m[DEBUG]    ( $tot_tests ) total tests ready.\e[0m" >&2
+  #echo "$count_tests_infos"
+  #echo "test info array contents are: ( ${tests_info[@]} )" >&2
 }
 
 function echo_othermode_tags {
@@ -136,6 +239,8 @@ function echo_options {
   echo -e "                Uses full source builds. Not recommended.\n"
   echo -e "        -g        git mode\n"
   echo -e "                Uses git checkouts of supported tags. Enabled by default.\n"
+  echo -e "        -t        test mode\n"
+  echo -e "                Tries all defined tests.\n"
   echo -e "    [OPERATIONS]:\n"
   echo -e "        -b        build\n"
   echo -e "                Tries building the binary if it's not available.\n"
@@ -156,6 +261,8 @@ function echo_options {
   echo -e "                Specifies sourcefile name for single file mode.\n"
   echo -e "        -M MAKEFILE_SUPPORT       tagname\n"
   echo -e "                Specifies a tag name for lowest version to support make.\n"
+  echo -e "        -T TEST_FOLDER       path\n"
+  echo -e "                Specifies a relative dirname for test folder.\n"
   echo -e "    [INFO]:\n"
   echo -e "        -l/L        list\n"
   echo -e "                Prints supported tags for current mode (all modes if L) and quits.\n"
@@ -185,6 +292,67 @@ function usage {
   echo_options
 }
 
+function escape_colorcodes_tee {
+  file="$1"
+  outfile="$2"
+  echo "" >"$outfile"
+  #sed -r 's/\/\\3/g' "$file"
+  #sed -e 's/\\033\[/COLOR[/g' -e 's/COLOR\[1;3/"<colorTag[Heavy,/g' -e 's/COLOR\[0;3/"<colorTag[Light,/g' -e 's/\\e\[0m/\]>"/g' "$file" >>"$outfile"
+  #sed 's/\x1B\[\([0-9]\{1,2\}\(;[0-9]\{1,2\}\)\?\)\?[mGK]//g' <"$file"
+  cat -e "$file" | tee "$outfile"
+}
+
+function escape_colorcodes {
+  file="$1"
+  outfile="$2"
+  echo "" >"$outfile"
+  #sed -r 's/\/\\3/g' "$file"
+  #sed -e 's/\\033\[/COLOR[/g' -e 's/COLOR\[1;3/"<colorTag[Heavy,/g' -e 's/COLOR\[0;3/"<colorTag[Light,/g' -e 's/\\e\[0m/\]>"/g' "$file" >>"$outfile"
+  #sed 's/\x1B\[\([0-9]\{1,2\}\(;[0-9]\{1,2\}\)\?\)\?[mGK]//g' <"$file"
+  cat -e "$file" >"$outfile"
+}
+
+function record_test {
+  tfp="$1" # test_file_path
+  echo "" > "$tfp.stdout"
+  echo "" > "$tfp.stderr"
+  tmp_stdout="$(mktemp)"
+  tmp_stderr="$(mktemp)"
+  run_test "$tfp" >>"$tmp_stdout" 2>>"$tmp_stderr"
+  res=$?
+  #echo "r: $res" >> "$tmp_stdout"
+  escape_colorcodes "$tmp_stdout" "$tfp.stdout"
+  escape_colorcodes "$tmp_stderr" "$tfp.stderr"
+  rm -f "$tmp_stdout" || echo "\033[1;31m[ERROR]    Failed removing tmpfile ($tmp_stdout). Why?\n"
+  [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;32m[TEST]    Removed tempfile "$tmp_stdout".\e[0m" >&2
+  rm -f "$tmp_stderr" || echo "\033[1;31m[ERROR]    Failed removing tmpfile ($tmp_stderr). Why?\n"
+  [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;32m[TEST]    Removed tempfile "$tmp_stderr".\e[0m" >&2
+}
+
+function run_test {
+  tfp="$1" # test_file_path
+  #echo -en "\033[1;36m"
+  "$tfp"
+  #echo -en "\e[0m"
+  res=$?
+}
+
+function delete_test {
+  tfp="$1" # test_file_path
+  (
+    echo "deleting $tfp" 2>/dev/null
+    exit "$?"
+  )
+  res="$?"
+
+  if [[ $res -eq 0 ]]; then {
+    echo -e "\033[0;32m[TEST]    Deleted $tfp.\e[0m" >&2
+  } else {
+    echo -e "\033[1;31m[TEST]    Failed deleting $tfp. How?\e[0m" >&2
+  }
+  fi
+}
+
 #Prepare flag values to default value
 purge_flag=0
 run_flag=0 #By default we don't run the binary
@@ -203,10 +371,13 @@ vers_make_flag=0
 makefile_version=""
 git_mode_flag=1 #By default we run in git mode
 base_mode_flag=0
+test_mode_flag=0
+testdir_flag=0
+kazoj_dir=""
 big_list_flag=0
 small_list_flag=0
 
-while getopts "M:S:E:D:BgVbpHhrivdlL" opt; do
+while getopts "M:S:E:D:T:BgVbpHhrivdlLt" opt; do
   case $opt in
     S )
       source_name="$OPTARG"
@@ -219,6 +390,10 @@ while getopts "M:S:E:D:BgVbpHhrivdlL" opt; do
     D )
       dir_flag=1
       milestones_dir="$OPTARG"
+      ;;
+    T )
+      testdir_flag=1
+      kazoj_dir="$OPTARG"
       ;;
     M )
       vers_make_flag=1
@@ -241,6 +416,9 @@ while getopts "M:S:E:D:BgVbpHhrivdlL" opt; do
       ;;
     g )
       git_mode_flag=1
+      ;;
+    t )
+      test_mode_flag=1
       ;;
     V )
       verbose_flag=1
@@ -276,6 +454,14 @@ while getopts "M:S:E:D:BgVbpHhrivdlL" opt; do
 tot_opts=$OPTIND
 done
 
+#We check again if testmode was requested, and reset the other mode flags.
+if [[ $test_mode_flag -gt 0 ]] ; then {
+  git_mode_flag=0
+  base_mode_flag=0
+  echo -e "\033[1;33m[AMBOSO-MODE]    Running in test mode.\e[0m" >&2
+}
+fi
+
 #We check again if basemode was requested, as the only flag checked in build stage is git_mode_flag
 #If base_mode_flag is asserted, we always override git_mode_flag
 [[ $base_mode_flag -gt 0 ]] && git_mode_flag=0 && echo -e "\033[1;31m[AMBOSO-MODE]    Running in base mode, expecting full source builds.\e[0m" >&2
@@ -283,21 +469,6 @@ done
 
 #We always notify of missing -D argument
 [[ ! $dir_flag -gt 0 ]] && milestones_dir="$(pwd)/bin/" && echo -e "\033[1;33m[DEBUG]    No -D flag, using ( $milestones_dir ) for target dir. Run with -V to see more.\e[0m" >&2 #&& usage && exit 1
-
-#Check if we are printing tag list for current mode and exiting early
-if [[ $small_list_flag -gt 0 ]]; then {
-  echo_supported_tags "$milestones_dir"
-  exit 0
-}
-fi
-
-#Check if we are printing tag list for both modes and exiting early
-if [[ $big_list_flag -gt 0 ]]; then {
-  echo_supported_tags "$milestones_dir"
-  echo_othermode_tags "$milestones_dir"
-  exit 0
-}
-fi
 
 #Check if we are printing help info and exiting early
 if [[ $smallhelp_flag -gt 0 ]]; then {
@@ -317,6 +488,55 @@ fi
 
 scripts_dir="$milestones_dir" # MUST BE SET before checking for -S and -E
 set_supported_versions "$scripts_dir" # Might as well do it now
+
+#If we're in test mode and test dir was not passed, we check if "./kazoj" is a directory and use that. If it isn't, we may get the name from stego.lock. If that is not a directory, we quit immediately.
+if [[ -z $kazoj_dir && $test_mode_flag -gt 0 ]] ; then {
+  if [[ "$amboso_currvers" > "$amboso_testflag_version" || "$amboso_currvers" = "$amboso_testflag_version" ]] ; then {
+     if [[ -d "./kazoj" ]]; then {
+       kazoj_dir=$(realpath "./kazoj")
+       set_tests_info "$kazoj_dir"
+       set_supported_tests "$kazoj_dir"
+       echo -e "\033[1;33m[DEBUG]    No -T flag on a test run (amboso > $amboso_testflag_version), using \"./kazoj\" as tests dir.\e[0m" >&2
+     } else {
+       echo -e "\033[1;33m[DEBUG]    No -T flag on a test run (amboso > $amboso_testflag_version), reading stego.lock.\e[0m" >&2
+       set_source_info "$milestones_dir"
+       kazoj_dir=${sources_info[3]}
+       set_tests_info "$kazoj_dir"
+       set_supported_tests "$kazoj_dir"
+       #echo_tests_info "$tests_dir"
+     }
+     fi
+  } else {
+     echo -e "\033[1;31m[ERROR]    No -T flag on a test run, amboso version is < ($amboso_testflag_version).\n    Quitting.\e[0m" #>&2
+  }
+  fi
+}
+fi
+
+#Check if we are printing tag list for current mode and exiting early
+if [[ $small_list_flag -gt 0 ]]; then {
+  if [[ $git_mode_flag -gt 0 || $base_mode_flag -gt 0 ]] ; then {
+    echo_supported_tags "$milestones_dir"
+  } elif [[ $test_mode_flag -gt 0 ]]; then {
+    echo_tests_info "$kazoj_dir"
+  }
+  fi
+  exit 0
+}
+fi
+
+#Check if we are printing tag list for both modes and exiting early
+if [[ $big_list_flag -gt 0 ]]; then {
+  if [[ $git_mode_flag -gt 0 || $base_mode_flag -gt 0 ]] ; then {
+    echo_supported_tags "$milestones_dir"
+    echo_othermode_tags "$milestones_dir"
+  } elif [[ $test_mode_flag -gt 0 ]]; then {
+    echo_tests_info "$kazoj_dir"
+  }
+  fi
+  exit 0
+}
+fi
 
 #If version for makefile support was not specified, it's read from the stego.lock (an empty value would work maybe)
 if [[ -z $makefile_version ]] ; then {
@@ -347,9 +567,11 @@ fi
 [[ $verbose_flag -gt 0 && ! $exec_was_set -gt 0 ]] && echo -e "\033[0;32m[INFO]    Using target bin: ( $exec_entrypoint ).\e[0m" >&2
 [[ $verbose_flag -gt 0 && ! $sourcename_was_set -gt 0 ]] && echo -e "\033[0;32m[INFO]    Using source file name: ( $source_name ).\e[0m" >&2
 [[ $verbose_flag -gt 0 && ! $vers_make_flag -gt 0 ]] && echo -e "\033[0;32m[INFO]    Using tag for make support: ( $makefile_version ) as first tag compiled with make.\e[0m" >&2
+[[ $test_mode_flag -gt 0 && ! $testdir_flag -gt 0 ]] && echo -e "\033[0;32m[INFO]    Using tests dir: ( $kazoj_dir ).\e[0m" >&2
 
-#Check if we are doing init
-if [[ $init_flag -gt 0 ]] ; then {
+#Check if we are doing init and we're not in test mode
+#Which means we want to build all tags
+if [[ $init_flag -gt 0 && $test_mode_flag -eq 0 ]] ; then {
   count_bins=0
   start_t_init=`date +%s.%N`
   for i in $(seq 0 $(($tot_vers-1))); do
@@ -398,17 +620,37 @@ if [[ $init_flag -gt 0 ]] ; then {
 }
 fi
 
+if [[ $init_flag -gt 0 && $test_mode_flag -gt 0 && $verbose_flag -gt 0 ]] ; then {
+  echo -e "\033[0;35m[TEST]    [-i]\e[0m    Will record all tests." >&2
+}
+fi
+if [[ $purge_flag -gt 0 && $test_mode_flag -gt 0 && $verbose_flag -gt 0 ]] ; then {
+  :
+  #echo -e "\033[0;35m[TEST]    [-p]\e[0m    Will clean all tests." >&2
+}
+fi
+if [[ $build_flag -gt 0 && $test_mode_flag -gt 0 && $verbose_flag -gt 0 ]] ; then {
+  echo -e "\033[0;35m[TEST]    [-b]\e[0m    Will record test query." >&2
+}
+fi
+if [[ $delete_flag -gt 0 && $test_mode_flag -gt 0 && $verbose_flag -gt 0 ]] ; then {
+  :
+  #echo -e "\033[0;35m[TEST]    [-d]\e[0m    Will clean test query." >&2
+}
+fi
+
 #Version argument is mandatory outside of purge or init mode
 #check arg num
 # nothing else is allowed
 #shift all the options
-for i in $(seq 0 $(( $tot_opts - 2 )) ); do
+for i in $(seq 0 $(( $tot_opts - 2 )) ); do {
   shift
+}
 done
 
 # $0 is now target version, at position 1 in the array ??
 v_pos=1
-queried_version="${!v_pos}"
+query="${!v_pos}"
 
 tot_left_args=$(( $# ))
 if [[ $tot_left_args -gt 1 ]]; then {
@@ -418,31 +660,245 @@ if [[ $tot_left_args -gt 1 ]]; then {
 }
 fi
 
+
 #If we don't have init or purge flag, we bail on a missing version argument
-if [[ $tot_left_args -lt 1 && $purge_flag -eq 0 && $init_flag -eq 0 ]]; then {
-  echo -e "\033[1;31m[ERROR]    Missing version query.\e[0m\n"
+if [[ $tot_left_args -lt 1 && $purge_flag -eq 0 && $init_flag -eq 0 && $test_mode_flag -eq 0 ]]; then {
+  echo -e "\033[1;31m[ERROR]    Missing query.\e[0m\n"
   echo -e "\033[1;33m           Run with -h for help.\e[0m\n"
+  exit 1
+} elif [[ $tot_left_args -lt 1 && $test_mod_flag -gt 0 ]] ; then {
+  #If in test mode, we still whine about a target test
+  echo -e "\033[1;31m[ERROR]    Missing test query.\e[0m\n"
+  echo -e "\033[1;33m           Run with -h for help.\e[0m\n"
+  echo "can we do init/purge?"
+}
+fi
+#Check if we are doing a test
+if [[ $test_mode_flag -gt 0 ]]; then {
+  #We expect $scripts_dir to end with /
+  test_name=""
+  test_type=""
+  test_path=""
+  for i in $(seq 0 $(($count_tests_names-1))); do {
+    current_item="${read_tests_files[$i]}"
+    #echo "checking $current_item"
+    if [[ $query = $current_item ]]; then {
+      test_type="casetest"
+      test_name="$query"
+      test_path="$kazoj_dir/$cases_dir/${read_tests_files[$i]}"
+      [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;35m[TEST]    Recording cases ($i/$count_tests_names): $test_name\e[0m" >&2
+      break; #done looking
+    }
+    fi
+  }
+  done
+  if [[ -z $test_name ]] ; then {
+    for i in $(seq 0 $(($count_errortests_names-1))); do {
+      current_item="${read_errortests_files[$i]}"
+      #echo "checking $current_item"
+      if [[ $query = $current_item ]] ; then {
+	test_type="errortest"
+	test_name="$query"
+	test_path="$kazoj_dir/$errors_dir/${read_errortests_files[$i]}"
+        [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;35m[TEST]    Recording error case ($i/$count_errortests_names): $test_name\e[0m" >&2
+	break; #done looking
+      }
+      fi
+    }
+    done
+  }
+  fi
+
+  if [[ -z $test_path && (( $init_flag -gt 0 || $build_flag -gt 0 )) ]]; then {
+    #We may only freak out if we don't have init flag on
+    if [[ -z $test_path && -z $query ]] ; then {
+      keep_run_txt=""
+      [[ $init_flag -gt 0 ]] && keep_run_txt="[INIT]" && echo -e "\033[1;33m[TEST]    ( \"empty\"[$query] ) is not a supported tag , but we go on to $keep_run_txt.\e[0m" >&2
+    } elif [[ -z $test_path && ! -z $query ]] ; then {
+      keep_run_txt=""
+      [[ $init_flag -gt 0 ]] && keep_run_txt="[INIT]" && echo -e "\033[1;33m[TEST]    ( $query ) is not a supported tag, but we continue to $keep_run_txt.\e[0m" >&2
+      [[ $build_flag -gt 0 ]] && keep_run_txt="[BUILD]" && echo -e "\033[1;33m[TEST]    ( $query ) is not a supported tag, but we continue to $keep_run_txt.\e[0m" >&2
+    } else {
+      [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;33m[TEST] expected:\n  $test_type\n\n  name: $test_name\n  path: $test_path\e[0m"# >&2
+      echo -e "\033[0;32m[TEST]    target: ( $test_path ).\e[0m\n"
+    }
+    fi
+  } elif [[ -z $test_path && -z $query ]] ; then {
+    #Panic
+    echo -e "\033[1;31m[ERROR]    ( $test_name : at  $test_path ) is not a supported test.\e[0m\n"
+    echo -e "\033[1;33m           Run with -h for help.\e[0m\n"
+    exit 1
+  }
+  fi
+
+  relative_testpath="$test_path"
+
+  if [[ $build_flag -gt 0 ]] ; then {
+    echo -e "\033[0;34m[TEST]    \"-b\" is set, Recording: ( $relative_testpath ).\e[0m" >&2
+    #record_test "$relative_testpath"
+  } elif [[ $delete_flag -gt 0 ]] ; then {
+    :
+    #echo -e "\033[0;34m[TEST]    \"-d\" is set, Deleting: ( $relative_testpath ).\e[0m" >&2
+    #delete_test "$relative_testpath"
+  } elif [[ $init_flag -gt 0 ]] ; then {
+    echo -e "\033[0;34m[TEST]    \"-i\" is set, Recording ALL: ( $relative_testpath ).\e[0m"
+    echo -e "\033[1;33m[DEBUG]    ( $tot_tests ) total tests ready.\e[0m" >&2
+    for i in $(seq 0 $(($tot_tests-1))); do {
+      TEST="${supported_tests[$i]}"
+      verb=""
+      gitm=""
+      [[ $verbose_flag -gt 0 ]] && verb="V" && echo -e "\n[TEST]    Recording ALL: ( $(($i+1)) / $tot_tests ) ( $TEST )" >&2
+      ( "$prog_name" -D "$scripts_dir" -b"$verb"t "$TEST" 2>/dev/null ; exit "$?")
+      clean_res="$?"
+    }
+    done
+    #init_all_tests "$relative_testpath"
+  } elif [[ $purge_flag -gt 0 ]] ; then {
+    :
+    #echo "[TEST]    Deleting ALL: ( $relative_testpath )."
+    #purge_all_tests "$relative_testpath"
+  }
+  fi
+  if [[ -z $query && $init_flag -eq 0 ]] ; then {
+    echo -e "\033[1;33m[INIT]    Can't proceed further with no query, quitting.\e[0m" && exit 0
+  }
+  fi
+  if [[ -z $relative_testpath && $init_flag -eq 1 && ! -z $query ]] ; then {
+    echo -e "\033[1;31m[ERROR]    Can't proceed even with -i flag, with no testpath. ( $relative_testpath ) will be ( $query ).\e[0m"
+  }
+  fi
+  if [[ -z $relative_testpath && $init_flag -eq 1 && -z $query ]] ; then {
+    echo -e "\033[1;31m[ERROR]    Can't proceed with no query.  ( q: $query, p: $relative_testpath ).\e[0m" && exit 1
+  }
+  fi
+  run_tmp_out="$(mktemp)"
+  run_tmp_escout="$(mktemp)"
+  run_tmp_err="$(mktemp)"
+  run_tmp_escerr="$(mktemp)"
+  echo -e "\033[1;33m[TEST]    Running ( $relative_testpath ).\e[0m"
+  run_test "$relative_testpath" >>"$run_tmp_out" 2>>"$run_tmp_err"
+  escape_colorcodes_tee "$run_tmp_out" "$run_tmp_escout"
+  escape_colorcodes_tee "$run_tmp_err" "$run_tmp_escerr"
+  if [[ $build_flag -eq 0 ]] ; then {
+    :
+    cp "$run_tmp_escout" "$relative_testpath".stdout || echo -e "Failed replacing stdout with new file."
+    cp "$run_tmp_escerr" "$relative_testpath".stderr || echo -e "Failed replacing stderr with new file."
+  } else {
+    :
+  }
+  fi
+  rm -f "$run_tmp_out" || echo -e "\033[1;31m[ERROR]    Failed removing tmpfile ($run_tmp_out). Why?\n"
+  [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;32m[TEST]    Removed tempfile "$run_tmp_out".\e[0m" >&2
+  rm -f "$run_tmp_err" || echo -e "\033[1;31m[ERROR]    Failed removing tmpfile ($run_tmp_err). Why?\n"
+  [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;32m[TEST]    Removed tempfile "$run_tmp_err".\e[0m" >&2
+  #Testing diff for escaped stdout
+  ( diff "$run_tmp_escout" "$relative_testpath".stdout ) 2>/dev/null 1>&2
+  diff_res="$?"
+  out_res=""
+  if [[ "$diff_res" -eq 0 ]]; then {
+    out_res="pass"
+    if [[ ! -z "$run_tmp_escout" && ! -z "$relative_testpath.stdout" ]]; then {
+      #This one doesn't go on stderr since we still want it in recursive calls:
+      [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;32m[TEST]    Pass, both outputs are not empty.\e[0m"
+    } elif [[ -z "$run_tmp_escout" ]]; then {
+      [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;35m[TEST]    Pass, current stdout is empty. Is that expected?\e[0m">&2
+    } elif [[ -z "$relative_testpath.stdout" ]]; then {
+      [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;35m[TEST]    Pass, registered stdout is empty. Is that expected?\e[0m" >&2
+    }
+    fi
+    if [[ $verbose_flag -gt 0 ]]; then {
+      echo -e "\n\033[1;35m[TEST]    (stdout) Expected:\e[0m"
+      cat "$relative_testpath.stdout"
+      echo -e "\n\033[1;35m[TEST]    (stdout) Found:\e[0m"
+      cat "$run_tmp_escout"
+    }
+    fi
+  } else {
+    out_res="fail"
+    echo -e "\n\033[1;31m[TEST]    (stdout) Expected:\e[0m"
+    cat "$relative_testpath.stdout"
+    echo -e "\n\033[1;31m[TEST]    (stdout) Found:\e[0m"
+    cat "$run_tmp_escout"
+    echo -e "\n\033[1;31m[TEST]    Failed: stdout changed.\e[0m"
+    #cat "$run_tmp_escout"
+  }
+  fi
+  rm -f "$run_tmp_escout" || echo -e "\033[1;31m[ERROR]    Failed removing tmpfile ($run_tmp_escout). Why?\n"
+  [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;32m[TEST]    Removed tempfile "$run_tmp_escout".\e[0m" >&2
+  #Testing diff for escaped stderr
+  ( diff "$run_tmp_escerr" "$relative_testpath".stderr ) 2>/dev/null 1>&2
+  diff_res="$?"
+  if [[ "$diff_res" -eq 0 ]]; then {
+    err_res="pass"
+    if [[ ! -z "$run_tmp_escerr" && ! -z "$relative_testpath.stderr" ]]; then {
+      #This one doesn't go on stderr since we still want it in recursive calls:
+      [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;32m[TEST]    Pass, both stderrs are not empty.\e[0m"
+    } elif [[ -z "$run_tmp_escerr" ]]; then {
+      [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;35m[TEST]    Pass, current run stderr is empty. Is that expected?\e[0m">&2
+    } elif [[ -z "$relative_testpath.stderr" ]]; then {
+      [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;35m[TEST]    Pass, registered stderr is empty. Is that expected?\e[0m" >&2
+    }
+    fi
+    if [[ $verbose_flag -gt 0 ]]; then {
+      echo -e "\n\033[1;35m[TEST]    (stderr) Expected:\e[0m"
+      cat "$relative_testpath.stderr"
+      echo -e "\n\033[1;35m[TEST]    (stderr) Found:\e[0m"
+      cat "$run_tmp_escerr"
+    }
+    fi
+    #cat "$run_tmp_escerr"
+  } else {
+    err_res="fail"
+    echo -e "\n\033[1;31m[TEST]    (stderr) Expected:\e[0m"
+    cat "$relative_testpath.stderr"
+    echo -e "\n\033[1;31m[TEST]    (stderr) Found:\e[0m"
+    cat "$run_tmp_escerr"
+    echo -e "\n\033[1;31m[TEST]    Failed: stderr changed.\e[0m"
+    #cat "$run_tmp_escerr"
+  }
+  fi
+  rm -f "$run_tmp_escerr" || echo "\033[1;31m[ERROR]    Failed removing tmpfile ($run_tmp_escerr). Why?\n"
+  [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;32m[TEST]    Removed tempfile "$run_tmp_escerr".\e[0m" >&2
+  if [[ $build_flag -gt 0 ]] ; then {
+    #We simulate success since we're recording
+    echo -e "\033[1;35m[TEST]    Phony pass (recording).\e[0m"
+    [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;33m    (out: $out_res)\e[0m"
+    [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;33m    (err: $err_res)\e[0m"
+    exit 0 #We return earlier
+  } elif [[ $out_res = "pass" && $err_res = "pass" ]]; then {
+    echo -e "\033[1;32m[TEST]    Passed.\e[0m"
+    exit 0 #We return earlier
+  } elif [[ $out_res = "fail" ]] ; then {
+   :#echo "failed" #We echoed before
+  } elif [[ $err_res = "fail" ]] ; then {
+   :#echo "failed" #We echoed before
+  } else {
+    echo -e "\033[1;31m[ERROR]    Unexpected values (o:$out_res/e:$err_res) should be either pass or fail.\e[0m. How?"
+  }
+  fi
   exit 1
 }
 fi
+#End of test mode block
 
 #We expect $scripts_dir to end with /
 version=""
 for i in $(seq 0 $(($tot_vers-1))); do
-  [[ $queried_version = ${supported_versions[$i]} ]] && version="$queried_version" && script_path=""$scripts_dir"v"$version""
+  [[ $query = ${supported_versions[$i]} ]] && version="$query" && script_path=""$scripts_dir"v"$version""
 done
 
 if [[ -z $version ]]; then {
-  #We only freak out if we don't have purge or init flags on
-  if [[ $purge_flag -eq 0 && $init_flag -eq 0 ]] ; then {
-    echo -e "\033[1;31m[ERROR]    ( $queried_version ) is not a supported tag.\e[0m\n"
+  #We only freak out if we don't have test_mode, purge or init flags on
+  if [[ $test_mode_flag -eq 0 && $purge_flag -eq 0 && $init_flag -eq 0 ]] ; then {
+    echo -e "\033[1;31m[ERROR]    ( $query ) is not a supported tag.\e[0m\n"
     echo -e "\033[1;33m           Run with -h for help.\e[0m\n"
     exit 1
-  } elif [[ ! -z $queried_version ]] ; then { #We gently tell the user that the version is not supported
+  } elif [[ ! -z $query && $test_mode_flag -gt 0 ]] ; then { #If we're in test mode, gently tell the user that the version is not supported
     keep_run_txt=""
     [[ $init_flag -gt 0 ]] && keep_run_txt="$mode_txt[INIT]"
     [[ $purge_flag -gt 0 ]] && keep_run_txt="$mode_txt[PURGE]"
-    echo -e "\n\033[1;33m[DEBUG]    ( $queried_version ) is not a supported tag, but we keep running to do $keep_run_txt.\e[0m" >&2
+    echo -e "\n\033[1;33m[DEBUG]    ( $query ) is not a supported test. $keep_run_txt.\e[0m" >&2
+    exit 1;
   }
   fi
 }
@@ -473,7 +929,7 @@ if [[ ! -f "$script_path/$exec_entrypoint" && ! -z $version ]] ; then {
       [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;33m[BUILD]    Building ( $version ), using make.\e[0m" >&2
       curr_dir=$(realpath .)
       start_t=`date +%s.%N`
-      if [[ $git_mode_flag -eq 0 ]] ; then { #Building in base mode, we cd into target directory before make
+      if [[ $git_mode_flag -eq 0 && $base_mode_flag -eq 1 ]] ; then { #Building in base mode, we cd into target directory before make
         [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;35m[BUILD]    Running in base mode, expecting full source in $script_path.\e[0m" #>&2
         cd $script_path; make >&2
         comp_res=$?
@@ -556,8 +1012,8 @@ if [[ ! -f "$script_path/$exec_entrypoint" && ! -z $version ]] ; then {
 } elif [[ ! -z $version ]] ; then { #Binary was present, we notify if we were running with build flag
   echo -e "\n\033[1;32m[QUERY]    ( $version ) binary is ready at ( $script_path ) .\e[0m" >&2
   [[ $build_flag -gt 0 ]] && echo -e "\033[0;33m[BUILD]    Found binary for ( $version ), won't build.\e[0m" >&2
-} elif [[ ! -z $queried_version ]] ; then {
-  echo -e "\033[1;31m[QUERY]    ( $queried_version ) invalid query, run with -V to see more.\e[0m"
+} elif [[ ! -z $query ]] ; then {
+  echo -e "\033[1;31m[QUERY]    ( $query ) invalid query, run with -V to see more.\e[0m"
 }
 fi
 
@@ -682,5 +1138,4 @@ if [[ purge_flag -gt 0 ]]; then
   }
   fi
 fi
-
 exit 0
