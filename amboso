@@ -318,7 +318,7 @@ function record_test {
   echo "" > "$tfp.stderr"
   tmp_stdout="$(mktemp)"
   tmp_stderr="$(mktemp)"
-  (run_test "$tfp" >>"$tmp_stdout" 2>>"$tmp_stderr")
+  run_test "$tfp" >>"$tmp_stdout" 2>>"$tmp_stderr"
   res=$?
   #echo "r: $res" >> "$tmp_stdout"
   escape_colorcodes "$tmp_stdout" "$tfp.stdout"
@@ -332,7 +332,7 @@ function record_test {
 function run_test {
   tfp="$1" # test_file_path
   #echo -en "\033[1;36m"
-  ( "$tfp" )
+  "$tfp"
   #echo -en "\e[0m"
   res=$?
 }
@@ -759,7 +759,7 @@ if [[ $test_mode_flag -gt 0 ]] ; then {
   run_tmp_escout="$(mktemp)"
   run_tmp_err="$(mktemp)"
   run_tmp_escerr="$(mktemp)"
-  run_test "$relative_testpath" >>"$run_tmp_out" 2>>"$run_tmp_out"
+  run_test "$relative_testpath" >>"$run_tmp_out" 2>>"$run_tmp_err"
   escape_colorcodes_tee "$run_tmp_out" "$run_tmp_escout"
   rm -f "$run_tmp_out" || echo -e "\033[1;31m[ERROR]    Failed removing tmpfile ($run_tmp_out). Why?\n"
   [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;32m[TEST]    Removed tempfile "$run_tmp_out".\e[0m" >&2
@@ -772,9 +772,15 @@ if [[ $test_mode_flag -gt 0 ]] ; then {
   out_res=""
   if [[ "$diff_res" -eq 0 ]]; then {
     out_res="pass"
+    [[ ! -z "$run_tmp_escout" && ! -z "$relative_testpath.stdout" ]] && echo -e "Pass, not null"
     #cat "$run_tmp_escout"
   } else {
     out_res="fail"
+    echo -e "\n\033[1;31m[TEST]    Expected:\e[0m"
+    cat "$relative_testpath.stdout"
+    echo -e "\n\033[1;31m[TEST]    Found:\e[0m"
+    cat "$run_tmp_escout"
+    echo -e "\n\033[1;31m[TEST]    Failed: stdout changed.\e[0m"
     #cat "$run_tmp_escout"
   }
   fi
@@ -785,9 +791,15 @@ if [[ $test_mode_flag -gt 0 ]] ; then {
   diff_res="$?"
   if [[ "$diff_res" -eq 0 ]]; then {
     err_res="pass"
+    [[ ! -z "$run_tmp_escerr" && ! -z "$relative_testpath.stderr" ]] && echo -e "Pass, not null"
     #cat "$run_tmp_escerr"
   } else {
     err_res="fail"
+    echo -e "\n\033[1;31m[TEST]    Expected:\e[0m"
+    cat "$relative_testpath.stderr"
+    echo -e "\n\033[1;31m[TEST]    Found:\e[0m"
+    cat "$run_tmp_escerr"
+    echo -e "\n\033[1;31m[TEST]    Failed: stderr changed.\e[0m"
     #cat "$run_tmp_escerr"
   }
   fi
@@ -795,17 +807,17 @@ if [[ $test_mode_flag -gt 0 ]] ; then {
   [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;32m[TEST]    Removed tempfile "$run_tmp_escerr".\e[0m" >&2
   if [[ $build_flag -gt 0 ]] ; then {
     #We simulate success since we're recording
-    echo -e "\033[1;32m[TEST]    Phony pass.\e[0m"
-    echo -e "\033[1;32m    (out: $out_res)\e[0m"
-    echo -e "\033[1;32m    (err: $err_res)\e[0m"
+    [[ $verbose_flag -gt 0 ]] && echo -e "\033[1;35m[TEST]    Phony pass (recording).\e[0m"
+    [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;33m    (out: $out_res)\e[0m"
+    [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;33m    (err: $err_res)\e[0m"
     exit 0; #We return earlier
   } elif [[ $out_res = "pass" && $err_res = "pass" ]]; then {
     echo -e "\033[1;32m[TEST]    Passed.\e[0m"
     exit 0; #We return earlier
   } elif [[ $out_res = "fail" ]] ; then {
-    echo -e "\033[1;31m[TEST]    Failed: stdout changed.\e[0m"
+   :#echo "failed" #We echoed before
   } elif [[ $err_res = "fail" ]] ; then {
-    echo -e "\033[1;31m[TEST]    Failed: stderr changed.\e[0m"
+   :#echo "failed" #We echoed before
   } else {
     echo -e "\033[1;31m[ERROR]    Unexpected values (o:$out_res/e:$err_res) should be either pass or fail.\e[0m. How?"
   }
@@ -813,6 +825,7 @@ if [[ $test_mode_flag -gt 0 ]] ; then {
   exit 1;
 }
 fi
+#End of test mode block
 
 #We expect $scripts_dir to end with /
 version=""
