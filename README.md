@@ -1,6 +1,6 @@
 # amboso
 
-## A make frontend with some git integration, powered by bash.
+## A build tool wrapping make, with some git integration, powered by bash.
 
 I wanted to build some older tagged version of a C project I was building using make, but for some of them I didn't have a proper past commit.
 
@@ -17,6 +17,8 @@ To see how this marvelous work of art works, run:
 ```
 $ ./try_anvil
 ```
+
+TODO: I should probably update `./try_anvil` to show usage of test commands, should some soon.
 
 I'll tell you that even the help option can fail, if you don't point this child to where your targets are and rely on naming your compliant folder "./bin/".
 You have a bin/ directory in the repo to test this behaviour.
@@ -63,7 +65,15 @@ It can now also show how the repo itself complies with amboso specs to run in gi
 
 ## bin/
 
-### Contains a directory for each supported tag (directories **must** start with an extra v prepended to the tag name, like so:
+Contains a directory for each supported tag (directories **must** start with an extra v prepended to the tag name, like so:
+
+## kazoj/
+
+Contains a directory for each test group, ATM there's one for successful tests and one for failures. The two subdirectories **must** be called, respectively:
+- `bone` : The general directory, for successful tests
+- `kulpo` : The error directory, for failure tests
+
+You should have your own `kazoj` directory (which you can specify in `stego.lock`), in your super-repo. Maybe run it with your `anvil` symlink?
 
 ```
 super-repo
@@ -79,13 +89,18 @@ super-repo
 │   │   ├── v1.0.0
 │   │   └── v1.1.0
 │   │   └── v1.1.1
+│   ├── kazoj
+│   │   ├── bone
+│   │   │   └── good_test_exe
+│   │   └── kulpo
+│   │       └── bad_test_exe
 │   ├── CODEOWNERS
 │   ├── hello_world.c
 │   ├── LICENSE
 │   ├── Makefile
 │   ├── README.md
 │   └── try_anvil
-
+├── kazoj
 ```
 
 ```
