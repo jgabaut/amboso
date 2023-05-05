@@ -1,3 +1,2 @@
-#!/bin/bash
-
-./amboso -D "./bin" 69
+#!/bin/bash -v
+"./amboso" -D "./bin" 69
