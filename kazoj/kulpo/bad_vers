@@ -1,0 +1,3 @@
+#!/bin/bash
+
+./amboso -D "./bin" 69
