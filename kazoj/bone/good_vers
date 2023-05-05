@@ -1,2 +1,2 @@
-#!/bin/bash -v
+#!/bin/bash
 "./amboso" -D "./bin" 1.0.0
