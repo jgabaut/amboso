@@ -372,6 +372,7 @@ makefile_version=""
 git_mode_flag=1 #By default we run in git mode
 base_mode_flag=0
 test_mode_flag=0
+test_info_was_set=0
 testdir_flag=0
 kazoj_dir=""
 big_list_flag=0
@@ -394,6 +395,7 @@ while getopts "M:S:E:D:T:BgVbpHhrivdlLt" opt; do
     T )
       testdir_flag=1
       kazoj_dir="$OPTARG"
+      test_info_was_set=1
       ;;
     M )
       vers_make_flag=1
@@ -470,6 +472,17 @@ fi
 #We always notify of missing -D argument
 [[ ! $dir_flag -gt 0 ]] && milestones_dir="$(pwd)/bin/" && echo -e "\033[1;33m[DEBUG]    No -D flag, using ( $milestones_dir ) for target dir. Run with -V to see more.\e[0m" >&2 #&& usage && exit 1
 
+#We always notify of missing -T argument, if in test mode
+if [[ $test_mode_flag -gt 0 && ! $testdir_flag -gt 0 ]] ; then {
+  set_source_info "$milestones_dir"
+  kazoj_dir="${sources_info[3]}"
+  set_tests_info "$kazoj_dir"
+  set_supported_tests "$kazoj_dir"
+  #kazoj_dir="$(pwd)/kazoj/"
+  echo -e "\033[1;33m[DEBUG]    No -T flag, using ( $kazoj_dir ) for target dir. Run with -V to see more.\e[0m" >&2 #&& usage && exit 1
+}
+fi
+
 #Check if we are printing help info and exiting early
 if [[ $smallhelp_flag -gt 0 ]]; then {
       "$prog_name" -H -D "$milestones_dir" | less
@@ -481,6 +494,7 @@ if [[ $bighelp_flag -gt 0 ]]; then {
       echo_amboso_version
       set_source_info "$milestones_dir"
       set_supported_versions "$milestones_dir"
+      set_supported_versions "$milestones_dir"
       usage
       exit 0
 }
@@ -488,30 +502,37 @@ fi
 
 scripts_dir="$milestones_dir" # MUST BE SET before checking for -S and -E
 set_supported_versions "$scripts_dir" # Might as well do it now
+set_source_info "$milestones_dir"
+kazoj_dir="${sources_info[3]}"
+set_tests_info "$kazoj_dir"
+set_supported_tests "$kazoj_dir"
 
 #If we're in test mode and test dir was not passed, we check if "./kazoj" is a directory and use that. If it isn't, we may get the name from stego.lock. If that is not a directory, we quit immediately.
 if [[ -z $kazoj_dir && $test_mode_flag -gt 0 ]] ; then {
   if [[ "$amboso_currvers" > "$amboso_testflag_version" || "$amboso_currvers" = "$amboso_testflag_version" ]] ; then {
      if [[ -d "./kazoj" ]]; then {
-       kazoj_dir=$(realpath "./kazoj")
+       kazoj_dir="./kazoj"
        set_tests_info "$kazoj_dir"
        set_supported_tests "$kazoj_dir"
        echo -e "\033[1;33m[DEBUG]    No -T flag on a test run (amboso > $amboso_testflag_version), using \"./kazoj\" as tests dir.\e[0m" >&2
      } else {
        echo -e "\033[1;33m[DEBUG]    No -T flag on a test run (amboso > $amboso_testflag_version), reading stego.lock.\e[0m" >&2
        set_source_info "$milestones_dir"
-       kazoj_dir=${sources_info[3]}
+       kazoj_dir="${sources_info[3]}"
        set_tests_info "$kazoj_dir"
        set_supported_tests "$kazoj_dir"
-       #echo_tests_info "$tests_dir"
      }
      fi
   } else {
      echo -e "\033[1;31m[ERROR]    No -T flag on a test run, amboso version is < ($amboso_testflag_version).\n    Quitting.\e[0m" #>&2
+     exit 0;
   }
   fi
 }
 fi
+
+#echo_tests_info "$tests_dir"
+
 
 #Check if we are printing tag list for current mode and exiting early
 if [[ $small_list_flag -gt 0 ]]; then {
@@ -567,7 +588,7 @@ fi
 [[ $verbose_flag -gt 0 && ! $exec_was_set -gt 0 ]] && echo -e "\033[0;32m[INFO]    Using target bin: ( $exec_entrypoint ).\e[0m" >&2
 [[ $verbose_flag -gt 0 && ! $sourcename_was_set -gt 0 ]] && echo -e "\033[0;32m[INFO]    Using source file name: ( $source_name ).\e[0m" >&2
 [[ $verbose_flag -gt 0 && ! $vers_make_flag -gt 0 ]] && echo -e "\033[0;32m[INFO]    Using tag for make support: ( $makefile_version ) as first tag compiled with make.\e[0m" >&2
-[[ $test_mode_flag -gt 0 && ! $testdir_flag -gt 0 ]] && echo -e "\033[0;32m[INFO]    Using tests dir: ( $kazoj_dir ).\e[0m" >&2
+[[ $verbose_flag -gt 0 && $test_mode_flag -gt 0 && ! $test_info_was_set -gt 0 ]] && echo -e "\033[0;32m[INFO]    Using tests dir: ( $kazoj_dir ).\e[0m" >&2
 
 #Check if we are doing init and we're not in test mode
 #Which means we want to build all tags
@@ -748,7 +769,7 @@ if [[ $test_mode_flag -gt 0 ]]; then {
       verb=""
       gitm=""
       [[ $verbose_flag -gt 0 ]] && verb="V" && echo -e "\n[TEST]    Recording ALL: ( $(($i+1)) / $tot_tests ) ( $TEST )" >&2
-      ( "$prog_name" -D "$scripts_dir" -b"$verb"t "$TEST" 2>/dev/null ; exit "$?")
+      ( "$prog_name" -T "$kazoj_dir" -D "$scripts_dir" -b"$verb"t "$TEST" 2>/dev/null ; exit "$?")
       clean_res="$?"
     }
     done
