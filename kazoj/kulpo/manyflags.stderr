@@ -27,4 +27,8 @@
 ^[[0;32m[INFO]    Using tests dir: ( kazoj ).^[[0m$
 ^[[0;35m[TEST]    [-i]^[[0m    Will record all tests.$
 ^[[0;35m[TEST]    [-b]^[[0m    Will record test query.$
+^[[0;35m[TEST]    Checking if query 0.1.0 is a testcase.^[[0m$
+^[[0;35m[TEST]    Checking if query 0.1.0 is a error testcase.^[[0m$
+^[[0;35m[TEST]    Checking error case (0/2): bad_vers^[[0m$
+^[[0;35m[TEST]    Checking error case (1/2): manyflags^[[0m$
 ^[[1;33m[TEST]    ( 0.1.0 ) is not a supported tag, we quit at this point. [INIT].^[[0m$
