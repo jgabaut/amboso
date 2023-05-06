@@ -1,3 +1,3 @@
-^[[1;33m[AMBOSO-MODE]    Running in test mode.^[[0m$
+[AMBOSO]    Deep recursion (>1), are you calling "./amboso" in a test? ;)$
+^[[1;31m[MODE]    Running in base mode, expecting full source builds.^[[0m$
 ^[[1;33m[DEBUG]    No -D flag, using ( ./bin/ ) for target dir. Run with -V to see more.^[[0m$
-^[[1;33m[DEBUG]    No -K flag, using ( kazoj ) for target dir. Run with -V to see more.^[[0m$

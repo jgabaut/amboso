@@ -1,3 +1,16 @@
-^[[1;34m[AMBOSO]    Recursive call , depth: ( 2 )^[[0m$
-[AMBOSO]    deep recursion, are you calling "./amboso" in a test? ;)$
-^[[1;31m[TEST]    Error: -t was asserted with -T. -t is a shortcut to run as -T on all tests found.^[[0m$
+^[[1;31m[DEBUG]    Recording all tests with -ti is deprecated.$
+$
+        Feature will be dropped in next major update.$
+$
+$
+[AMBOSO]    Exceeded depth for recursion ( nested 3 times).$
+$
+$
+[AMBOSO]    Exceeded depth for recursion ( nested 3 times).$
+$
+$
+[AMBOSO]    Exceeded depth for recursion ( nested 3 times).$
+$
+$
+[AMBOSO]    Exceeded depth for recursion ( nested 3 times).$
+$
