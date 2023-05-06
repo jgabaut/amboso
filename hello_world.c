@@ -3,7 +3,6 @@
 
 int main(void) {
   printf("Hello, World!\n");
-  printf("Built using make and anvil around it.\n");
-  printf("Amboso v1.3.0, with better test mode!\n");
+  printf("amboso v1.3.1\n");
   return 0;
 }

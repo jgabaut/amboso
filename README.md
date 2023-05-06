@@ -19,18 +19,9 @@ $ ./try_anvil
 ```
 
 TODO: I should probably update `./try_anvil` to show usage of test commands, should some soon.
+Altought I expect some headache due to the backtrace, we'll see.
 
 For now consider:
-
-## Test mode
-
-Running `anvil` with `-t` or `-T` will start test mode.
-
-- If using `-t`, `anvil` will try to run ALL detected executable tests.
-- If using `-T`, `anvil` should only try to test the passed QUERY tag (must be a valid test name).
-
-- Use `-i` to record all the tests stdout and stderr to aptly named files.
-- You can do the same for just 1 file with `-b`.
 
 ## Options and usage, hard failure
 
@@ -52,6 +43,27 @@ Definition of a base-mode tag **must** start with a '?', like so
 ?my_value=1# A nice comment
 ```
 The '?' character will not be a part of your tag name, it only marks base-mode tags when at the start of a tag name.
+
+## kazoj/
+
+Contains a directory for each test group, ATM there's one for successful tests and one for failures. The two subdirectories **must** be called, respectively:
+- `bone` : The general directory, for successful tests
+- `kulpo` : The error directory, for failure tests
+
+You should have your own `kazoj` directory (which you can specify in `stego.lock`), in your super-repo.
+And there, there should be a `kazoj.lock` file to remember the names of your cases/errors folders.
+Maybe run it with your super-repo `anvil` symlink? :)
+
+## Test mode
+
+Running `anvil` with `-t` or `-T` will start test mode.
+
+- If using `-t`, `anvil` will try to run ALL detected executable tests.
+- If using `-T`, `anvil` should only try to test the passed QUERY tag (must be a valid test name).
+
+- Use `-i` to record all the tests stdout and stderr to aptly named files.
+- You can do the same for just 1 file with `-b`.
+
 
 ## Beware of spaces:
 
@@ -80,14 +92,6 @@ It can now also show how the repo itself complies with amboso specs to run in gi
 ## bin/
 
 Contains a directory for each supported tag (directories **must** start with an extra v prepended to the tag name, like so:
-
-## kazoj/
-
-Contains a directory for each test group, ATM there's one for successful tests and one for failures. The two subdirectories **must** be called, respectively:
-- `bone` : The general directory, for successful tests
-- `kulpo` : The error directory, for failure tests
-
-You should have your own `kazoj` directory (which you can specify in `stego.lock`), in your super-repo. Maybe run it with your `anvil` symlink?
 
 ```
 super-repo
