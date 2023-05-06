@@ -20,6 +20,20 @@ $ ./try_anvil
 
 TODO: I should probably update `./try_anvil` to show usage of test commands, should some soon.
 
+For now consider:
+
+## Test mode
+
+Running `anvil` with `-t` or `-T` will start test mode.
+
+- If using `-t`, `anvil` will try to run ALL detected executable tests.
+- If using `-T`, `anvil` should only try to test the passed QUERY tag (must be a valid test name).
+
+- Use `-i` to record all the tests stdout and stderr to aptly named files.
+- You can do the same for just 1 file with `-b`.
+
+## Options and usage, hard failure
+
 I'll tell you that even the help option can fail, if you don't point this child to where your targets are and rely on naming your compliant folder "./bin/".
 You have a bin/ directory in the repo to test this behaviour.
 
