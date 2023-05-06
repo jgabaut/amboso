@@ -2,7 +2,7 @@
 # Bash script to run a milestone build providing the version number.
 
 prog_name="$0"
-amboso_currvers="1.3.1"
+amboso_currvers="1.3.2"
 amboso_testflag_version="1.3.0"
 amboso_version="amboso version $amboso_currvers"
 
@@ -327,7 +327,7 @@ function record_test {
   tmp_stderr="$(mktemp)"
   run_test "$tfp" >>"$tmp_stdout" 2>>"$tmp_stderr"
   res="$?"
-  echo "r: $res" >> "$tmp_stdout"
+  #echo "r: $res" >> "$tmp_stdout"
   escape_colorcodes_tee "$tmp_stdout" "$tfp.stdout"
   escape_colorcodes_tee "$tmp_stderr" "$tfp.stderr"
   rm -f "$tmp_stdout" || echo "\033[1;31m[ERROR]    Failed removing tmpfile ($tmp_stdout). Why?\n"
@@ -340,8 +340,10 @@ function run_test {
   tfp="$1" # test_file_path
   #echo -en "\033[1;36m"
   "$tfp"
+  res="$?"
   #echo -en "\e[0m"
-  res=$?
+  return "$res"
+
 }
 
 function delete_test {
@@ -852,7 +854,7 @@ if [[ $test_mode_flag -gt 0 ]]; then {
   echo -e "\033[1;33m[TEST]    Running ( $relative_testpath ).\e[0m"
   run_test "$relative_testpath" >>"$run_tmp_out" 2>>"$run_tmp_err"
   ran_res="$?"
-  echo "r: $ran_res" >> "$run_tmp_out"
+  #echo "r: $ran_res" >> "$run_tmp_out"
   escape_colorcodes_tee "$run_tmp_out" "$run_tmp_escout"
   escape_colorcodes_tee "$run_tmp_err" "$run_tmp_escerr"
   if [[ $build_flag -gt 0 ]] ; then {
