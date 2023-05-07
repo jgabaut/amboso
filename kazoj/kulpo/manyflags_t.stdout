@@ -1,0 +1,19 @@
+^[[1;31m[DEBUG]    Recording all tests with -ti is deprecated.$
+$
+        Feature will be dropped in next major update.$
+$
+$
+^[[1;31m[PANIC]    Running  "./amboso" in test mode inside a test is not supported.^[[0m$
+$
+$
+^[[1;31m[PANIC]    Running  "./amboso" in test mode inside a test is not supported.^[[0m$
+$
+$
+^[[1;31m[PANIC]    Running  "./amboso" in test mode inside a test is not supported.^[[0m$
+$
+$
+^[[1;31m[PANIC]    Running  "./amboso" in test mode inside a test is not supported.^[[0m$
+$
+$
+^[[1;31m[PANIC]    Running  "./amboso" in test mode inside a test is not supported.^[[0m$
+$

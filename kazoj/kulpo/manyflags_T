@@ -1,0 +1,3 @@
+#!/bin/bash
+
+./amboso -qTibprdgB 0.1.0
