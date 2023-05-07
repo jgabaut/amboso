@@ -1305,14 +1305,9 @@ fi
 #We check the run flag to run the binary
 if [[ ! -z $version && $run_flag -eq 1 && -x $script_path/$exec_entrypoint ]] ; then {
   echo -en "\n\033[0;32m[DEBUG]    Running script $script_path/$exec_entrypoint\e[0m"
-  sleep 1
-  echo -n "."
-  sleep 1
-  echo -n "."
-  sleep 1
-  echo -n "."
-  sleep 1
-  echo ""
+  #echo -n "."
+  #sleep 1
+  #echo ""
   ( cd "$script_path" ; ./"$exec_entrypoint" )
 } elif [[ ! -z $version && $run_flag -eq 0  ]] ; then {
   echo -e "\033[0;33m[DEBUG]    Running without -r flag, won't run.\e[0m" >&2

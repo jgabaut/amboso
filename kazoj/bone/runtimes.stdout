@@ -1,0 +1,8 @@
+[VERS]    1.4.0 e: 0 r: 0$
+[BASE][QUIET][BUILD][DELETE] 0.1.0 e: 0 r: 0$
+[BASE][BUILD][DELETE][VERB] 0.1.0 e: 0 r: 0$
+[BASE][QUIET][INIT][PURGE] e: 0 r: 0$
+[BASE][INIT][PURGE] e: 0 r: 0$
+[BASE][INIT][PURGE][VERB] e: 0 r: 0$
+$
+    SUCCESS:    all timed commands took longer than the one before.$
