@@ -3,17 +3,20 @@ $
         Feature will be dropped in next major update.$
 $
 $
-^[[1;31m[PANIC]    Running  "./amboso" in test mode inside a test is not supported.^[[0m$
+[AMBOSO]    Exceeded depth for recursion ( nested 3 times).$
 $
 $
-^[[1;31m[PANIC]    Running  "./amboso" in test mode inside a test is not supported.^[[0m$
+[AMBOSO]    Exceeded depth for recursion ( nested 3 times).$
 $
 $
-^[[1;31m[PANIC]    Running  "./amboso" in test mode inside a test is not supported.^[[0m$
+[AMBOSO]    Exceeded depth for recursion ( nested 3 times).$
 $
 $
-^[[1;31m[PANIC]    Running  "./amboso" in test mode inside a test is not supported.^[[0m$
+[AMBOSO]    Exceeded depth for recursion ( nested 3 times).$
 $
 $
-^[[1;31m[PANIC]    Running  "./amboso" in test mode inside a test is not supported.^[[0m$
+[AMBOSO]    Exceeded depth for recursion ( nested 3 times).$
+$
+$
+[AMBOSO]    Exceeded depth for recursion ( nested 3 times).$
 $

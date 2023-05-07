@@ -1,0 +1,4 @@
+[VERS]    1.4.1 e: 0 r: 0$
+[BASE][QUIET][BUILD][DELETE] 0.1.0 e: 0 r: 0$
+[BASE][BUILD][DELETE][VERB] 0.1.0 e: 0 r: 0$
+[ Bqip ] < [ [BASE][BUILD][DELETE][VERB] 0.1.0 ] FAIL:    timed [ 0.305179875 ] < [ 0.526182587 ].$
