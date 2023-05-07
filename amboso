@@ -3,7 +3,7 @@
 #prog_name="$0"
 
 prog_name="$(readlink -f "$0")"
-amboso_currvers="1.4.0"
+amboso_currvers="1.4.1"
 amboso_testflag_version="1.4.0"
 amboso_version="amboso version $amboso_currvers"
 
