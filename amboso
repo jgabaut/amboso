@@ -1304,7 +1304,7 @@ fi
 
 #We check the run flag to run the binary
 if [[ ! -z $version && $run_flag -eq 1 && -x $script_path/$exec_entrypoint ]] ; then {
-  echo -en "\n\033[0;32m[DEBUG]    Running script $script_path/$exec_entrypoint\e[0m"
+  echo -e "\n\033[0;32m[DEBUG]    Running script $script_path/$exec_entrypoint\e[0m"
   #echo -n "."
   #sleep 1
   #echo ""
