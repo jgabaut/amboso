@@ -1,6 +1,8 @@
-//Last edit: 08/05/23
 
-digraph G {
+
+digraph amboso {
+
+    start -> BEGIN
 
   subgraph cluster_0 {
     style=filled;
@@ -30,7 +32,7 @@ digraph G {
 
     check_macro -> is_macro;
     is_macro -> macro_test;
-    macro_test -> RUN_ALL_TESTS -> BEGIN [color=yellow];
+    macro_test -> RUN_ALL_TESTS //-> BEGIN [color=yellow];
     is_not_macro -> check_op_t;
     check_op_t -> run_test -> check_query_t;
     check_op_t -> rec_test -> check_query_t_phony;
@@ -39,7 +41,7 @@ digraph G {
     check_query_t -> check_query_t_success;
     check_query_t -> check_query_t_fail;
     check_op_t -> rec_all_test -> check_query_t_phony;
-    is_macro -> macro_rec_test -> RECORD_ALL_TESTS -> BEGIN [color=yellow];
+    is_macro -> macro_rec_test -> RECORD_ALL_TESTS //-> BEGIN [color=yellow];
     rec_all_test [color=palegreen];
     rec_test [color=palegreen];
     check_query_t_phony [color=palegreen];
@@ -51,7 +53,7 @@ digraph G {
     DELETE_GIT [shape=Msquare,color=red]
     git_mode -> consume_init_g;
     consume_init_g -> consume_BPD_g;
-    consume_init_g -> INIT_GIT -> BEGIN [color=lightblue];
+    consume_init_g -> INIT_GIT// -> BEGIN [color=lightblue];
     consume_BPD_g -> hasbuild_g -> check_query_g [color=darkgreen];
     consume_BPD_g -> hasdel_g -> check_query_g [color=red]
     consume_BPD_g -> check_query_g
@@ -79,7 +81,7 @@ digraph G {
     DELETE_BASE [shape=Msquare,color=red]
     base_mode -> consume_init_b;
     consume_init_b -> consume_BPD_b;
-    consume_init_b -> INIT_BASE -> BEGIN [color=darkorange];
+    consume_init_b -> INIT_BASE //-> BEGIN [color=darkorange];
     consume_BPD_b -> hasbuild_b [color=darkgreen];
     consume_BPD_b -> hasdel_b [color=red];
     consume_BPD_b -> check_query_b;
@@ -128,10 +130,10 @@ digraph G {
   INVALID_GIT_TAG -> query_fail [color=darkgreen];
   INVALID_GIT_TAG -> query_fail [color=red];
   query_success -> END;
-  query_success -> PURGE_BASE -> BEGIN [color=purple];
-  query_success -> PURGE_GIT -> BEGIN [color=pink];
-  query_fail -> PURGE_BASE -> BEGIN [color=purple];
-  query_fail -> PURGE_GIT -> BEGIN [color=pink];
+  query_success -> PURGE_BASE// -> BEGIN [color=purple];
+  query_success -> PURGE_GIT// -> BEGIN [color=pink];
+  query_fail -> PURGE_BASE //-> BEGIN [color=purple];
+  query_fail -> PURGE_GIT //-> BEGIN [color=pink];
   query_fail -> END;
   query_fail -> END [color=red];
   query_fail -> END [color=darkgreen];
