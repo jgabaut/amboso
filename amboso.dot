@@ -1,0 +1,138 @@
+//Last edit: 08/05/23
+
+digraph G {
+
+  subgraph cluster_0 {
+    style=filled;
+    color=white;
+    node [style=filled,color=grey];
+    BEGIN [shape=Msquare];
+    END [shape=Msquare]
+    PURGE_BASE [shape=Msquare,color=purple]
+    PURGE_GIT [shape=Msquare,color=pink]
+    query_success [shape=Msquare,color=palegreen]
+    query_fail [shape=Msquare,color=palegreen]
+    BEGIN -> check_lvl_rec;
+    check_lvl_rec -> lt_3;
+    check_lvl_rec -> ge_3;
+    ge_3 -> END
+    lt_3 -> get_flags;
+    get_flags -> echo_v -> END
+    get_flags -> check_mode
+    check_mode -> default_mode
+    get_flags -> echo_help -> END
+
+    node [style=filled, color=yellow];
+    test_mode -> check_macro;
+    check_macro -> is_not_macro;
+    RECORD_ALL_TESTS [shape=Msquare]
+    RUN_ALL_TESTS [shape=Msquare]
+
+    check_macro -> is_macro;
+    is_macro -> macro_test;
+    macro_test -> RUN_ALL_TESTS -> BEGIN [color=yellow];
+    is_not_macro -> check_op_t;
+    check_op_t -> run_test -> check_query_t;
+    check_op_t -> rec_test -> check_query_t_phony;
+    check_query_t_phony -> check_query_t_success;
+    check_query_t_phony -> check_query_t_fail;
+    check_query_t -> check_query_t_success;
+    check_query_t -> check_query_t_fail;
+    check_op_t -> rec_all_test -> check_query_t_phony;
+    is_macro -> macro_rec_test -> RECORD_ALL_TESTS -> BEGIN [color=yellow];
+    rec_all_test [color=palegreen];
+    rec_test [color=palegreen];
+    check_query_t_phony [color=palegreen];
+
+    node [style=filled,color=lightblue];
+    hasdel_g [color=red]
+    hasbuild_g [color=darkgreen]
+    BUILD_GIT [shape=Msquare,color=darkgreen]
+    DELETE_GIT [shape=Msquare,color=red]
+    git_mode -> consume_init_g;
+    consume_init_g -> consume_BPD_g;
+    consume_init_g -> INIT_GIT -> BEGIN [color=lightblue];
+    consume_BPD_g -> hasbuild_g -> check_query_g [color=darkgreen];
+    consume_BPD_g -> hasdel_g -> check_query_g [color=red]
+    consume_BPD_g -> check_query_g
+    check_query_g -> VALID_GIT_TAG [color=red]
+    check_query_g -> VALID_GIT_TAG [color=darkgreen];
+    check_query_g -> VALID_GIT_TAG [color=pink];
+    check_query_g -> VALID_GIT_TAG;
+    VALID_GIT_TAG -> BUILD_GIT [color=darkgreen]
+    VALID_GIT_TAG -> BUILD_GIT [color=pink]
+    VALID_GIT_TAG -> DELETE_GIT [color=red];
+    VALID_GIT_TAG -> DELETE_GIT [color=pink];
+    check_query_g -> INVALID_GIT_TAG;
+    check_query_g -> INVALID_GIT_TAG [color=pink];
+    check_query_g -> INVALID_GIT_TAG [color=darkgreen];
+    check_query_g -> INVALID_GIT_TAG [color=red];
+    consume_BPD_g -> has_purge_g -> check_query_g [color=pink];
+    has_purge_g [color=pink]
+    INIT_GIT [shape=Msquare,color=lightblue]
+
+
+    node [style=filled,color=darkorange];
+    hasdel_b [color=red]
+    hasbuild_b [color=darkgreen]
+    //BUILD_BASE [shape=Mdiamond]
+    DELETE_BASE [shape=Msquare,color=red]
+    base_mode -> consume_init_b;
+    consume_init_b -> consume_BPD_b;
+    consume_init_b -> INIT_BASE -> BEGIN [color=darkorange];
+    consume_BPD_b -> hasbuild_b [color=darkgreen];
+    consume_BPD_b -> hasdel_b [color=red];
+    consume_BPD_b -> check_query_b;
+    hasbuild_b -> check_query_b [color=darkgreen];
+    hasdel_b -> check_query_b [color=red];
+    check_query_b -> VALID_BASE_TAG;
+    check_query_b -> VALID_BASE_TAG [color=purple];
+    check_query_b -> VALID_BASE_TAG [color=red];
+    check_query_b -> VALID_BASE_TAG [color=darkgreen];
+    VALID_BASE_TAG -> BUILD_BASE [color=darkgreen]
+    VALID_BASE_TAG -> BUILD_BASE [color=purple]
+    VALID_BASE_TAG -> DELETE_BASE [color=red];
+    VALID_BASE_TAG -> DELETE_BASE [color=purple];
+    check_query_b -> INVALID_BASE_TAG;
+    check_query_b -> INVALID_BASE_TAG [color=red];
+    check_query_b -> INVALID_BASE_TAG [color=darkgreen];
+    check_query_b -> INVALID_BASE_TAG [color=purple];
+    consume_BPD_b -> has_purge_b -> check_query_b [color=purple];
+    has_purge_b [color=purple];
+    INIT_BASE [shape=Msquare,color=darkorange]
+    BUILD_BASE [shape=Msquare,color=darkgreen]
+    label = "AMBOSO";
+  }
+  check_mode -> test_mode;
+  check_mode -> git_mode;
+  check_mode -> base_mode;
+  default_mode -> git_mode;
+  check_query_t_success -> query_success;
+  VALID_GIT_TAG -> query_success;
+  VALID_BASE_TAG -> query_success;
+  BUILD_BASE -> query_success [color=darkgreen];
+  BUILD_BASE -> query_success [color=purple];
+  DELETE_BASE -> query_success [color=red];
+  DELETE_BASE -> query_success [color=purple];
+  BUILD_GIT -> query_success [color=darkgreen];
+  BUILD_GIT -> query_success [color=pink];
+  DELETE_GIT -> query_success [color=red];
+  DELETE_GIT -> query_success [color=pink];
+  check_query_t_fail -> query_fail;
+  INVALID_BASE_TAG -> query_fail;
+  INVALID_BASE_TAG -> query_fail [color=red];
+  INVALID_BASE_TAG -> query_fail [color=purple];
+  INVALID_BASE_TAG -> query_fail [color=darkgreen];
+  INVALID_GIT_TAG -> query_fail;
+  INVALID_GIT_TAG -> query_fail [color=pink];
+  INVALID_GIT_TAG -> query_fail [color=darkgreen];
+  INVALID_GIT_TAG -> query_fail [color=red];
+  query_success -> END;
+  query_success -> PURGE_BASE -> BEGIN [color=purple];
+  query_success -> PURGE_GIT -> BEGIN [color=pink];
+  query_fail -> PURGE_BASE -> BEGIN [color=purple];
+  query_fail -> PURGE_GIT -> BEGIN [color=pink];
+  query_fail -> END;
+  query_fail -> END [color=red];
+  query_fail -> END [color=darkgreen];
+}
