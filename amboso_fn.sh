@@ -1,3 +1,4 @@
+AMBOSO_API_LVL="1.4.3"
 at () {
     echo -n "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -33,7 +34,7 @@ trace () {
   fi
 }
 
-function echo_current_tags {
+function echo_active_flags {
   echo -e "[DEBUG]    Current flags:\n"
   echo -en "           [MODE]    -"
   [[ $small_test_mode_flag -gt 0 ]] && echo -n "t"
@@ -426,6 +427,7 @@ function run_test {
 }
 
 function delete_test {
+  #WIP
   tfp="$1" # test_file_path
   (
     echo "deleting $tfp" 2>/dev/null
