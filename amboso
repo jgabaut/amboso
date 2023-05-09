@@ -1,27 +1,40 @@
 #!/bin/bash
 # Bash script to run a milestone build providing the version number.
-#prog_name="$0"
 
-prog_name="$(readlink -f "$0")"
-amboso_currvers="1.4.1"
-amboso_testflag_version="1.4.0"
-amboso_version="amboso version $amboso_currvers"
+at () {
+    echo -n "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
+    for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
+    printf '<%s:%s> ' "${FUNCNAME[i]}" "${BASH_LINENO[i]}";
+    done
+    echo "$LINENO"
+}
 
-PARENT_COMMAND=$(ps -o comm= $PPID)
-[[ $verbose_flag -gt 0 ]] && echo parent is $PARENT_COMMAND
+backtrace () {
+   #[[ $tracing -eq 0 ]] && echo -n "{ [MAIN] at: $trace_line } -> {"
+   if [[ $trace_line -eq 0 ]] ; then {
+     echo -e "\n\n\n\n{ [$(( $trace_line ))] [ trace at) "
+   } else {
+     at echo -e "["
+   }
+   fi
+   trace_line=1
+   while caller "$trace_line"
+   do
+      #echo "]"
+      trace_line=$((trace_line+1))
+      #echo -n "at [ $(( $trace_line  )) ] ["
+   done
+   echo "} -> "
+}
 
-# set env var if not exists
-export AMBOSO_LVL_REC="${AMBOSO_LVL_REC:-0}"
-
-# check recursion
-if [[ "${AMBOSO_LVL_REC}" -le "2" ]]; then
-  [[ $PARENT_COMMAND = "$prog_name" ]] && echo "what" && exit 1
-else
-  echo -e "\n[AMBOSO]    Exceeded depth for recursion ( nested ${AMBOSO_LVL_REC} times).\n"
-  exit 69
-fi
-# increment depth counter
-export AMBOSO_LVL_REC=$(($AMBOSO_LVL_REC+1))
+trace () {
+  if [[ $trace_flag -gt 0 ]] ; then {
+   backtrace
+  } else {
+   :
+  }
+  fi
+}
 
 function echo_current_tags {
   echo -e "[DEBUG]    Current flags:\n"
@@ -400,6 +413,43 @@ function delete_test {
   }
   fi
 }
+main_at=409
+#PROG_START_LINE
+prog_start_line="409"
+trace_flag=0
+trace_line="421"
+# Check env var to enable backtrace
+if [[ ${AMBOSO_TRACING} -gt 0 ]]; then {
+  trace_line=0
+  trace_flag=1;
+  printf "\033[0;37m[TRACE]    Tracing started.\e[0m\n" >&2
+  trap backtrace DEBUG ERR
+} else {
+  : #echo "{No trace}" >&2
+}
+fi
+prog_name="$(readlink -f "$0")"
+amboso_currvers="1.4.1"
+amboso_testflag_version="1.4.0"
+amboso_version="amboso version $amboso_currvers"
+
+PARENT_COMMAND=$(ps -o comm= $PPID)
+[[ $verbose_flag -gt 0 ]] && echo parent is $PARENT_COMMAND
+
+# set env var if not exists
+export AMBOSO_LVL_REC="${AMBOSO_LVL_REC:-0}"
+
+# check recursion
+if [[ "${AMBOSO_LVL_REC}" -le "2" ]]; then
+  [[ $PARENT_COMMAND = "$prog_name" ]] && echo "what" && exit 1
+else
+  echo -e "\n[AMBOSO]    Exceeded depth for recursion ( nested ${AMBOSO_LVL_REC} times).\n"
+  exit 69
+fi
+# increment depth counter
+export AMBOSO_LVL_REC=$(($AMBOSO_LVL_REC+1))
+
+
 
 #Prepare flag values to default value
 purge_flag=0
@@ -511,6 +561,8 @@ while getopts "M:S:E:D:K:BgVbpHhrivdlLtTq" opt; do
   esac
 tot_opts=$OPTIND
 done
+
+[[ $verbose_flag -gt 0 ]] && echo -e "\033[0;32m[DEBUG]    Done getopts.\e[0m" >&2 && echo_current_tags >&2
 
 #Won't print call info for top level calls
 if [[ ${AMBOSO_LVL_REC} -gt 1 ]] ; then {
@@ -1424,4 +1476,6 @@ if [[ purge_flag -gt 0 ]]; then
   }
   fi
 fi
+
+
 exit 0
