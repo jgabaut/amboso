@@ -301,49 +301,6 @@ function echo_supported_tags {
   echo ""
 }
 
-function echo_options {
-  echo -e "\n    [MODES]:\n"
-  echo -e "        -B        base mode\n"
-  echo -e "                Uses full source builds. Not recommended.\n"
-  echo -e "        -g        git mode\n"
-  echo -e "                Uses git checkouts of supported tags. Enabled by default.\n"
-  echo -e "        -T        test mode\n"
-  echo -e "                Tries the queried test.\n"
-  echo -e "    [OPERATIONS]:\n"
-  echo -e "        -b        build\n"
-  echo -e "                Tries building the binary if it's not available.\n"
-  echo -e "        -r        run\n"
-  echo -e "                Specifies you want to run the tag.\n"
-  echo -e "        -d        delete\n"
-  echo -e "                Deletes queried tag binary and quits.\n"
-  echo -e "        -i        init\n"
-  echo -e "                Tries building all supported versions.\n"
-  echo -e "        -p        purge\n"
-  echo -e "                Removes all tags binaries and quits.\n"
-  echo -e "    [OPTIONS]:\n"
-  echo -e "        -D TARGET_DIR        directory\n"
-  echo -e "                Specifies target directory\n"
-  echo -e "        -E TARGET_EXEC       executable\n"
-  echo -e "                Specifies target executable name\n"
-  echo -e "        -S TARGET_SOURCE       sourcename\n"
-  echo -e "                Specifies sourcefile name for single file mode.\n"
-  echo -e "        -M MAKEFILE_SUPPORT       tagname\n"
-  echo -e "                Specifies a tag name for lowest version to support make.\n"
-  echo -e "        -K TEST_FOLDER       path\n"
-  echo -e "                Specifies a relative dirname for test folder.\n"
-  echo -e "    [INFO]:\n"
-  echo -e "        -l/L        list\n"
-  echo -e "                Prints supported tags for current mode (all modes if L) and quits.\n"
-  echo -e "        -q        quiet\n"
-  echo -e "                Less debug output, recursive.\n"
-  echo -e "        -V        verbose\n"
-  echo -e "                More debug output.\n"
-  echo -e "        -h/H        help\n"
-  echo -e "                Prints help info (paged if -h) and quits.\n"
-  echo -e "        -v        version\n"
-  echo -e "                Prints version message and quits.\n"
-}
-
 function git_mode_check {
   is_git_repo=0
   #Check if we're inside a repo
@@ -353,13 +310,72 @@ function git_mode_check {
   [[ $verbose_flag -gt 0 ]] && echo -e "\033[1;34m[MODE]    Running in git mode.\e[0m" >&2
 }
 
+function amboso_help {
+  usage
+  echo -e "Arguments:
+
+  [-D ...]    BINDIR    Sets directory used to host tags
+
+      [-K ...]    TESTDIR    Sets directory used to host tests
+
+  [-S ...]    SOURCENAME    Sets name for target main source
+
+  [-E ...]    EXECNAME    Sets name for target executable
+
+    [-M ...]    MAKETAG    Sets minimum tag for using make as build/clean step
+
+  [-tgBT]    mode    Sets run mode
+
+        Building:
+
+    -g    git mode    (Default)
+
+    -B    base mode    (Expects a full source copy of every tag. Not recommended.)
+
+        Testing:
+
+    -T    test mode    (Tests TAG_QUERY)
+
+    -t    test macro    (Recurses as -T\"\$PASSED_FLAGS\" on all tests)
+
+  [-bripd]    operation    Combined operations on current tag.
+
+          The operation changes semantics in test mode.
+
+      In the order they are consumed from a top call:
+
+    -i    init    (Recurses as -b\"\$MODE_FLAG\"\"\$PASSED_FLAGS\" on all tags for current build mode)
+                  (TEST: record all test results)
+
+    -b    build    Build TAG_QUERY
+                  (TEST: record TAG_QUERY test results. If using -t for the macro, it's the same as -i)
+
+    -r    run    Run TAG_QUERY (ATM unused in test mode)
+
+    -d    delete    Delete TAG_QUERY (ATM unused in test mode)
+
+    -p    purge    (Recurses as -b\"\$MODE_FLAG\"\"\$PASSED_FLAGS\" on all tags for current build mode)
+
+  [-hHvVlLq]    info    Change text output for the program.
+
+    -hH    help    Prints help info (-h is paged)
+    -v    version    Prints current version and quits
+    -V    verbose    More verbose output, can be >1
+    -lL    list    Lists all valid tags (-L ignores current build mode to check for tags)
+    -q    quiet    Less output (useful but not well implemented, recommended on recursive calls)
+
+  [...]    TAG_QUERY    Ask a tag for current mode
+
+        Reports if target executable name for TAG_QUERY was found at BINDIR/vTAG_QUERY/EXECNAME.\n"
+
+}
+
 function usage {
-  echo -e "Usage: $(basename $prog_name) [OPTION]... VERSION_QUERY\n"
-  echo "    Query for a build version"
+  echo -e "Usage:  $(basename $prog_name) [(-D|-K|-M|-S|-E) ...ARGS] [-TBtg] [-bripd] [-hHvVlLq] [TAG_QUERY]\n"
+  echo -e "    Query for a build version\n"
   #echo_supported_tags "$milestones_dir"
   #echo ""
   #echo_othermode_tags "$milestones_dir"
-  echo_options
 }
 
 function escape_colorcodes_tee {

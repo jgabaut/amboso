@@ -2,7 +2,7 @@
 # Bash script to run a milestone build providing the version number.
 # Set recursion env var if not exists
 prog_name="$(readlink -f "$0")"
-amboso_currvers="1.4.2"
+amboso_currvers="1.4.3-devel"
 amboso_testflag_version="1.4.0"
 export AMBOSO_LVL_REC="${AMBOSO_LVL_REC:-0}"
 # check recursion
@@ -142,7 +142,6 @@ if [[ $(basename $(pwd)) == "amboso" ]] ; then {
   fi
 } else {
   amboso_fn_path="$(realpath $(pwd))/amboso/amboso_fn.sh"
-  echo "$amboso_fn_path"
   if [[ -f $amboso_fn_path ]] ; then {
     [[ $verbose_flag -gt 1 ]] && echo -e "\033[0;37m[PREP]    Running in amboso dir. Sourcing: \"$amboso_fn_path\".\e[0m" >&2
     source "$amboso_fn_path";
@@ -271,10 +270,10 @@ if [[ $smallhelp_flag -gt 0 ]]; then {
     exit 1
   }
   fi
-  (echo_amboso_version
-  set_source_info "$milestones_dir"
-  set_supported_versions "$milestones_dir"
-  usage) | less
+  echo_amboso_version
+  usage
+
+  echo -e "Try running with with -H for more info.\n"
   #"$prog_name" -H -D "$milestones_dir" | less
   exit 0
 }
@@ -289,7 +288,7 @@ if [[ $bighelp_flag -gt 0 ]]; then {
   echo_amboso_version
   set_source_info "$milestones_dir"
   set_supported_versions "$milestones_dir"
-  usage
+  amboso_help
   exit 0
 }
 fi
