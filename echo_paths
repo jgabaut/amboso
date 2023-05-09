@@ -1,0 +1,33 @@
+#!/bin/bash
+#Calls python to output closed loops from 'BEGIN' to passed endNode
+
+function echo_paths {
+PY_DOTFILE="$1" PY_ENDTAG="$2" python3 - <<PY_wrap
+import sys
+import os
+from sys import argv
+import networkx as nx
+from networkx.drawing.nx_agraph import read_dot
+dotfile = (os.environ['PY_DOTFILE'])
+endnode = (os.environ['PY_ENDTAG'])
+
+if ( dotfile == "" or endnode == "" ):
+	print("Wrong arguments, syntax:\n\n    {} [\"file.dot\"] [endNode]".format(argv[0])) ; exit ;
+else:
+# read the dot file as a networkx DiGraph object
+	G = read_dot(dotfile)
+
+# set the source and destination nodes
+	node1 = 'BEGIN'
+	node2 = endnode
+
+# find all simple paths between node1 and node2
+	paths = list(nx.all_simple_paths(G, source=node1, target=node2))
+
+# print the paths
+	for path in paths:
+    		print(' -> '.join(path))
+PY_wrap
+}
+
+echo_paths "$1" "$2"
