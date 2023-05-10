@@ -1,4 +1,4 @@
-AMBOSO_API_LVL="1.4.3"
+AMBOSO_API_LVL="1.4.4-devel"
 at () {
     echo -n "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -43,7 +43,13 @@ function echo_active_flags {
   [[ $base_mode_flag -gt 0 ]] && echo -n "B"
   echo ""
   echo -en "           [OP]    -"
-  [[ $verbose_flag -gt 0 ]] && echo -n "V"
+  if [[ $verbose_flag -gt 0 ]] ; then {
+    for verb_lv in $(seq 0 $(($verbose_flag-1))) ; do {
+      echo -n "V"
+    }
+    done
+  }
+  fi
   [[ $quiet_flag -gt 0 ]] && echo -n "q"
   [[ $init_flag -gt 0 ]] && echo -n "i"
   [[ $build_flag -gt 0 ]] && echo -n "b"
@@ -364,6 +370,7 @@ function amboso_help {
     -V    verbose    More verbose output, can be >1
     -lL    list    Lists all valid tags (-L ignores current build mode to check for tags)
     -q    quiet    Less output (useful but not well implemented, recommended on recursive calls)
+    -s    silent    Way less output (Some output expected on stderr before the flag is applied)
 
   [...]    TAG_QUERY    Ask a tag for current mode
 
