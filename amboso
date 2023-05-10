@@ -8,9 +8,9 @@ if [[ "$EUID" -eq 0 ]] ; then {
 fi
 # Set recursion env var if not exists
 prog_name="$(readlink -f "$0")"
-amboso_currvers="1.4.4-devel"
-expected_AMBOSO_API_LVL="1.4.4-devel"
-amboso_testflag_version="1.4.0"
+amboso_currvers="1.4.4"
+expected_AMBOSO_API_LVL="1.4.4"
+amboso_testflag_version="1.4.4"
 export AMBOSO_LVL_REC="${AMBOSO_LVL_REC:-0}"
 # check recursion
 if [[ "${AMBOSO_LVL_REC}" -le "2" ]]; then
