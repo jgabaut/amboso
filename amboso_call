@@ -1,0 +1,35 @@
+#!/bin/bash
+
+flags="$1"
+query="$2"
+
+#Must always add B to not use git mode
+echo -e "[API]    Add B to the flags to not use git mode by default.\n"
+
+start_t_call=`date +%s.%N`
+"./amboso" -sVVV -"$flags" "$query"
+res="$?"
+end_t_call=`date +%s.%N`
+runtime_call=$( echo "$end_t_call - $start_t_call" | bc -l )
+display_zero=$(echo $runtime_call | cut -d '.' -f 1)
+  if [[ -z $display_zero ]]; then {
+    display_zero="0"
+  } else {
+    display_zero=""
+  }
+  fi
+
+if [[ $res -eq 0 ]] ; then {
+  header="\033[1;32m[API]\e[0m"
+} elif [[ $res -gt 1 ]] ; then {
+  header="\033[1;34m[API]\e[0m"
+} else {
+  header="\033[1;31m[API]\e[0m"
+}
+fi
+
+echo -e "$header    Got ($res), Operation was: [$flags] Query was: [$query] ).\n"
+echo -e "$header    Took $display_zero$runtime_call seconds.\n"
+
+exit "$res"
+

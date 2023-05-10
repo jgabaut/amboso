@@ -1,3 +1,3 @@
-[VERS]    amboso version 1.4.3 e: 0 r: 0$
+[VERS]    amboso version 1.4.4-devel e: 0 r: 0$
 [BASE][QUIET][BUILD][DELETE] 0.1.0 e: 0 r: 0$
-[ BbdV 0.1.0 ] < [ [BASE][QUIET][BUILD][DELETE] 0.1.0 ] FAIL:    timed [ 0.457028604 ] < [ 0.463291363 ].$
+[ BbdV 0.1.0 ] < [ [BASE][QUIET][BUILD][DELETE] 0.1.0 ] FAIL:    timed [ 0.478984005 ] < [ 0.491962936 ].$
