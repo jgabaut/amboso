@@ -1,5 +1,11 @@
 #!/bin/bash
 # Bash script to run a milestone build providing the version number.
+# Will refuse to run as root. We don't need root privileges in here.
+if [[ "$EUID" -eq 0 ]] ; then {
+  echo "[AMBOSO]    Please don't run me as root."
+  exit 3
+}
+fi
 # Set recursion env var if not exists
 prog_name="$(readlink -f "$0")"
 amboso_currvers="1.4.4-devel"
@@ -743,7 +749,7 @@ if [[ $test_mode_flag -gt 0 ]]; then {
   ran_res="$?"
 
   if [[ $ran_res -eq 69 ]] ; then {
-    echo -e "\033[1;31m[PANIC]    Test call returned 69, we clean tmpfiles and follow suit.\e[0m"
+    echo -e "\033[1;31m[WARN]    Test call returned 69, we clean tmpfiles and follow suit.\e[0m"
     #Delete tmpfiles
     rm -f "$run_tmp_out" || echo -e "\033[1;31m[ERROR]    Failed removing tmpfile ($run_tmp_out). Why?\e[0m\n"
     [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;32m[TEST]    Removed tempfile "$run_tmp_out".\e[0m" >&2
