@@ -1,4 +1,4 @@
-AMBOSO_API_LVL="1.4.4"
+AMBOSO_API_LVL="1.4.5-devel"
 at () {
     echo -n "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -196,7 +196,7 @@ function set_supported_tests {
     fi
     if ! [[ -f $test_fp && -x $test_fp ]] ; then {
       skipped=$((skipped+1))
-      echo -e "\033[0;36m[PREP-TEST]    Skip test \"$FILE\" (at $(dirname $test_fp)), not an executable.\e[0m" >&2
+      [[ $verbose_flag -gt 1 ]] && echo -e "\033[0;36m[PREP-TEST]    Skip test \"$FILE\" (at $(dirname $test_fp)), not an executable.\e[0m" >&2
       continue
     }
     fi
@@ -216,7 +216,7 @@ function set_supported_tests {
     fi
     if ! [[ -f $test_fp && -x $test_fp ]] ; then {
       skipped=$((skipped+1))
-      echo -e "\033[0;36m[PREP-TEST]    Skip errtest \"$FILE\" (at $(basename $test_fp)), not an executable.\e[0m" >&2
+      [[ $verbose_flag -gt 1 ]] && echo -e "\033[0;36m[PREP-TEST]    Skip errtest \"$FILE\" (at $(basename $test_fp)), not an executable.\e[0m" >&2
       continue
     }
     fi
