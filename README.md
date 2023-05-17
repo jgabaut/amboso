@@ -18,17 +18,10 @@ To see how this marvelous work of art works, run:
 $ ./try_anvil
 ```
 
-TODO: I should probably update `./try_anvil` to show usage of test commands, should some soon.
+TODO: I should probably update `./try_anvil` to show usage of test commands, should come soon.
 Altought I expect some headache due to the backtrace, we'll see.
 
 For now consider:
-
-## Options and usage, hard failure
-
-I'll tell you that even the help option can fail, if you don't point this child to where your targets are and rely on naming your compliant folder "./bin/".
-You have a bin/ directory in the repo to test this behaviour.
-
-You should rely on your `stego.lock` file to ensure you don't have to retype arguments you're 100% positive are correct, just to get the damn thing to build.
 
 ## stego.lock
 
@@ -44,15 +37,22 @@ Definition of a base-mode tag **must** start with a '?', like so
 ```
 The '?' character will not be a part of your tag name, it only marks base-mode tags when at the start of a tag name.
 
+## Options and usage, hard failure
+
+I'll tell you that even the help option can fail, if you don't point this child to where your targets are and rely on naming your compliant folder "./bin/".
+You have a bin/ directory in the repo to test this behaviour.
+
+You should rely on your `stego.lock` file to ensure you don't have to retype arguments you're 100% positive are correct, just to get the damn thing to build.
+
 ## kazoj/
 
-Contains a directory for each test group, ATM there's one for successful tests and one for failures. The two subdirectories **must** be called, respectively:
+Contains a directory for each test group, ATM there's one for successful tests and one for failures. The two subdirectories can have any name and they are to be specified in `kazoj.lock`. Canonic names are, respectively:
 - `bone` : The general directory, for successful tests
 - `kulpo` : The error directory, for failure tests
 
 You should have your own `kazoj` directory (which you can specify in `stego.lock`), in your super-repo.
 And there, there should be a `kazoj.lock` file to remember the names of your cases/errors folders.
-Maybe run it with your super-repo `anvil` symlink? :)
+Maybe run it with your super-repo `anvil` symlink.
 
 ## Test mode
 
