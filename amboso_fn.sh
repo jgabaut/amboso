@@ -1,4 +1,4 @@
-AMBOSO_API_LVL="1.4.5-devel"
+AMBOSO_API_LVL="1.4.5"
 at () {
     echo -n "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -196,7 +196,7 @@ function set_supported_tests {
     fi
     if ! [[ -f $test_fp && -x $test_fp ]] ; then {
       skipped=$((skipped+1))
-      [[ $verbose_flag -gt 1 ]] && echo -e "\033[0;36m[PREP-TEST]    Skip test \"$FILE\" (at $(dirname $test_fp)), not an executable.\e[0m" >&2
+      [[ $verbose_flag -gt 1 && $quiet_flag -eq 0 ]] && echo -e "\033[0;36m[PREP-TEST]    Skip test \"$FILE\" (at $(dirname $test_fp)), not an executable.\e[0m" >&2
       continue
     }
     fi
@@ -210,13 +210,13 @@ function set_supported_tests {
     extens=$(echo "$(realpath $FILE)" | cut -d '.' -f '2')
     if [[ $extens = "stderr" || $extens = "stdout" ]] ; then {
       skipped=$((skipped+1))
-      [[ $verbose_flag -gt 0 && $quiet_flag -eq 0 ]] && echo -e "\033[0;37m[PREP-TEST]    Skip record $FILE (at $(dirname $test_fp)).\e[0m" >&2
+      [[ $verbose_flag -gt 1 && $quiet_flag -eq 0 ]] && echo -e "\033[0;37m[PREP-TEST]    Skip record $FILE (at $(dirname $test_fp)).\e[0m" >&2
       continue
     }
     fi
     if ! [[ -f $test_fp && -x $test_fp ]] ; then {
       skipped=$((skipped+1))
-      [[ $verbose_flag -gt 1 ]] && echo -e "\033[0;36m[PREP-TEST]    Skip errtest \"$FILE\" (at $(basename $test_fp)), not an executable.\e[0m" >&2
+      [[ $verbose_flag -gt 1 && $quiet_flag -eq 0 ]] && echo -e "\033[0;36m[PREP-TEST]    Skip errtest \"$FILE\" (at $(basename $test_fp)), not an executable.\e[0m" >&2
       continue
     }
     fi
@@ -363,14 +363,15 @@ function amboso_help {
 
     -p    purge    (Recurses as -b\"\$MODE_FLAG\"\"\$PASSED_FLAGS\" on all tags for current build mode)
 
-  [-hHvVlLq]    info    Change text output for the program.
+  [-hHvVlLqc]    info    Change text output for the program.
 
-    -hH    help    Prints help info (-h is paged)
+    -hH    help    Prints help info
     -v    version    Prints current version and quits
     -V    verbose    More verbose output, can be >1
     -lL    list    Lists all valid tags (-L ignores current build mode to check for tags)
     -q    quiet    Less output (useful but not well implemented, recommended on recursive calls)
     -s    silent    Way less output (Some output expected on stderr before the flag is applied)
+    -c    control    Output dotfile \'amboso_cfg.dot\' while running.
 
   [...]    TAG_QUERY    Ask a tag for current mode
 
@@ -379,7 +380,7 @@ function amboso_help {
 }
 
 function usage {
-  echo -e "Usage:  $(basename $prog_name) [(-D|-K|-M|-S|-E) ...ARGS] [-TBtg] [-bripd] [-hHvVlLq] [TAG_QUERY]\n"
+  echo -e "Usage:  $(basename $prog_name) [(-D|-K|-M|-S|-E) ...ARGS] [-TBtg] [-bripd] [-hHvVlLqc] [TAG_QUERY]\n"
   echo -e "    Query for a build version\n"
   #echo_supported_tags "$milestones_dir"
   #echo ""

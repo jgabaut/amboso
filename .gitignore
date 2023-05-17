@@ -13,3 +13,5 @@ hello_world_debug
 
 #ignore dot output
 logic.png
+#ignore cfg dot output
+amboso_cfg.dot
