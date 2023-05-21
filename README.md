@@ -27,19 +27,19 @@ For now consider:
 
 This file contains user-defined tags for supported versions and fundamental CLI arguments you don't want to type again.
 
-Defined tags are terminated by a **mandatory** # character, which marks start of comment.
+Defined tags are terminated by a `#` character, which marks start of comment.
 
 You can define either git-mode tags or base-mode tags , each supported when running in the corresponding mode.
 
-Definition of a base-mode tag **must** start with a '?', like so
+Definition of a base-mode tag **must** start with a `?`, like so
 ```
 ?my_value=1# A nice comment
 ```
-The '?' character will not be a part of your tag name, it only marks base-mode tags when at the start of a tag name.
+The `?` character will not be a part of your tag name, it only marks base-mode tags when at the start of a tag name.
 
 ## Options and usage, hard failure
 
-I'll tell you that even the help option can fail, if you don't point this child to where your targets are and rely on naming your compliant folder "./bin/".
+I'll tell you that even the help option can fail, if you don't point this child to where your targets are and rely on naming your compliant folder `./bin/`.
 You have a bin/ directory in the repo to test this behaviour.
 
 You should rely on your `stego.lock` file to ensure you don't have to retype arguments you're 100% positive are correct, just to get the damn thing to build.
@@ -197,3 +197,20 @@ Tags supported by amboso running in git mode would be a subset of ` git tag -l `
 ## Why would I use this when I can generate a Makefile automatically, or something?
 
 Good question, you shouldn't. No reason at all. Go back to your serious build system and leave these silly kid scripts to me.
+
+## Local installation
+
+Running:
+
+```
+sudo make install
+```
+
+copies `amboso_fn.sh` and `amboso` (renamed as `anvil`) to `/usr/local/bin`.
+
+This allows calls to amboso plug into any directory, by having a default path.
+
+Not much useful by itself, since you won't probably have a compliant `stego.lock` in a random directory.
+May be useful to me to anchor a default version locally.
+
+Run `sudo make uninstall` to clean the installed files.

@@ -8,8 +8,8 @@ if [[ "$EUID" -eq 0 ]] ; then {
 fi
 # Set recursion env var if not exists
 prog_name="$(readlink -f "$0")"
-amboso_currvers="1.4.5"
-expected_AMBOSO_API_LVL="1.4.5"
+amboso_currvers="1.4.6"
+expected_AMBOSO_API_LVL="1.4.6"
 amboso_testflag_version="1.4.4"
 export AMBOSO_LVL_REC="${AMBOSO_LVL_REC:-0}"
 # check recursion
@@ -185,7 +185,7 @@ if [[ $(basename $(pwd)) == "amboso" ]] ; then {
     [[ $verbose_flag -gt 1 ]] && echo -e "\033[0;35m[PREP]    Running inside amboso dir. Sourcing: \"$amboso_fn_path\".\e[0m" >&2
     source "$amboso_fn_path";
     source_res="$?"
-    [[ $source_res -ne 0 ]] && echo -e "\033[1;34m[PREP]    Failed loading amboso_fn.\n\n    Using file: \"$amboso_fn_path\".\e[0m" >&2
+    [[ $source_res -ne 0 ]] && echo -e "\033[1;31m[PREP]    Failed loading amboso_fn.\n\n    Using file: \"$amboso_fn_path\".\e[0m" >&2 && exit 3
   } else {
     echo -e "\033[1;31m[ERROR]    Couldn't load amboso_fn, check your symlinks.\e[0m"
     exit 2
@@ -193,21 +193,34 @@ if [[ $(basename $(pwd)) == "amboso" ]] ; then {
   fi
 } else {
   amboso_fn_path="$(realpath $(pwd))/amboso/amboso_fn.sh"
+  found_amboso_dir=0
+  [[ $verbose_flag -gt 1 ]] && echo -e "\033[0;33m[PREP]    Assuming we are running in super-repo. Sourcing: \"$amboso_fn_path\".\e[0m" >&2
+  [[ -d "$(realpath $(pwd))"/amboso ]] && found_amboso_dir=1
+  [[ $verbose_flag -gt 1 && $found_amboso_dir -gt 0 ]] && echo -e "\033[0;32m[PREP]    Found amboso dir.\e[0m" >&2
   if [[ -f $amboso_fn_path ]] ; then {
-    [[ $verbose_flag -gt 1 ]] && echo -e "\033[0;35m[PREP]    Running in super-repo. Sourcing: \"$amboso_fn_path\".\e[0m" >&2
+    [[ $verbose_flag -gt 1 ]] && echo -e "\033[0;35m[PREP]    Valid file at: \"$amboso_fn_path\".\e[0m" >&2
     source "$amboso_fn_path";
     source_res="$?"
     [[ $source_res -ne 0 ]] && echo -e "\033[1;31m[PREP]    Failed loading amboso_fn.\n\n    Using file: \"$amboso_fn_path\".\e[0m" >&2
   } else {
-    echo -e "\033[1;31m[ERROR]    Couldn't load amboso_fn, check your symlinks.\e[0m"
-    exit 2
+    [[ $quiet_flag -eq 0 ]] && echo -e "\033[0;31m[WARN]    \"$amboso_fn_path\" was not a valid file. Not in valid super-repo.\e[0m" >&2 && try_default=1
+  }
+  fi
+  if [[ $try_default -eq 1 && -f /usr/local/bin/amboso_fn.sh ]] ; then { #We only enter here if we failed sourcing
+    #We need one more error message to show me are missing functions because of an amboso directory with no file.
+    [[ $found_amboso_dir -gt 0 ]] && echo -e "\033[1;31m[WARN]   Deprecated amboso dir (< 1.4.3) found, as it doesn't provide a function api marker.\e[0m\n" >&2 && exit 3
+    amboso_fn_path="/usr/local/bin/amboso_fn.sh"
+    [[ $quiet_flag -eq 0 ]] && echo -e "\033[0;35m[WARN]    Fallback to default path for amboso_fn. Sourcing: \"$amboso_fn_path\".\e[0m" >&2
+    source "$amboso_fn_path";
+    source_res="$?"
+    [[ $source_res -ne 0 ]] && echo -e "\033[1;31m[PREP]    Failed loading amboso_fn. Quitting.\n\n    Using file: \"$amboso_fn_path\".\e[0m" >&2 && exit 3
   }
   fi
 }
 fi
 
 if [[ $source_res -ne 0 ]] ; then {
-  echo -e "\033[1;31m[PANIC]    Can't find amboso_fn. Expected path: \"$amboso_fn_path\".\e[0m"
+  echo -e "\033[1;31m[PANIC]    Failed sourcing amboso_fn. Expected path: \"$amboso_fn_path\".\e[0m"
   app "$(echo_node begin_node failed_sourcing_fn)"
   app "$(echo_node failed_sourcing_fn end_node)"
   end_digraph
