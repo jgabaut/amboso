@@ -35,9 +35,14 @@ I did not want to learn how to write nice makefiles or chaining a couple git com
 
 ## Prerequisites <a name = "prerequisites"></a>
 
-* At the moment the only supported build step command is `make`. This means you use make without providing a task name. 
+* At the moment the only supported build step command is `make`. This means you use make without providing a task name.
+
+* You should test you have `bc` installed, since it's used to calc runtimes.
+
+* You definitely need `bash`, I'm using version `5.1.x` but for now I don't know about incompatible features used here.
+
 * If you want to try how it works by using this repo's `./bin` dir as an example (or this repo in general) you will need:
-  * gcc, for building `helloworld`
+  * `gcc`, for building `helloworld`
 
 ## See how it behaves <a name = "tryanvil"></a>
 
@@ -49,7 +54,20 @@ $ ./try_anvil
 
 ## try-anvil
 
-Backtraced script running `./anvil` with various flags using the provided ./bin example references.
+All commands ran by the script will be shown on screen with a `+` before them.
+
+It's a script running `./anvil` with various flags using the provided ./bin example references, so you can see how to call amboso with different flags.
+
+### Note
+
+- The script symlinks `amboso` to `./anvil`, using `ln -s PATH_TO/amboso/amboso ./anvil`.
+
+  - If you include this repo as a submodule, you should also do the same and have the `anvil` link in your main repo directory, so you can call that instead of `REPO/amboso/amboso`.
+
+  - If you installed `anvil` globally with `sudo make install`, you should be mindful of different anvil versions if you are using this repo as a submodule.
+
+  - When running inside a dir containing an `amboso` folder, `anvil` will try to source `amboso_fn.sh` from `./amboso/amboso_fn.sh` instead of the file located inside global installation `/usr/local/bin/amboso_fn.sh`.
+  - You should see a warning message if a version mismatch occurs.
 
 This command hints you to symlinking `./amboso` to `super_repo/anvil`, and shows differents outputs based on the queries made.
 
@@ -78,8 +96,15 @@ The `?` character will not be a part of your tag name, it only marks base-mode t
 
 I'll tell you that even the help option can fail, if you don't point this child to where your targets are and rely on naming your compliant folder `./bin/`.
 You have a bin/ directory in the repo to test this behaviour.
+Locating folders is probably the only thing this script does, yet you still have to make sure to setup a proper amboso base directory with the targets dirs, and the `stego.lock` file.
 
 You should rely on your `stego.lock` file to ensure you don't have to retype arguments you're 100% positive are correct, just to get the damn thing to build.
+
+### Note
+
+Since I've been using `/bin/` as a target dir myself, I haven't tested the script too much with the passing a different dirname with -D flag.
+
+I will look into this to ensure you don't have to stick to this name for the target directory.
 
 ## bin/
 
@@ -231,5 +256,5 @@ Run `sudo make uninstall` to clean the installed files.
 
 ## Todo <a name = "todo"></a>
 
-* Since the script is just selecting your `stego.lock` file to find the path to the correct target dir for your tag, we could try to use something other than `make`. 
+* Since the script is just selecting your `stego.lock` file to find the path to the correct target dir for your tag, we could try to use something other than `make`.
 * ATM I don't really see how to easily change that, and `amboso` is pretty long already. Maybe a second argument with the path to your build-step script?

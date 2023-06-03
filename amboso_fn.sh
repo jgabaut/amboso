@@ -1,4 +1,4 @@
-AMBOSO_API_LVL="1.4.6"
+AMBOSO_API_LVL="1.4.7"
 at () {
     echo -n "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -153,7 +153,11 @@ function set_source_info {
 
 function set_tests_info {
   dir="$1"
-  [[ ! -f "$dir"/kazoj.lock ]] && echo -e "\033[1;31m[ERROR]    Can't find \"kazoj.lock\" in ( $dir ). Try running with -K to specify the right directory.\e[0m\n" && exit 1
+  if [[ ! -f "$dir"/kazoj.lock ]] ; then {
+    echo -e "\033[1;31m[ERROR]    Can't find \"kazoj.lock\" in \"$dir\". Try running with -K to specify the right directory.\e[0m\n"
+    return 1
+  }
+  fi
   j=0
   k=0
   while IFS="\n" read -r line; do
@@ -168,6 +172,11 @@ function set_tests_info {
   done < "$dir/kazoj.lock" 2>/dev/null
   #echo "test info array size is " "${#tests_info[@]}" >&2
   count_tests_infos="${#tests_info[@]}"
+  if [[ $count_tests_infos -eq 0 ]] ; then {
+    echo -e "\033[0;31m[WARN]\e[0m    \"\$count_tests_infos\" was 0 after doing set_tests_info().\n"
+    return 1
+  }
+  fi
   #echo "$count_tests_infos"
   #echo "test info array contents are: ( ${tests_info[@]} )" >&2
 }
@@ -184,7 +193,17 @@ function set_supported_tests {
 
   #tests loop
   cases_path="$kazoj_dir/$cases_dir"
+  if [[ ! -d $cases_path ]]; then {
+    echo -e "\033[0;33m[DEBUG]\e[0m    \"$cases_path\" was not a valid directory.\n"
+    return 1
+  }
+  fi
   errorcases_path="$kazoj_dir/$errors_dir"
+  if [[ ! -d $errorcases_path ]]; then {
+    echo -e "\033[0;33m[DEBUG]\e[0m    \"$errorcases_path\" was not a valid directory.\n"
+    return 1
+  }
+  fi
   for FILE in $(ls "$cases_path") ; do {
     test_fp="$cases_path/$FILE"
     extens=$(echo "$(realpath $FILE)" | cut -d '.' -f '2')

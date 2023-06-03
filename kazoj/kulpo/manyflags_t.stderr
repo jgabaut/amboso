@@ -1,2 +1,0 @@
-^[[1;31m[MODE]    Running in base mode, expecting full source builds.^[[0m$
-^[[1;33m[DEBUG]    No -D flag, using ( ./bin/ ) for target dir. Run with -V to see more.^[[0m$
