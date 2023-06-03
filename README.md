@@ -21,6 +21,12 @@
 + [Local installation](#local_install)
 + [Todo](#todo)
 
+### Note
+
+- I noticed one of the files inside `/kazoj/` was causing problems on some filesystems, since it had a collision when checked ignoring case.
+
+- I'm sorry about the mistake, from version `1.4.7-b` the repo won't support the tags contaning colliding files anymore. I'll see if this is enough.
+
 ## What is this thing? <a name = "witt"></a>
 
 I wanted to build some older tagged version of a C project I was building using make, but for some of them I didn't have a proper past commit.
