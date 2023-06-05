@@ -13,4 +13,4 @@ kazoj# tests folder name
 1.3.0#
 1.3.1# Stable test mode
 1.3.2#
-1.4.7-b# Fix file collision
+1.4.8# Add make check

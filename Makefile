@@ -1,5 +1,5 @@
 export SHELL=/bin/bash
-VERSION="1.4.8-devel"
+VERSION="1.4.8"
 all: hello_world
 	@echo -e "\033[1;32mEnd of build.\e[0m\n"
 .PHONY: all
