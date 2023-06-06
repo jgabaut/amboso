@@ -12,9 +12,9 @@ hello_world: .hello_world.o
 	gcc .hello_world.o -o hello_world
 	@echo -e "\033[1;33mDone.\e[0m"
 
-.hello_world.o: ./hello_world.c
+.hello_world.o: ./example-src/hello_world.c
 	@echo -en "Building .hello_world.o for amboso $(VERSION):    "
-	gcc -c ./hello_world.c -o .hello_world.o
+	gcc -c ./example-src/hello_world.c -o .hello_world.o
 	@echo -e "\033[1;33mDone.\e[0m"
 
 check: hello_world
