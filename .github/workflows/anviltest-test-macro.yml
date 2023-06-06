@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  test: -t test macro, recurse on all tests. Error 69
 
     runs-on: ubuntu-latest
 
@@ -24,6 +24,4 @@ jobs:
       
     - name: Run ./amboso as test macro in subshell, +verbose (-tVV)
       run: |
-        (./amboso -tVV) 
-        result="$?"
-        if [[ $result -eq 0 ]]; then echo -e "Success.\n"; else echo -e "Failure.\n"; fi
+        test ./amboso -tVV -eq 69 || exit 1
