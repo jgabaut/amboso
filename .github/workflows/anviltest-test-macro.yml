@@ -22,5 +22,8 @@ jobs:
     - name: Run distcheck
       run: make distcheck
       
-    - name: Run ./amboso as test macro, +verbose (-tVV)
-      run: ./amboso -tVV
+    - name: Run ./amboso as test macro in subshell, +verbose (-tVV)
+      run: |
+        (./amboso -tVV) 
+        result="$?"
+        if [[ $result -eq 0 ]]; then echo -e "Success.\n"; else echo -e "Failure.\n"; fi
