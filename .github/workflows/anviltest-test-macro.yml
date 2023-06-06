@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  test: -t test macro, recurse on all tests. Error 69
+  build:
 
     runs-on: ubuntu-latest
 
