@@ -1,4 +1,4 @@
-name: (anviltest) git init mode
+name: (anviltest) use -t test macro flag
 on:
   push:
     branches: [ "master" ]
