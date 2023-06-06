@@ -1,9 +1,7 @@
-name: Fail ./amboso -tVV with error 69
+name: Test macro with ./amboso -tVV
 on:
   push:
     branches: [ "master" ]
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
 
 jobs:
   build:
@@ -21,7 +19,7 @@ jobs:
 
     - name: Run distcheck
       run: make distcheck
-      
+
     - name: (anviltest) use -t test macro flag, +verbose (-tVV)
       run: |
-        "./amboso -tVV" || echo -e "Failed.\n"
+        "./amboso -tVV" || echo -e "\033[1;31mFailed.\e[0m\n"
