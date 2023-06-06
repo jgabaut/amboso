@@ -24,4 +24,4 @@ jobs:
       
     - name: Run ./amboso as test macro in subshell, +verbose (-tVV)
       run: |
-        test ./amboso -tVV -eq 69 || exit 1
+        test "./amboso -tVV" -eq 69 || exit 1
