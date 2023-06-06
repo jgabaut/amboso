@@ -1,5 +1,5 @@
 export SHELL=/bin/bash
-VERSION="1.4.9"
+VERSION="1.5.0"
 ECHO_VERSION="./amboso"
 RUN_VERSION := $(shell $(ECHO_VERSION) -v)
 
@@ -24,6 +24,11 @@ check: hello_world
 
 distcheck: hello_world
 	@echo -en "Distchecking amboso $(VERSION):    "
+	echo -e "Feeling good.\n"
+	@echo -e "\033[1;32mSuccess.\e[0m"
+
+pack: hello_world
+	@echo -en "Packing amboso $(VERSION):    "
 	echo -e "Feeling good.\n"
 	@echo -e "\033[1;32mSuccess.\e[0m"
 
