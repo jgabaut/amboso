@@ -1,0 +1,112 @@
+#!/bin/bash -x
+function HINT {
+  :
+}
+
+clear
+ln -s ./amboso ./anvil
+HINT " STEP 0/10    We symlinked the script to anvil to avoid referring to many places around here as amboso.
+
+    try_amboso    a tester for amboso functions
+
+    This script shows usage of amboso by Bash stacktrace.
+    Every time the script runs a command, it will repeat it to us, in this format:
+    Every + sign is a command being run.
+
+    \"+    CMD_LINE\"
+    \"CMD OUTPUT . . .\"
+    \"HINT an hint, when there is one\"
+
+
+    This allows us to test program behaviour for different run modes.
+
+    "
+
+cd .
+pwd
+ls -lA
+HINT " STEP 1/10
+
+    cd to project dir (we are here already!), we will test how amboso behaves when it runs without any flags.
+
+    It seems our repo already has a compliant ./bin dir... We will make sure to disrupt that peace soon.
+    We will rename the directory to ./some_bin_name, and even though it contains a stego.lock file, it may cause some little trouble.
+
+    Please dont get out of the script before we reach step 4. Idempotency, right? 2 more steps left. Or you will have to do that mv all by yourself, no help.
+
+    "
+
+mv ./bin/ ./some_bin_name/
+HINT " STEP 2/10
+
+    We renamed the compliant bin folder.
+
+    "
+
+./anvil -v
+./anvil -B
+HINT " STEP 3/10
+
+    We run with -B to showcase base mode, where every build needs full sources in a separate folder.
+    No -D provided. ./bin does not exist, right? (hence does not contain a valid stego.lock file. Who cares its actually there if you didnt tell amboso in which directory it is?)
+
+    "
+
+mv ./some_bin_name/ ./bin/
+HINT " STEP 4/10
+
+    NOW we rename back our compliant directory to ./bin, and it also contains a stego.lock file!
+
+    "
+
+./anvil -B
+HINT " STEP 5/10
+
+    No args run, no -D provided. ./bin does exist now ( and the contained stego.lock file will be used to set -SEDM flags ), so we get an error for not giving a version query as argument.
+
+    "
+
+./anvil -BV 0.1.0
+HINT " STEP 6/10
+
+    Verbose query, should succeed in reporting unbuilt version
+
+    "
+
+./anvil -Brbd 0.1.0
+HINT " STEP 7/10
+
+    Build, run, delete 0.1.0. Tests single file compilation & execution. Delete is done just before quitting and cleans our binary.
+
+    "
+
+./anvil -Brb 0.9.0
+HINT " STEP 8/10
+
+    Build, run 0.9.0. Tests make compilation & execution. No delete here, so the binary stays in the directory for future queries
+
+    "
+
+./anvil -BprbiV 1.0.0
+HINT " STEP 9/10
+
+    Verbose Init, Build, Run and Purge 1.0.0.
+    Tests compilation for ALL tags & executes 1.0.0.
+    Init is done as the first operation, trying to build all tags.
+    As you can see, we fail the build for 1.0.0, as we are running in base mode and that tag is not valid for this mode, as defined in stego.lock .
+    We can see 0.9.0 was not built again, as it was not purged after the last command did a successful build.
+    Purge is done just before quitting, and runs delete on ALL tags corresponding to current mode.
+
+    "
+
+./anvil -rdiV 1.0.0
+HINT " STEP 10/10
+
+    Run in git mode. 1.0.0 is the first compliant tag for amboso itself.
+    Init, run 1.0.0 and purge, as we didnt clean before.
+    When running in git mode, make clean is never called for any tag, so
+      the script only removes the target executable from its directory in bin.
+    We also removed the symlink to anvil we created before.
+
+    "
+rm ./anvil # We remove the symlink, you should put your own one outside of the repo dir.
