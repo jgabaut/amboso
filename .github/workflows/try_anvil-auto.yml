@@ -19,11 +19,15 @@ jobs:
       with:
         base: jgabaut/amboso
 
-    - name: Push all new branches
+    - name: Echo all new branches
       run: |
         while read branch; do
-          git checkout origin $branch
+          echo $branch
         done <<< "${{ steps.checkout-tags.outputs.branches }}"
+        git tag
+
+    - name: List tags
+      run: git tag
 
     - name: Install dependencies
       run: make
