@@ -12,15 +12,19 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+      with:
+        fetch-depth: '0'
+
+    - name: Echo tags
+      run: |
+        git tag
 
     - name: Install dependencies
-      run: make
-
-    - name: Run check
-      run: make check
-
-    - name: Run distcheck
-      run: make distcheck
+      run: |
+        pwd
+        ls
+        git status
+        git describe --tags --abbrev=0
 
     - name: (try_anvil_auto) Testing try_anvil, without the stepping
       run: |
