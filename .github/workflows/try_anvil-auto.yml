@@ -23,8 +23,8 @@ jobs:
       run: |
         while read branch; do
           echo $branch
+          git checkout $(git describe --tags --abbrev=0)
         done <<< "${{ steps.checkout-tags.outputs.branches }}"
-        git tag
 
     - name: List tags
       run: git tag
@@ -35,7 +35,6 @@ jobs:
         ls
         git status
         git describe --tags --abbrev=0
-        git checkout $(git describe --tags --abbrev=0)
 
     - name: (try_anvil_auto) Testing try_anvil, without the stepping
       run: |
