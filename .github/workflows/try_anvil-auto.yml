@@ -13,6 +13,12 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: Checkout new tags to branches
+      id: checkout-tags
+      uses: chachako/checkout-tags@v1
+      with:
+        base: jgabaut/amboso
+
     - name: Install dependencies
       run: make
 
