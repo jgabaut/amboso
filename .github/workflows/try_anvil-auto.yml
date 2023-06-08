@@ -12,26 +12,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+      with:
+        fetch-depth: '0'
 
     - name: Echo tags
       run: |
         git tag
-
-    - name: Checkout new tags to branches
-      id: checkout-tags
-      uses: chachako/checkout-tags@v1
-      with:
-        base: jgabaut/amboso
-
-    - name: Echo all new branches
-      run: |
-        while read branch; do
-          echo $branch
-          git checkout $(git describe --tags --abbrev=0)
-        done <<< "${{ steps.checkout-tags.outputs.branches }}"
-
-    - name: List tags
-      run: git tag
 
     - name: Install dependencies
       run: |
