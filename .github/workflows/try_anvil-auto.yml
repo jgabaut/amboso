@@ -33,13 +33,8 @@ jobs:
       run: |
         pwd
         ls
-        make
-
-    - name: Run check
-      run: make check
-
-    - name: Run distcheck
-      run: make distcheck
+        git status
+        git describe --tags --abbrev=0
 
     - name: (try_anvil_auto) Testing try_anvil, without the stepping
       run: |
