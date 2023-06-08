@@ -1,0 +1,27 @@
+name: Test try_anvil_auto
+on:
+  push:
+    branches: [ "master" ]
+    # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: make
+
+    - name: Run check
+      run: make check
+
+    - name: Run distcheck
+      run: make distcheck
+
+    - name: (try_anvil_auto) Testing try_anvil, without the stepping
+      run: |
+        ./try_anvil_auto || echo -e "\033[1;31mFailed.\e[0m\n"
