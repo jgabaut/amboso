@@ -46,6 +46,7 @@ I did not want to learn how to write nice makefiles or chaining a couple git com
 * You should test you have `bc` installed, since it's used to calc runtimes.
 
 * You definitely need `bash`, I'm using version `5.1.x` but for now I don't know about incompatible features used here.
+  * For Apple silicon users: check this issue for unexpected behaviour on bash `3.x`. [#21](/../../issues/21)
 
 * If you want to try how it works by using this repo's `./bin` dir as an example (or this repo in general) you will need:
   * `gcc`, for building `helloworld`

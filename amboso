@@ -8,8 +8,8 @@ if [[ "$EUID" -eq 0 ]] ; then {
 fi
 # Set recursion env var if not exists
 prog_name="$(readlink -f "$0")"
-amboso_currvers="1.5.0"
-expected_AMBOSO_API_LVL="1.5.0"
+amboso_currvers="1.5.1"
+expected_AMBOSO_API_LVL="1.5.1"
 amboso_testflag_version="1.4.9"
 export AMBOSO_LVL_REC="${AMBOSO_LVL_REC:-0}"
 # check recursion
@@ -24,7 +24,7 @@ export AMBOSO_LVL_REC=$(($AMBOSO_LVL_REC+1))
 
 #Functions to output dotfile
 dotfile="./amboso_cfg.dot"
-function app () {
+function app() {
   [[ $print_cfg_flag -eq 0 || ${AMBOSO_LVL_REC} -gt 1 ]] && return
   txt="$1" file="$dotfile"
   echo "$txt" >> "$file"
