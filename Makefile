@@ -1,5 +1,5 @@
 export SHELL=/bin/bash
-VERSION="1.5.0"
+VERSION="1.5.1"
 ECHO_VERSION="./amboso"
 RUN_VERSION := $(shell $(ECHO_VERSION) -v)
 
