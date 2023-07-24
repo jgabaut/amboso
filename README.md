@@ -25,9 +25,17 @@
 
 - I noticed one of the files inside `/kazoj/` was causing problems on some filesystems, since it had a collision when checked ignoring case.
 
-- I'm sorry about the mistake, from version `1.4.7-b` the repo won't support the tags contaning colliding files anymore. I'll see if this is enough.
+- I'm sorry about the mistake, from version `1.4.7-b` the repo won't support the tags contaning colliding files anymore.
 
 ## What is this thing? <a name = "witt"></a>
+
+This tool is just a bash script handling some flags to perform automated builds (leveraging `make`, so there isn't much you can do "only" with this script) and tests.
+
+If you want to run something like `git checkout vMY_TAG; make`, then you may need a few other args to move the completed build to an ordered directory tree.
+
+`amboso` uses a simple text file to pin some tags your repo offers, and enables your repo to handle a directory where you can keep all compiled version while keeping a clean `git status`.
+
+The idea is nothing great.
 
 I wanted to build some older tagged version of a C project I was building using make, but for some of them I didn't have a proper past commit.
 

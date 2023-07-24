@@ -1,4 +1,4 @@
-AMBOSO_API_LVL="1.5.1-devel"
+AMBOSO_API_LVL="1.5.2"
 at () {
     echo -n "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -50,6 +50,8 @@ function echo_active_flags {
     done
   }
   fi
+  [[ $tell_uname_flag -gt 0 ]] && echo -n "U"
+  [[ $pack_flag -gt 0 ]] && echo -n "z"
   [[ $quiet_flag -gt 0 ]] && echo -n "q"
   [[ $init_flag -gt 0 ]] && echo -n "i"
   [[ $build_flag -gt 0 ]] && echo -n "b"
@@ -62,6 +64,14 @@ function echo_active_flags {
   [[ $version_flag -eq 1 ]] && echo -n "v"
   [[ $version_flag -gt 1 ]] && echo -n "v" #One more level to this option
   echo -e "\n"
+}
+
+print_sysinfo () {
+  echo -e "[SYSTEM]    System info:\n"
+  echo -e "            [ kernel_name ]    [ $kernel_name ]"
+  echo -e "            [ kernel_release ]    [ $kernel_release ]"
+  echo -e "            [ machine_name ]    [ $machine_name ]"
+  echo -e "            [ os_name ]    [ $os_name ]"
 }
 
 function echo_amboso_version {
