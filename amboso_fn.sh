@@ -1,4 +1,4 @@
-AMBOSO_API_LVL="1.5.2"
+AMBOSO_API_LVL="1.6.0"
 at () {
     echo -n "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -92,7 +92,7 @@ function set_supported_versions {
 
   while IFS= read -r line; do {
     #Skip the first five lines, reserved for header, source file and target executable names, test folder, and versions header
-    [[ $j -lt 6 ]] && j=$((j+1)) && continue
+    [[ $j -lt 7 ]] && j=$((j+1)) && continue
 
     was_git_tag=0
     was_base_tag=0
@@ -153,7 +153,7 @@ function set_source_info {
     #echo "Text read from file, no comments: ( $( echo "$line" | cut -d '#' -f 1 ) )"
     sources_info[k]=$(echo "$line" | cut -d '#' -f 1 | cut -d ' ' -f 1 )
     k=$((k+1))
-    [[ $k -eq 4 ]] && break #we only read the first three lines
+    [[ $k -eq 5 ]] && break #we only read the first four lines
   done < "$dir/stego.lock" 2>/dev/null
   #echo "source info array size is " "${#sources_info[@]}" >&2
   count_source_infos="${#sources_info[@]}"
