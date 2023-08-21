@@ -13,8 +13,8 @@ kernel_release="$(uname -r)"
 kernel_version="$(uname -v)"
 machine_name="$(uname -m)"
 os_name="$(uname -o)"
-amboso_currvers="1.6.0"
-expected_AMBOSO_API_LVL="1.6.0"
+amboso_currvers="1.6.1"
+expected_AMBOSO_API_LVL="1.6.1"
 amboso_testflag_version="1.4.9"
 export AMBOSO_LVL_REC="${AMBOSO_LVL_REC:-0}"
 # check recursion
@@ -451,6 +451,12 @@ kazoj_dir="${sources_info[3]}" #TODO: don't think this should be overwritten her
 use_automake_version="${sources_info[4]}"
 set_tests_info "$kazoj_dir"
 set_supported_tests "$kazoj_dir"
+
+if [[ $verbose_flag -gt 0 ]]; then {
+    echo -e "\033[1;36m[FETCH]    Fetching remote tags\e[0m" >&2
+    check_tags #Lookup tags from remote
+}
+fi
 
 if [[ $verbose_flag -gt 1 ]]; then { #WIP
     echo -e "\033[1;35m[VERB]    SYNCPOINT:  listing tag names\e[0m" >&2

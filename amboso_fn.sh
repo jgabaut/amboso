@@ -1,4 +1,4 @@
-AMBOSO_API_LVL="1.6.0"
+AMBOSO_API_LVL="1.6.1"
 at () {
     echo -n "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -79,6 +79,48 @@ function echo_amboso_version {
 }
 function echo_amboso_version_short {
   echo "$amboso_currvers"
+}
+
+function check_tags {
+	git fetch --tags
+	repo_tags=($(git tag -l))
+
+	if [[ $verbose_flag -gt 1 ]] ; then {
+		for tag in "${read_versions[@]}"; do
+		if [[ " ${repo_tags[@]} " =~ " $tag " ]]; then
+			if [[ $verbose_flag -gt 0 ]] ; then {
+				shown_tag="\033[1;32m$tag\e[0m"
+				echo -e "[AMBOSO]  Read Tag $shown_tag exists in the repo." >&2
+			}
+			fi
+		else {
+			if [[ $verbose_flag -gt 0 ]] ; then {
+				shown_tag="\033[1;31m$tag\e[0m"
+				echo -e "[AMBOSO]  Read Tag $shown_tag is missing in the repo." >&2
+			}
+			fi
+		}
+		fi
+		done
+	}
+	fi
+
+	for tag in "${supported_versions[@]}"; do
+    	if [[ " ${repo_tags[@]} " =~ " $tag " ]]; then {
+		if [[ $verbose_flag -gt 0 ]] ; then {
+    			shown_tag="\033[1;32m$tag\e[0m"
+        		echo -e "[AMBOSO]  Supported Tag $shown_tag exists in the repo." >&2
+		}
+		fi
+	} else {
+		if [[ $verbose_flag -gt 0 ]] ; then {
+    			shown_tag="\033[1;31m$tag\e[0m"
+        		echo -e "[AMBOSO]  Supported Tag $shown_tag is missing in the repo." >&2
+		}
+		fi
+ 	}
+    	fi
+	done
 }
 
 function set_supported_versions {
