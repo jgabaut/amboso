@@ -25,12 +25,12 @@ hello_world: .hello_world.o .anvil__hello_world.o
 
 ./example-src/anvil__hello_world.c: ./amboso_fn.sh ./amboso
 	@echo -en "Generating C anvil__hello_world for $(VERSION):    "
-	./amboso -G ./example-src $(ANVIL_C_HEADER_VERSION)
+	-./amboso -G ./example-src $(ANVIL_C_HEADER_VERSION)
 	@echo -e "\033[1;33mDone.\e[0m"
 
 ./example-src/anvil__hello_world.h: ./amboso_fn.sh ./amboso
 	@echo -en "Generating C anvil__hello_world for $(VERSION):    "
-	./amboso -G ./example-src $(ANVIL_C_HEADER_VERSION)
+	-./amboso -G ./example-src $(ANVIL_C_HEADER_VERSION)
 	@echo -e "\033[1;33mDone.\e[0m"
 
 check: hello_world
@@ -63,12 +63,12 @@ uninstall:
 
 clean:
 	@echo -en "Cleaning build artifacts:    "
-	rm \.*.o hello_world
+	-rm \.*.o hello_world
 	@echo -e "\033[1;33mDone.\e[0m"
 
 cleanob:
 	@echo -en "Cleaning object build artifacts:    "
-	rm \.*.o
+	-rm \.*.o
 	@echo -e "\033[1;33mDone.\e[0m"
 
 $(V).SILENT:
