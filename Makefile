@@ -12,12 +12,12 @@ hello_world: .hello_world.o .anvil__hello_world.o
 	gcc .hello_world.o .anvil__hello_world.o -o hello_world
 	@echo -e "\033[1;33mDone.\e[0m"
 
-.hello_world.o: ./example-src/hello_world.c
+.hello_world.o: ./example-src/hello_world.c ./example-src/anvil__hello_world.h ./example-src/anvil__hello_world.c
 	@echo -en "Building .hello_world.o for amboso $(VERSION):    "
 	gcc -c ./example-src/hello_world.c -o .hello_world.o
 	@echo -e "\033[1;33mDone.\e[0m"
 
-.anvil__hello_world.o: ./amboso ./amboso_fn.sh .hello_world.o
+.anvil__hello_world.o: ./amboso ./amboso_fn.sh ./example-src/anvil__hello_world.c ./example-src/anvil__hello_world.h
 	@echo -en "Building .anvil__hello_world.o:    "
 	gcc -c ./example-src/anvil__hello_world.c -o .anvil__hello_world.o
 	@echo -e "\033[1;33mDone.\e[0m"
