@@ -154,27 +154,27 @@ function gen_C_headers {
 	echo "static const char ANVIL__"$execname"__VERSION_DESC[] = \""$tag_txt"\"; /**< Represents current version info for [$headername] generated header.*/" >> "$target_dir/$headername"
 	echo "static const char ANVIL__"$execname"__VERSION_DATE[] = \""$tag_date"\"; /**< Represents date for current version for [$headername] generated header.*/" >> "$target_dir/$headername"
 	echo "static const char ANVIL__"$execname"__VERSION_AUTHOR[] = \""$tag_author"\"; /**< Represents author for current version for [$headername] generated header.*/" >> "$target_dir/$headername"
-	echo "const char* get_ANVIL__API__LEVEL__(); /**< Returns a version string for amboso API of [$headername] generated header.*/" >> "$target_dir/$headername"
-	echo "const char* get_ANVIL__VERSION__(); /**< Returns a version string for [$headername] generated header.*/" >> "$target_dir/$headername"
-	echo "const char* get_ANVIL__VERSION__DESC__(); /**< Returns a version info string for [$headername] generated header.*/" >> "$target_dir/$headername"
-	echo "const char* get_ANVIL__VERSION__DATE__(); /**< Returns a version date string for [$headername] generated header.*/" >> "$target_dir/$headername"
-	echo "const char* get_ANVIL__VERSION__AUTHOR__(); /**< Returns a version author string for [$headername] generated header.*/" >> "$target_dir/$headername"
+	echo "const char* get_ANVIL__API__LEVEL__(void); /**< Returns a version string for amboso API of [$headername] generated header.*/" >> "$target_dir/$headername"
+	echo "const char* get_ANVIL__VERSION__(void); /**< Returns a version string for [$headername] generated header.*/" >> "$target_dir/$headername"
+	echo "const char* get_ANVIL__VERSION__DESC__(void); /**< Returns a version info string for [$headername] generated header.*/" >> "$target_dir/$headername"
+	echo "const char* get_ANVIL__VERSION__DATE__(void); /**< Returns a version date string for [$headername] generated header.*/" >> "$target_dir/$headername"
+	echo "const char* get_ANVIL__VERSION__AUTHOR__(void); /**< Returns a version author string for [$headername] generated header.*/" >> "$target_dir/$headername"
 	echo "#endif" >> "$target_dir/$headername"
 
 	echo "#include \"$headername\"" >> "$target_dir/$c_headername"
-	echo "const char* get_ANVIL__VERSION__() {
+	echo "const char* get_ANVIL__VERSION__(void) {
 	return ANVIL__"$execname"__VERSION_STRING;
 }" >> "$target_dir/$c_headername"
-	echo "const char* get_ANVIL__VERSION__DESC__() {
+	echo "const char* get_ANVIL__VERSION__DESC__(void) {
 	return ANVIL__"$execname"__VERSION_DESC;
 }" >> "$target_dir/$c_headername"
-	echo "const char* get_ANVIL__VERSION__DATE__() {
+	echo "const char* get_ANVIL__VERSION__DATE__(void) {
 	return ANVIL__"$execname"__VERSION_DATE;
 }" >> "$target_dir/$c_headername"
-	echo "const char* get_ANVIL__VERSION__AUTHOR__() {
+	echo "const char* get_ANVIL__VERSION__AUTHOR__(void) {
 	return ANVIL__"$execname"__VERSION_AUTHOR;
 }" >> "$target_dir/$c_headername"
-	echo "const char* get_ANVIL__API__LEVEL__() {
+	echo "const char* get_ANVIL__API__LEVEL__(void) {
 	return ANVIL__API_LEVEL__STRING;
 }" >> "$target_dir/$c_headername"
 
