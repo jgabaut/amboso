@@ -2,9 +2,9 @@ name: Makefile CI
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "devel" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "master", "devel" ]
 
 jobs:
   build:
@@ -13,6 +13,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+
+    - name: Check git tags
+      run: git tag -l
 
     - name: Install dependencies
       run: make
