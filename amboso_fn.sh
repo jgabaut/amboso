@@ -149,10 +149,12 @@ function gen_C_headers {
 	echo "" > "$target_dir/$c_headername"
 	echo "#ifndef ANVIL__"$execname"__" >> "$target_dir/$headername"
 	echo "#define ANVIL__"$execname"__" >> "$target_dir/$headername"
+	echo "static const char ANVIL__API_LEVEL__STRING[] = \""$AMBOSO_API_LVL"\"; /**< Represents amboso version used for [$headername] generated header.*/" >> "$target_dir/$headername"
 	echo "static const char ANVIL__"$execname"__VERSION_STRING[] = \""$tag"\"; /**< Represents current version for [$headername] generated header.*/" >> "$target_dir/$headername"
 	echo "static const char ANVIL__"$execname"__VERSION_DESC[] = \""$tag_txt"\"; /**< Represents current version info for [$headername] generated header.*/" >> "$target_dir/$headername"
 	echo "static const char ANVIL__"$execname"__VERSION_DATE[] = \""$tag_date"\"; /**< Represents date for current version for [$headername] generated header.*/" >> "$target_dir/$headername"
 	echo "static const char ANVIL__"$execname"__VERSION_AUTHOR[] = \""$tag_author"\"; /**< Represents author for current version for [$headername] generated header.*/" >> "$target_dir/$headername"
+	echo "const char* get_ANVIL__API__LEVEL__(); /**< Returns a version string for amboso API of [$headername] generated header.*/" >> "$target_dir/$headername"
 	echo "const char* get_ANVIL__VERSION__(); /**< Returns a version string for [$headername] generated header.*/" >> "$target_dir/$headername"
 	echo "const char* get_ANVIL__VERSION__DESC__(); /**< Returns a version info string for [$headername] generated header.*/" >> "$target_dir/$headername"
 	echo "const char* get_ANVIL__VERSION__DATE__(); /**< Returns a version date string for [$headername] generated header.*/" >> "$target_dir/$headername"
@@ -171,6 +173,9 @@ function gen_C_headers {
 }" >> "$target_dir/$c_headername"
 	echo "const char* get_ANVIL__VERSION__AUTHOR__() {
 	return ANVIL__"$execname"__VERSION_AUTHOR;
+}" >> "$target_dir/$c_headername"
+	echo "const char* get_ANVIL__API__LEVEL__() {
+	return ANVIL__API_LEVEL__STRING;
 }" >> "$target_dir/$c_headername"
 
 }
