@@ -13,8 +13,8 @@ kernel_release="$(uname -r)"
 kernel_version="$(uname -v)"
 machine_name="$(uname -m)"
 os_name="$(uname -o)"
-amboso_currvers="1.6.1"
-expected_AMBOSO_API_LVL="1.6.1"
+amboso_currvers="1.6.2"
+expected_AMBOSO_API_LVL="1.6.2"
 amboso_testflag_version="1.4.9"
 export AMBOSO_LVL_REC="${AMBOSO_LVL_REC:-0}"
 # check recursion
@@ -82,9 +82,24 @@ silent_flag=0
 print_cfg_flag=0
 pack_flag=0
 tell_uname_flag=0
+gen_C_headers_set=0
+gen_C_headers_flag=0
+gen_C_headers_destdir=""
 
-while getopts "A:M:S:E:D:K:BgVbpHhrivdlLtTqsczU" opt; do
+while getopts "A:M:S:E:D:K:G:BgVbpHhrivdlLtTqsczU" opt; do
   case $opt in
+    G )
+      gen_C_headers_flag=1
+      gen_C_headers_destdir="$OPTARG"
+      if [[ ! -d $gen_C_headers_destdir ]] ; then {
+	      echo -e "\033[1;31m[ERROR]    ($gen_C_headers_destdir) was not a valid directory.\e[0m"
+	      echo -e "\033[1;33m[AMBOSO]    Run with -h for help.\e[0m"
+	      exit 1
+      } else {
+              gen_C_headers_set=1
+      }
+      fi
+      ;;
     U )
       tell_uname_flag=1
       ;;
@@ -452,9 +467,9 @@ use_automake_version="${sources_info[4]}"
 set_tests_info "$kazoj_dir"
 set_supported_tests "$kazoj_dir"
 
-if [[ $verbose_flag -gt 0 ]]; then {
+if [[ $verbose_flag -gt 1 ]]; then {
     echo -e "\033[1;36m[FETCH]    Fetching remote tags\e[0m" >&2
-    check_tags #Lookup tags from remote
+    echo_tag_info $version
 }
 fi
 
@@ -1046,6 +1061,12 @@ if [[ -z $version ]]; then {
 fi
 #We now should have a valid $version value, outside of purge or init mode
 
+if [[ $gen_C_headers_set -gt 0 && $gen_C_headers_flag -gt 0 ]]; then {
+    echo -e "\033[1;36m[AMBOSO]    Generate C header for [$version].\e[0m" >&2
+    gen_C_headers $gen_C_headers_destdir $version $exec_entrypoint
+}
+fi
+
 has_makefile=0
 if [[ $version > $makefile_version || $version = $makefile_version ]] ; then
   has_makefile=1
@@ -1063,6 +1084,10 @@ if [[ ! -f "$script_path/$exec_entrypoint" && ! -z $version ]] ; then {
   }
   fi
   echo -e "\n\033[1;33m[QUERY]    ( $version ) binary not found in ( $script_path ).\e[0m" #>&2
+  if [[ $verbose_flag -gt 0 ]] ; then {
+	  echo_tag_info $version
+  }
+  fi
   if [[ ! $build_flag -gt 0 ]] ; then { #We exit here if we don't want to try building and we're not going to purge
     echo -e "\033[0;33m[DEBUG]    To try building, run with -b flag\e[0m\n" >&2
     if [[ ! $purge_flag -gt 0 ]] ; then {
@@ -1189,6 +1214,10 @@ if [[ ! -f "$script_path/$exec_entrypoint" && ! -z $version ]] ; then {
   }
   fi
   echo -e "\n\033[1;32m[QUERY]    ( $version ) binary is ready at ( $script_path ) .\e[0m\n" >&2
+  if [[ $verbose_flag -gt 0 ]] ; then {
+	  echo_tag_info $version
+  }
+  fi
   if [[ $build_flag -gt 0 ]] ; then {
     echo -e "\033[0;33m[BUILD]    Found binary for ( $version ), won't build.\e[0m" >&2
     app "$(echo_node query_success_ready build_success)"
@@ -1213,6 +1242,10 @@ if [[ ! -f "$script_path/$exec_entrypoint" && ! -z $version ]] ; then {
 } elif [[ ! -z $query ]] ; then {
   app "$(echo_node silence_check query_invalid)"
   echo -e "\033[1;31m[QUERY]    ( $query ) invalid query, run with -V to see more.\e[0m"
+  if [[ $verbose_flag -gt 0 ]] ; then {
+	  echo_tag_info $version
+  }
+  fi
 }
 fi
 

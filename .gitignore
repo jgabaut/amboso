@@ -11,6 +11,10 @@ hello_world
 # also explicitly ignore our debug executable for good measure
 hello_world_debug
 
+# ignore generated C header and implementation file for helloworld.c
+anvil__hello_world.c
+anvil__hello_world.h
+
 #ignore dot output
 logic.png
 #ignore cfg dot output

@@ -1,5 +1,5 @@
 export SHELL=/bin/bash
-VERSION="1.6.1"
+VERSION="1.6.2"
 ECHO_VERSION="./amboso"
 RUN_VERSION := $(shell $(ECHO_VERSION) -v)
 
@@ -7,14 +7,29 @@ all: hello_world
 	@echo -e "\033[1;32mEnd of build.\e[0m\n"
 .PHONY: all
 
-hello_world: .hello_world.o
+hello_world: .hello_world.o .anvil__hello_world.o
 	@echo -en "Building hello_world for amboso $(VERSION):    "
-	gcc .hello_world.o -o hello_world
+	gcc .hello_world.o .anvil__hello_world.o -o hello_world
 	@echo -e "\033[1;33mDone.\e[0m"
 
 .hello_world.o: ./example-src/hello_world.c
 	@echo -en "Building .hello_world.o for amboso $(VERSION):    "
 	gcc -c ./example-src/hello_world.c -o .hello_world.o
+	@echo -e "\033[1;33mDone.\e[0m"
+
+.anvil__hello_world.o: ./amboso ./amboso_fn.sh .hello_world.o
+	@echo -en "Building .anvil__hello_world.o:    "
+	gcc -c ./example-src/anvil__hello_world.c -o .anvil__hello_world.o
+	@echo -e "\033[1;33mDone.\e[0m"
+
+./example-src/anvil__hello_world.c: ./amboso_fn.sh ./amboso
+	@echo -en "Generating C anvil__hello_world for $(VERSION):    "
+	./amboso -G ./example-src $(VERSION)
+	@echo -e "\033[1;33mDone.\e[0m"
+
+./example-src/anvil__hello_world.h: ./amboso_fn.sh ./amboso
+	@echo -en "Generating C anvil__hello_world for $(VERSION):    "
+	./amboso -G ./example-src $(VERSION)
 	@echo -e "\033[1;33mDone.\e[0m"
 
 check: hello_world
