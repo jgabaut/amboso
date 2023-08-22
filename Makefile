@@ -1,5 +1,6 @@
 export SHELL=/bin/bash
 VERSION="1.6.2"
+ANVIL_C_HEADER_VERSION="1.6.2"
 ECHO_VERSION="./amboso"
 RUN_VERSION := $(shell $(ECHO_VERSION) -v)
 
@@ -24,12 +25,12 @@ hello_world: .hello_world.o .anvil__hello_world.o
 
 ./example-src/anvil__hello_world.c: ./amboso_fn.sh ./amboso
 	@echo -en "Generating C anvil__hello_world for $(VERSION):    "
-	./amboso -G ./example-src $(VERSION)
+	./amboso -G ./example-src $(ANVIL_C_HEADER_VERSION)
 	@echo -e "\033[1;33mDone.\e[0m"
 
 ./example-src/anvil__hello_world.h: ./amboso_fn.sh ./amboso
 	@echo -en "Generating C anvil__hello_world for $(VERSION):    "
-	./amboso -G ./example-src $(VERSION)
+	./amboso -G ./example-src $(ANVIL_C_HEADER_VERSION)
 	@echo -e "\033[1;33mDone.\e[0m"
 
 check: hello_world
