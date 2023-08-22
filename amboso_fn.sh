@@ -1,4 +1,4 @@
-AMBOSO_API_LVL="1.6.1"
+AMBOSO_API_LVL="1.6.2"
 at () {
     echo -n "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -121,6 +121,58 @@ function check_tags {
  	}
     	fi
 	done
+}
+
+function echo_tag_info {
+	tag=$1
+	tag_date=$(git show -q --clear-decorations $tag | grep Date | cut -f2 -d':')
+	tag_author=$(git show -q --clear-decorations $tag | grep Author | cut -f2 -d':')
+	tag_txt=$(git show -q --clear-decorations $tag | tail -n2 | grep -v '^$')
+	echo -e "\033[1;33m[AMBOSO]    Tag text was:  \033[1;34m[$tag_txt    ]\e[0m"
+	echo -e "\033[1;33m[AMBOSO]    Tag author was:  \033[1;34m[$tag_author ]\e[0m"
+	echo -e "\033[1;33m[AMBOSO]    Tag date was:  \033[1;34m[$tag_date   ]\e[0m"
+}
+
+function gen_C_headers {
+	target_dir=$1
+	tag=$2
+	execname=$3
+	headername="anvil__$execname.h"
+	c_headername="anvil__$execname.c"
+	tag_date=$(git show -q --clear-decorations $tag | grep Date | cut -f2 -d':')
+	tag_author=$(git show -q --clear-decorations $tag | grep Author | cut -f2 -d':')
+	tag_txt=$(git show -q --clear-decorations $tag | tail -n2 | grep -v '^$')
+	echo -e "\033[1;35m[AMBOSO]    Gen C header for ($execname), v($tag) to dir ($target_dir)\e[0m"
+	echo -e "\033[1;35m[AMBOSO]    Reset file ($target_dir/$headername)"
+	echo "" > "$target_dir/$headername"
+	echo -e "\033[1;35m[AMBOSO]    Reset file ($target_dir/$c_headername)"
+	echo "" > "$target_dir/$c_headername"
+	echo "#ifndef ANVIL__"$execname"__" >> "$target_dir/$headername"
+	echo "#define ANVIL__"$execname"__" >> "$target_dir/$headername"
+	echo "static const char ANVIL__"$execname"__VERSION_STRING[] = \""$tag"\"; /**< Represents current version for [$headername] generated header.*/" >> "$target_dir/$headername"
+	echo "static const char ANVIL__"$execname"__VERSION_DESC[] = \""$tag_txt"\"; /**< Represents current version info for [$headername] generated header.*/" >> "$target_dir/$headername"
+	echo "static const char ANVIL__"$execname"__VERSION_DATE[] = \""$tag_date"\"; /**< Represents date for current version for [$headername] generated header.*/" >> "$target_dir/$headername"
+	echo "static const char ANVIL__"$execname"__VERSION_AUTHOR[] = \""$tag_author"\"; /**< Represents author for current version for [$headername] generated header.*/" >> "$target_dir/$headername"
+	echo "const char* get_ANVIL__VERSION__(); /**< Returns a version string for [$headername] generated header.*/" >> "$target_dir/$headername"
+	echo "const char* get_ANVIL__VERSION__DESC__(); /**< Returns a version info string for [$headername] generated header.*/" >> "$target_dir/$headername"
+	echo "const char* get_ANVIL__VERSION__DATE__(); /**< Returns a version date string for [$headername] generated header.*/" >> "$target_dir/$headername"
+	echo "const char* get_ANVIL__VERSION__AUTHOR__(); /**< Returns a version author string for [$headername] generated header.*/" >> "$target_dir/$headername"
+	echo "#endif" >> "$target_dir/$headername"
+
+	echo "#include \"$headername\"" >> "$target_dir/$c_headername"
+	echo "const char* get_ANVIL__VERSION__() {
+	return ANVIL__"$execname"__VERSION_STRING;
+}" >> "$target_dir/$c_headername"
+	echo "const char* get_ANVIL__VERSION__DESC__() {
+	return ANVIL__"$execname"__VERSION_DESC;
+}" >> "$target_dir/$c_headername"
+	echo "const char* get_ANVIL__VERSION__DATE__() {
+	return ANVIL__"$execname"__VERSION_DATE;
+}" >> "$target_dir/$c_headername"
+	echo "const char* get_ANVIL__VERSION__AUTHOR__() {
+	return ANVIL__"$execname"__VERSION_AUTHOR;
+}" >> "$target_dir/$c_headername"
+
 }
 
 function set_supported_versions {
@@ -402,6 +454,8 @@ function amboso_help {
 
     [-M ...]    MAKETAG    Sets minimum tag for using make as build/clean step
 
+    [-G ...]    C_HEADER_DIR    Sets desidered output directory for C header of specified version
+
   [-tgBT]    mode    Sets run mode
 
         Building:
@@ -451,7 +505,7 @@ function amboso_help {
 }
 
 function usage {
-  echo -e "Usage:  $(basename $prog_name) [(-D|-K|-M|-S|-E) ...ARGS] [-TBtg] [-bripd] [-hHvVlLqc] [TAG_QUERY]\n"
+  echo -e "Usage:  $(basename $prog_name) [(-D|-K|-M|-S|-E|-G) ...ARGS] [-TBtg] [-bripd] [-hHvVlLqc] [TAG_QUERY]\n"
   echo -e "    Query for a build version\n"
   #echo_supported_tags "$milestones_dir"
   #echo ""
