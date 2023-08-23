@@ -19,3 +19,4 @@ kazoj# tests folder name
 1.5.2# Dump sysinfo
 1.6.0# Try running autoconf and ./configure
 1.6.2# -G to gen C header, check remote tags
+1.6.3# Better -G gen

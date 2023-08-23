@@ -2,8 +2,10 @@
 
 function hw_amboso {
   echo -e "Hello, World!";
+  echo -n "Built using amboso API v"
+  ./amboso "-qv";
   echo -n "amboso v";
-  ./amboso "-qv" ;
+  ./amboso "-qv";
   echo "" ;
 }
 
