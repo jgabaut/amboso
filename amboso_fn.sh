@@ -1,4 +1,4 @@
-AMBOSO_API_LVL="1.6.3"
+AMBOSO_API_LVL="1.6.4"
 at () {
     echo -n "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -139,9 +139,9 @@ function gen_C_headers {
 	execname=$3
 	headername="anvil__$execname.h"
 	c_headername="anvil__$execname.c"
-	tag_date=$(git show -q --clear-decorations $tag | grep Date | cut -f2 -d':')
-	tag_author=$(git show -q --clear-decorations $tag | grep Author | cut -f2 -d':')
-	tag_txt=$(git show -q --clear-decorations $tag | tail -n2 | grep -v '^$')
+	tag_date=$(git show -q --clear-decorations $tag 2>/dev/null | grep Date | cut -f2 -d':')
+	tag_author=$(git show -q --clear-decorations $tag 2>/dev/null | grep Author | cut -f2 -d':')
+	tag_txt=$(git show -q --clear-decorations $tag 2>/dev/null | tail -n2 | grep -v '^$')
 	echo -e "\033[1;35m[AMBOSO]    Gen C header for ($execname), v($tag) to dir ($target_dir)\e[0m"
 	echo -e "\033[1;35m[AMBOSO]    Reset file ($target_dir/$headername)"
 	echo "" > "$target_dir/$headername"
@@ -443,6 +443,12 @@ function git_mode_check {
   is_git_repo="$?"
   [[ $is_git_repo -gt 0 ]] && echo -e "\n\033[1;31m[ERROR]    Not running in a git repo. Try running with -B to use base mode.\e[0m\n" && exit 1
   [[ $verbose_flag -gt 0 ]] && echo -e "\033[1;34m[MODE]    Running in git mode.\e[0m" >&2
+  #Check if status is clean
+  if output=$(git status --untracked-files=no --porcelain) && [ -z "$output" ]; then
+	  return 0
+  else
+	return 1
+  fi
 }
 
 function amboso_help {
