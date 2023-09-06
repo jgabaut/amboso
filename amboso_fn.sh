@@ -443,6 +443,12 @@ function git_mode_check {
   is_git_repo="$?"
   [[ $is_git_repo -gt 0 ]] && echo -e "\n\033[1;31m[ERROR]    Not running in a git repo. Try running with -B to use base mode.\e[0m\n" && exit 1
   [[ $verbose_flag -gt 0 ]] && echo -e "\033[1;34m[MODE]    Running in git mode.\e[0m" >&2
+  #Check if status is clean
+  if output=$(git status --untracked-files=no --porcelain) && [ -z "$output" ]; then
+	  return 0
+  else
+	return 1
+  fi
 }
 
 function amboso_help {
