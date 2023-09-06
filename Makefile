@@ -1,6 +1,6 @@
 export SHELL=/bin/bash
-VERSION="1.6.3"
-ANVIL_C_HEADER_VERSION="1.6.3"
+VERSION="1.6.4"
+ANVIL_C_HEADER_VERSION="1.6.4"
 ECHO_VERSION="./amboso"
 RUN_VERSION := $(shell $(ECHO_VERSION) -v)
 
@@ -30,7 +30,7 @@ hello_world: .hello_world.o .anvil__hello_world.o
 
 ./example-src/anvil__hello_world.h: ./amboso_fn.sh ./amboso
 	@echo -en "Generating C anvil__hello_world for $(VERSION):    "
-	-./amboso -G ./example-src $(ANVIL_C_HEADER_VERSION)
+	-./amboso -qG ./example-src $(ANVIL_C_HEADER_VERSION)
 	@echo -e "\033[1;33mDone.\e[0m"
 
 check: hello_world
@@ -64,11 +64,15 @@ uninstall:
 clean:
 	@echo -en "Cleaning build artifacts:    "
 	-rm \.*.o hello_world
+	-rm ./example-src/*.o
 	@echo -e "\033[1;33mDone.\e[0m"
 
 cleanob:
 	@echo -en "Cleaning object build artifacts:    "
 	-rm \.*.o
+	-rm ./example-src/*.o
 	@echo -e "\033[1;33mDone.\e[0m"
+
+rebuild: clean all
 
 $(V).SILENT:

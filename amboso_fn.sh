@@ -1,4 +1,4 @@
-AMBOSO_API_LVL="1.6.3"
+AMBOSO_API_LVL="1.6.4"
 at () {
     echo -n "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -139,9 +139,9 @@ function gen_C_headers {
 	execname=$3
 	headername="anvil__$execname.h"
 	c_headername="anvil__$execname.c"
-	tag_date=$(git show -q --clear-decorations $tag | grep Date | cut -f2 -d':')
-	tag_author=$(git show -q --clear-decorations $tag | grep Author | cut -f2 -d':')
-	tag_txt=$(git show -q --clear-decorations $tag | tail -n2 | grep -v '^$')
+	tag_date=$(git show -q --clear-decorations $tag 2>/dev/null | grep Date | cut -f2 -d':')
+	tag_author=$(git show -q --clear-decorations $tag 2>/dev/null | grep Author | cut -f2 -d':')
+	tag_txt=$(git show -q --clear-decorations $tag 2>/dev/null | tail -n2 | grep -v '^$')
 	echo -e "\033[1;35m[AMBOSO]    Gen C header for ($execname), v($tag) to dir ($target_dir)\e[0m"
 	echo -e "\033[1;35m[AMBOSO]    Reset file ($target_dir/$headername)"
 	echo "" > "$target_dir/$headername"
