@@ -82,7 +82,10 @@ function echo_amboso_version_short {
 }
 
 function echo_timer {
-  [[ $verbose_flag -eq 0 || $quiet_flag -gt 0 ]] && return
+  if [[ $show_time_flag -eq 0 ]] ; then {
+    [[ $verbose_flag -eq 0 || $quiet_flag -gt 0 ]] && return
+  }
+  fi
   st="$1"
   msg="$2"
   color="$3"
@@ -526,6 +529,8 @@ function amboso_help {
     -q    quiet    Less output (useful but not well implemented, recommended on recursive calls)
     -s    silent    Way less output (Some output expected on stderr before the flag is applied)
     -c    control    Output dotfile \'amboso_cfg.dot\' while running.
+    -w    watch    Always display timers regardless of verbosity.
+    -X    experimental    Ignore the result of git_mode_check, which would stop git mode runs early when git status is not clean.
     -W ... START_TIME    Set start time of the program.
 
   [...]    TAG_QUERY    Ask a tag for current mode
@@ -535,7 +540,7 @@ function amboso_help {
 }
 
 function usage {
-  echo -e "Usage:  $(basename $prog_name) [(-D|-K|-M|-S|-E|-G) ...ARGS] [-TBtg] [-bripd] [-hHvVlLqc] [TAG_QUERY]\n"
+  echo -e "Usage:  $(basename $prog_name) [(-D|-K|-M|-S|-E|-G|-W) ...ARGS] [-TBtg] [-bripd] [-hHvVlLqcwX] [TAG_QUERY]\n"
   echo -e "    Query for a build version\n"
   #echo_supported_tags "$milestones_dir"
   #echo ""
