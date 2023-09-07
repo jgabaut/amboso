@@ -1,4 +1,4 @@
-AMBOSO_API_LVL="1.6.4"
+AMBOSO_API_LVL="1.6.5"
 at () {
     echo -n "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -79,6 +79,24 @@ function echo_amboso_version {
 }
 function echo_amboso_version_short {
   echo "$amboso_currvers"
+}
+
+function echo_timer {
+  [[ $verbose_flag -eq 0 || $quiet_flag -gt 0 ]] && return
+  st="$1"
+  msg="$2"
+  color="$3"
+  et=$(date +%s.%N)
+  runtime=$( echo "$et - $st" | bc -l )
+  display_zero=$(echo $runtime | cut -d '.' -f 1)
+  if [[ -z $display_zero ]]; then {
+    display_zero="0"
+  } else {
+    display_zero=""
+  }
+  fi
+  echo -e "\033[1;36m[TIME]\e[0m    [ \033[1;3"$color"m\"$msg\"\e[0m ] Took [ \033[1;33m$display_zero$runtime\e[0m ] seconds."
+  return
 }
 
 function check_tags {
@@ -508,6 +526,7 @@ function amboso_help {
     -q    quiet    Less output (useful but not well implemented, recommended on recursive calls)
     -s    silent    Way less output (Some output expected on stderr before the flag is applied)
     -c    control    Output dotfile \'amboso_cfg.dot\' while running.
+    -W ... START_TIME    Set start time of the program.
 
   [...]    TAG_QUERY    Ask a tag for current mode
 

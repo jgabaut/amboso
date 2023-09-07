@@ -1,2 +1,2 @@
 #!/bin/bash
-"./amboso" -D "./bin" -q 69
+"./amboso" -D "./bin" -qX 69

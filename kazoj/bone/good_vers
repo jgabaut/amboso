@@ -1,2 +1,2 @@
 #!/bin/bash
-"./amboso" -D "./bin" -q 1.0.0
+"./amboso" -D "./bin" -qX 1.0.0
