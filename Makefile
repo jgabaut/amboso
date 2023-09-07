@@ -1,6 +1,6 @@
 export SHELL=/bin/bash
-VERSION="1.6.4"
-ANVIL_C_HEADER_VERSION="1.6.4"
+VERSION="1.6.5"
+ANVIL_C_HEADER_VERSION="1.6.5"
 ECHO_VERSION="./amboso"
 RUN_VERSION := $(shell $(ECHO_VERSION) -v)
 
@@ -65,6 +65,7 @@ clean:
 	@echo -en "Cleaning build artifacts:    "
 	-rm \.*.o hello_world
 	-rm ./example-src/*.o
+	-rm ./example-src/anvil__hello_world.*
 	@echo -e "\033[1;33mDone.\e[0m"
 
 cleanob:
