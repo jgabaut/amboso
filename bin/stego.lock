@@ -22,3 +22,4 @@ kazoj# tests folder name
 1.6.3# Better -G gen
 1.6.4# Gen C header for missing git tags drops errors
 1.6.5# Add global start time
+1.6.6# Better author tag for C headers
