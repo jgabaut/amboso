@@ -1,4 +1,4 @@
-AMBOSO_API_LVL="1.6.5"
+AMBOSO_API_LVL="1.6.6"
 at () {
     echo -n "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -147,7 +147,7 @@ function check_tags {
 function echo_tag_info {
 	tag=$1
 	tag_date=$(git show -q --clear-decorations $tag 2>/dev/null | grep Date | cut -f2 -d':')
-	tag_author=$(git show -q --clear-decorations $tag 2>/dev/null | grep Author | cut -f2 -d':')
+	tag_author=$(git show -q --clear-decorations $tag 2>/dev/null | grep Author | cut -f2 -d':' | cut -f2 -d' ')
 	tag_txt=$(git show -q --clear-decorations $tag 2>/dev/null | tail -n2 | grep -v '^$')
 	echo -e "\033[1;33m[AMBOSO]    Tag text was:  \033[1;34m[$tag_txt    ]\e[0m"
 	echo -e "\033[1;33m[AMBOSO]    Tag author was:  \033[1;34m[$tag_author ]\e[0m"
@@ -161,7 +161,7 @@ function gen_C_headers {
 	headername="anvil__$execname.h"
 	c_headername="anvil__$execname.c"
 	tag_date=$(git show -q --clear-decorations $tag 2>/dev/null | grep Date | cut -f2 -d':')
-	tag_author=$(git show -q --clear-decorations $tag 2>/dev/null | grep Author | cut -f2 -d':')
+	tag_author=$(git show -q --clear-decorations $tag 2>/dev/null | grep Author | cut -f2 -d':' | cut -f2 -d' ')
 	tag_txt=$(git show -q --clear-decorations $tag 2>/dev/null | tail -n2 | grep -v '^$')
 	echo -e "\033[1;35m[AMBOSO]    Gen C header for ($execname), v($tag) to dir ($target_dir)\e[0m"
 	echo -e "\033[1;35m[AMBOSO]    Reset file ($target_dir/$headername)"
