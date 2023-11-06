@@ -1,4 +1,4 @@
-AMBOSO_API_LVL="1.6.7"
+AMBOSO_API_LVL="1.6.8"
 at () {
     echo -n "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -172,11 +172,11 @@ function gen_C_headers {
     printf "//Repo at https://github.com/jgabaut/amboso\n\n" >> "$target_dir/$headername"
 	printf "#ifndef ANVIL__"$execname"__\n" >> "$target_dir/$headername"
 	printf "#define ANVIL__"$execname"__\n\n" >> "$target_dir/$headername"
-	printf "static const char ANVIL__API_LEVEL__STRING[] = \""$AMBOSO_API_LVL"\"; /**< Represents amboso version used for [$headername] generated header.*/\n\n" >> "$target_dir/$headername"
-	printf "static const char ANVIL__"$execname"__VERSION_STRING[] = \""$tag"\"; /**< Represents current version for [$headername] generated header.*/\n\n" >> "$target_dir/$headername"
-	printf "static const char ANVIL__"$execname"__VERSION_DESC[] = \""$tag_txt"\"; /**< Represents current version info for [$headername] generated header.*/\n\n" >> "$target_dir/$headername"
-	printf "static const char ANVIL__"$execname"__VERSION_DATE[] = \""$tag_date"\"; /**< Represents date for current version for [$headername] generated header.*/\n\n" >> "$target_dir/$headername"
-	printf "static const char ANVIL__"$execname"__VERSION_AUTHOR[] = \""$tag_author"\"; /**< Represents author for current version for [$headername] generated header.*/\n\n" >> "$target_dir/$headername"
+	printf "static const char ANVIL__API_LEVEL__STRING[] = \"$AMBOSO_API_LVL\"; /**< Represents amboso version used for [$headername] generated header.*/\n\n" >> "$target_dir/$headername"
+	printf "static const char ANVIL__"$execname"__VERSION_STRING[] = \"$tag\"; /**< Represents current version for [$headername] generated header.*/\n\n" >> "$target_dir/$headername"
+	printf "static const char ANVIL__"$execname"__VERSION_DESC[] = \"$tag_txt\"; /**< Represents current version info for [$headername] generated header.*/\n\n" >> "$target_dir/$headername"
+	printf "static const char ANVIL__"$execname"__VERSION_DATE[] = \"$tag_date\"; /**< Represents date for current version for [$headername] generated header.*/\n\n" >> "$target_dir/$headername"
+	printf "static const char ANVIL__"$execname"__VERSION_AUTHOR[] = \"$tag_author\"; /**< Represents author for current version for [$headername] generated header.*/\n\n" >> "$target_dir/$headername"
 	printf "const char* get_ANVIL__API__LEVEL__(void); /**< Returns a version string for amboso API of [$headername] generated header.*/\n\n" >> "$target_dir/$headername"
 	printf "const char* get_ANVIL__VERSION__(void); /**< Returns a version string for [$headername] generated header.*/\n\n" >> "$target_dir/$headername"
 	printf "const char* get_ANVIL__VERSION__DESC__(void); /**< Returns a version info string for [$headername] generated header.*/\n\n" >> "$target_dir/$headername"
