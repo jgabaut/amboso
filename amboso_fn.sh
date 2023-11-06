@@ -1,4 +1,4 @@
-AMBOSO_API_LVL="1.6.9"
+AMBOSO_API_LVL="1.6.10"
 at () {
     echo -n "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -190,7 +190,7 @@ function gen_C_headers {
 	printf "const char *get_ANVIL__VERSION__DESC__(void)\n{\n    return ANVIL__"$execname"__VERSION_DESC;\n}\n\n" >> "$target_dir/$c_headername"
 	printf "const char *get_ANVIL__VERSION__DATE__(void)\n{\n    return ANVIL__"$execname"__VERSION_DATE;\n}\n\n" >> "$target_dir/$c_headername"
 	printf "const char *get_ANVIL__VERSION__AUTHOR__(void)\n{\n    return ANVIL__"$execname"__VERSION_AUTHOR;\n}\n\n" >> "$target_dir/$c_headername"
-	printf "const char *get_ANVIL__API__LEVEL__(void)\n{\n    return ANVIL__API_LEVEL__STRING;\n}\n\n" >> "$target_dir/$c_headername"
+	printf "const char *get_ANVIL__API__LEVEL__(void)\n{\n    return ANVIL__API_LEVEL__STRING;\n}\n" >> "$target_dir/$c_headername"
 
 }
 
