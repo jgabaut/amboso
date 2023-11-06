@@ -26,3 +26,4 @@ kazoj# tests folder name
 1.6.8# Fix broken C header tags - Drops support for 1.6.7 Update C header style
 1.6.9# Correct pointer spacing for C header
 1.6.10# Remove extra newline in C header
+1.6.11# Fix DESC tag for C header
