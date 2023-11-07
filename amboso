@@ -1107,14 +1107,14 @@ if [[ $test_mode_flag -gt 0 ]]; then {
   out_res=""
   if [[ "$diff_res" -eq 0 ]]; then {
     out_res="pass"
-    if [[ ! -z "$run_tmp_escout" && ! -z "$relative_testpath.stdout" ]]; then {
+    if [[ ! -z "$run_tmp_escout" ]] ; then { #FIXME: SC2157 && ! -z "$relative_testpath".stdout ]]; then {
       #This one doesn't go on stderr since we still want it in recursive calls:
       [[ $verbose_flag -gt 0 ]] && printf "\033[0;32m[TEST]    Pass, both outputs are not empty.\e[0m\n"
     } elif [[ -z "$run_tmp_escout" ]]; then {
       [[ $verbose_flag -gt 0 ]] && printf "\033[0;35m[TEST]    Pass, current stdout is empty. Is that expected?\e[0m\n">&2
-    } elif [[ -z "$relative_testpath.stdout" ]]; then {
-      [[ $verbose_flag -gt 0 ]] && printf "\033[0;35m[TEST]    Pass, registered stdout is empty. Is that expected?\e[0m\n" >&2
-    }
+    } #FIXME: SC2157 elif [[ -z "$relative_testpath.stdout" ]]; then {
+      #[[ $verbose_flag -gt 0 ]] && printf "\033[0;35m[TEST]    Pass, registered stdout is empty. Is that expected?\e[0m\n" >&2
+    #}
     fi
     if [[ $verbose_flag -gt 0 && $quiet_flag -eq 0 ]]; then {
       printf "\n\033[0;32m[TEST]    (stdout) Expected:\e[0m\n"
@@ -1143,14 +1143,14 @@ if [[ $test_mode_flag -gt 0 ]]; then {
   diff_res="$?"
   if [[ "$diff_res" -eq 0 ]]; then {
     err_res="pass"
-    if [[ ! -z "$run_tmp_escerr" && ! -z "$relative_testpath.stderr" ]]; then {
+    if [[ ! -z "$run_tmp_escerr" ]]; then { #FIXME SC2157 && ! -z "$relative_testpath.stderr" ]]; then {
       #This one doesn't go on stderr since we still want it in recursive calls:
       [[ $verbose_flag -gt 0 ]] && printf "\033[0;32m[TEST]    Pass, both stderrs are not empty.\e[0m\n"
     } elif [[ -z "$run_tmp_escerr" ]]; then {
       [[ $verbose_flag -gt 0 ]] && printf "\033[0;35m[TEST]    Pass, current run stderr is empty. Is that expected?\e[0m\n">&2
-    } elif [[ -z "$relative_testpath.stderr" ]]; then {
-      [[ $verbose_flag -gt 0 ]] && printf "\033[0;35m[TEST]    Pass, registered stderr is empty. Is that expected?\e[0m\n" >&2
-    }
+    }#FIXME SC2157 elif [[ -z "$relative_testpath.stderr" ]]; then {
+     # [[ $verbose_flag -gt 0 ]] && printf "\033[0;35m[TEST]    Pass, registered stderr is empty. Is that expected?\e[0m\n" >&2
+    #}
     fi
     if [[ $verbose_flag -gt 0 && $quiet_flag -eq 0 ]]; then {
       printf "\n\033[0;32m[TEST]    (stderr) Expected:\e[0m\n"
