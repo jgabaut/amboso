@@ -1,5 +1,19 @@
 #!/bin/bash
-# Bash script to run a milestone build providing the version number.
+#  Bash script to run a milestone build providing the version number.
+#    Copyright (C) 2023  jgabaut
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, version 3 of the License.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 # Will refuse to run as root. We don't need root privileges in here.
 amboso_start_time=`date +%s.%N`
 if [[ "$EUID" -eq 0 ]] ; then {
@@ -341,9 +355,9 @@ if [[ $expected_AMBOSO_API_LVL > $AMBOSO_API_LVL ]] ; then {
 }
 fi
 [[ $verbose_flag -gt 1 ]] && echo -e "\033[0;32m[PREP]    Printing active flags:\e[0m" >&2 && echo_active_flags >&2
-main_at=235
+main_at=359
 #PROG_START_LINE
-prog_start_line="235"
+prog_start_line="359"
 trace_flag=0
 trace_line="421"
 # Check env var to enable backtrace
