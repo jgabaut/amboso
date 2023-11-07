@@ -1218,8 +1218,8 @@ if [[ -z $version ]]; then {
     exit 1
   } elif [[ ! -z $query && $test_mode_flag -gt 0 ]] ; then { #If we're in test mode, gently tell the user that the version is not supported
     keep_run_txt=""
-    [[ $init_flag -gt 0 ]] && keep_run_txt="$mode_txt[INIT]"
-    [[ $purge_flag -gt 0 ]] && keep_run_txt="$mode_txt[PURGE]"
+    [[ $init_flag -gt 0 ]] && keep_run_txt="${mode_txt}[INIT]"
+    [[ $purge_flag -gt 0 ]] && keep_run_txt="${mode_txt}[PURGE]"
     printf "\n\033[1;33m[DEBUG]    ( $query ) is not a supported test. $keep_run_txt.\e[0m\n" >&2
     echo_timer "$amboso_start_time"  "Invalid test query [$query]" "1"
     exit 1;
