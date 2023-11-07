@@ -15,21 +15,21 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="1.6.12"
+AMBOSO_API_LVL="1.7.0"
 at () {
-    echo -n "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
+    printf "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
     printf '<%s:%s> ' "${FUNCNAME[i]}" "${BASH_LINENO[i]}";
     done
-    echo "$LINENO"
+    printf "$LINENO\n"
 }
 
 backtrace () {
    #[[ $tracing -eq 0 ]] && echo -n "{ [MAIN] at: $trace_line } -> {"
    if [[ $trace_line -eq 0 ]] ; then {
-     echo -e "\n\n\n\n{ [$(( $trace_line ))] [ trace at) "
+     printf "\n\n\n\n{ [$(( $trace_line ))] [ trace at) \n"
    } else {
-     at echo -e "["
+     at printf "[\n"
    }
    fi
    trace_line=1
@@ -39,7 +39,7 @@ backtrace () {
       trace_line=$((trace_line+1))
       #echo -n "at [ $(( $trace_line  )) ] ["
    done
-   echo "} -> "
+   printf "} -> \n"
 }
 
 trace () {
@@ -52,55 +52,55 @@ trace () {
 }
 
 function echo_active_flags {
-  echo -e "[DEBUG]    Current flags:\n"
-  echo -en "           [MODE]    -"
-  [[ $small_test_mode_flag -gt 0 ]] && echo -n "t"
-  [[ $test_mode_flag -gt 0 ]] && echo -n "T"
-  [[ $git_mode_flag -gt 0 ]] && echo -n "g"
-  [[ $base_mode_flag -gt 0 ]] && echo -n "B"
-  echo ""
-  echo -en "           [OP]    -"
+  printf "[DEBUG]    Current flags:\n\n"
+  printf "           [MODE]    -"
+  [[ $small_test_mode_flag -gt 0 ]] && printf "t"
+  [[ $test_mode_flag -gt 0 ]] && printf "T"
+  [[ $git_mode_flag -gt 0 ]] && printf "g"
+  [[ $base_mode_flag -gt 0 ]] && printf "B"
+  printf "\n"
+  printf "           [OP]    -"
   if [[ $verbose_flag -gt 0 ]] ; then {
     for verb_lv in $(seq 0 $(($verbose_flag-1))) ; do {
-      echo -n "V"
+      printf "V"
     }
     done
   }
   fi
-  [[ $gen_C_headers_flag -gt 0 ]] && echo -n "G"
-  [[ $show_time_flag -gt 0 ]] && echo -n "w"
-  [[ $start_time_flag -gt 0 ]] && echo -n "W"
-  [[ $ignore_fit_check_flag -gt 0 ]] && echo -n "X"
-  [[ $show_warranty_flag -gt 0 ]] && echo -n "C"
-  [[ $tell_uname_flag -gt 0 ]] && echo -n "U"
-  [[ $pack_flag -gt 0 ]] && echo -n "z"
-  [[ $quiet_flag -gt 0 ]] && echo -n "q"
-  [[ $init_flag -gt 0 ]] && echo -n "i"
-  [[ $build_flag -gt 0 ]] && echo -n "b"
-  [[ $purge_flag -gt 0 ]] && echo -n "p"
-  [[ $delete_flag -gt 0 ]] && echo -n "d"
-  [[ $small_list_flag -gt 0 ]] && echo -n "l"
-  [[ $big_list_flag -gt 0 ]] && echo -n "L"
-  [[ $bighelp_flag -gt 0 ]] && echo -n "H"
-  [[ $smallhelp_flag -gt 0 ]] && echo -n "h"
-  [[ $version_flag -eq 1 ]] && echo -n "v"
-  [[ $version_flag -gt 1 ]] && echo -n "v" #One more level to this option
-  echo -e "\n"
+  [[ $gen_C_headers_flag -gt 0 ]] && printf "G"
+  [[ $show_time_flag -gt 0 ]] && printf "w"
+  [[ $start_time_flag -gt 0 ]] && printf "W"
+  [[ $ignore_fit_check_flag -gt 0 ]] && printf"X"
+  [[ $show_warranty_flag -gt 0 ]] && printf "C"
+  [[ $tell_uname_flag -gt 0 ]] && printf "U"
+  [[ $pack_flag -gt 0 ]] && printf "z"
+  [[ $quiet_flag -gt 0 ]] && printf "q"
+  [[ $init_flag -gt 0 ]] && printf "i"
+  [[ $build_flag -gt 0 ]] && printf "b"
+  [[ $purge_flag -gt 0 ]] && printf "p"
+  [[ $delete_flag -gt 0 ]] && printf "d"
+  [[ $small_list_flag -gt 0 ]] && printf "l"
+  [[ $big_list_flag -gt 0 ]] && printf "L"
+  [[ $bighelp_flag -gt 0 ]] && printf "H"
+  [[ $smallhelp_flag -gt 0 ]] && printf "h"
+  [[ $version_flag -eq 1 ]] && printf "v"
+  [[ $version_flag -gt 1 ]] && printf "v" #One more level to this option
+  printf "\n\n"
 }
 
 print_sysinfo () {
-  echo -e "[SYSTEM]    System info:\n"
-  echo -e "            [ kernel_name ]    [ $kernel_name ]"
-  echo -e "            [ kernel_release ]    [ $kernel_release ]"
-  echo -e "            [ machine_name ]    [ $machine_name ]"
-  echo -e "            [ os_name ]    [ $os_name ]"
+  printf "[SYSTEM]    System info:\n\n"
+  printf "            [ kernel_name ]    [ $kernel_name ]\n"
+  printf "            [ kernel_release ]    [ $kernel_release ]\n"
+  printf "            [ machine_name ]    [ $machine_name ]\n"
+  printf "            [ os_name ]    [ $os_name ]\n"
 }
 
 function echo_amboso_version {
-  echo "$amboso_version"
+  printf "$amboso_version\n"
 }
 function echo_amboso_version_short {
-  echo "$amboso_currvers"
+  printf "$amboso_currvers\n"
 }
 
 function echo_timer {
@@ -112,15 +112,15 @@ function echo_timer {
   msg="$2"
   color="$3"
   et=$(date +%s.%N)
-  runtime=$( echo "$et - $st" | bc -l )
-  display_zero=$(echo $runtime | cut -d '.' -f 1)
+  runtime=$( printf "$et - $st\n" | bc -l )
+  display_zero=$(printf "$runtime\n" | cut -d '.' -f 1)
   if [[ -z $display_zero ]]; then {
     display_zero="0"
   } else {
     display_zero=""
   }
   fi
-  echo -e "\033[1;36m[TIME]\e[0m    [ \033[1;3"$color"m\"$msg\"\e[0m ] Took [ \033[1;33m$display_zero$runtime\e[0m ] seconds."
+  printf "\033[1;36m[TIME]\e[0m    [ \033[1;3"$color"m\"$msg\"\e[0m ] Took [ \033[1;33m$display_zero$runtime\e[0m ] seconds.\n"
   return
 }
 
@@ -133,13 +133,13 @@ function check_tags {
 		if [[ " ${repo_tags[@]} " =~ " $tag " ]]; then
 			if [[ $verbose_flag -gt 0 ]] ; then {
 				shown_tag="\033[1;32m$tag\e[0m"
-				echo -e "[AMBOSO]  Read Tag $shown_tag exists in the repo." >&2
+				printf "[AMBOSO]  Read Tag $shown_tag exists in the repo.\n" >&2
 			}
 			fi
 		else {
 			if [[ $verbose_flag -gt 0 ]] ; then {
 				shown_tag="\033[1;31m$tag\e[0m"
-				echo -e "[AMBOSO]  Read Tag $shown_tag is missing in the repo." >&2
+				printf "[AMBOSO]  Read Tag $shown_tag is missing in the repo.\n" >&2
 			}
 			fi
 		}
@@ -152,13 +152,13 @@ function check_tags {
     	if [[ " ${repo_tags[@]} " =~ " $tag " ]]; then {
 		if [[ $verbose_flag -gt 0 ]] ; then {
     			shown_tag="\033[1;32m$tag\e[0m"
-        		echo -e "[AMBOSO]  Supported Tag $shown_tag exists in the repo." >&2
+        		printf "[AMBOSO]  Supported Tag $shown_tag exists in the repo.\n" >&2
 		}
 		fi
 	} else {
 		if [[ $verbose_flag -gt 0 ]] ; then {
     			shown_tag="\033[1;31m$tag\e[0m"
-        		echo -e "[AMBOSO]  Supported Tag $shown_tag is missing in the repo." >&2
+        		printf "[AMBOSO]  Supported Tag $shown_tag is missing in the repo.\n" >&2
 		}
 		fi
  	}
@@ -171,9 +171,9 @@ function echo_tag_info {
 	tag_date=$(git show -q --clear-decorations $tag 2>/dev/null | grep Date | cut -f2 -d':')
 	tag_author=$(git show -q --clear-decorations $tag 2>/dev/null | grep Author | cut -f2 -d':' | cut -f2 -d' ')
 	tag_txt=$(git show -q --clear-decorations $tag 2>/dev/null | tail -n2 | grep -v '^$')
-	echo -e "\033[1;33m[AMBOSO]    Tag text was:  \033[1;34m[$tag_txt    ]\e[0m"
-	echo -e "\033[1;33m[AMBOSO]    Tag author was:  \033[1;34m[$tag_author ]\e[0m"
-	echo -e "\033[1;33m[AMBOSO]    Tag date was:  \033[1;34m[$tag_date   ]\e[0m"
+	printf "\033[1;33m[AMBOSO]    Tag text was:  \033[1;34m[$tag_txt    ]\e[0m\n"
+	printf "\033[1;33m[AMBOSO]    Tag author was:  \033[1;34m[$tag_author ]\e[0m\n"
+	printf "\033[1;33m[AMBOSO]    Tag date was:  \033[1;34m[$tag_date   ]\e[0m\n"
 }
 
 function gen_C_headers {
@@ -185,10 +185,10 @@ function gen_C_headers {
 	tag_date=$(git show -q --clear-decorations $tag 2>/dev/null | grep Date | cut -f2 -d':')
 	tag_author=$(git show -q --clear-decorations $tag 2>/dev/null | grep Author | cut -f2 -d':' | cut -f2 -d' ')
 	tag_txt=$(git show -q --clear-decorations $tag 2>/dev/null | head -n1 | grep -v '^$')
-	echo -e "\033[1;35m[AMBOSO]    Gen C header for ($execname), v($tag) to dir ($target_dir)\e[0m"
-	echo -e "\033[1;35m[AMBOSO]    Reset file ($target_dir/$headername)"
+	printf "\033[1;35m[AMBOSO]    Gen C header for ($execname), v($tag) to dir ($target_dir)\e[0m\n"
+	printf "\033[1;35m[AMBOSO]    Reset file ($target_dir/$headername)\n"
 	printf "" > "$target_dir/$headername"
-	echo -e "\033[1;35m[AMBOSO]    Reset file ($target_dir/$c_headername)"
+	printf "\033[1;35m[AMBOSO]    Reset file ($target_dir/$c_headername)\n"
 	printf "" > "$target_dir/$c_headername"
     printf "//Generated by amboso v$AMBOSO_API_LVL\n" >> "$target_dir/$headername"
     printf "//Repo at https://github.com/jgabaut/amboso\n\n" >> "$target_dir/$headername"
@@ -218,7 +218,7 @@ function gen_C_headers {
 
 function set_supported_versions {
   dir=$1
-  [[ ! -f $dir/stego.lock ]] && echo -e "\033[1;31m[ERROR]    Can't find \"stego.lock\" in ( $dir ).\e[0m\n" && exit 1
+  [[ ! -f $dir/stego.lock ]] && printf "\033[1;31m[ERROR]    Can't find \"stego.lock\" in ( $dir ).\e[0m\n\n" && exit 1
   git_tags_count=0
   base_tags_count=0
   j=0
@@ -231,13 +231,13 @@ function set_supported_versions {
 
     was_git_tag=0
     was_base_tag=0
-    for tag in $(echo "$line" | grep -v '^?' | cut -d '#' -f 1 | cut -d ' ' -f 1 | grep -v '^$'); do {
+    for tag in $(printf "$line\n" | grep -v '^?' | cut -d '#' -f 1 | cut -d ' ' -f 1 | grep -v '^$'); do {
       read_git_mode_tags[git_tags_count]="$tag"
       git_tags_count=$(($git_tags_count+1))
       was_git_tag=1
     }
     done
-    for tag in $(echo "$line" | grep '^?'| cut -d '?' -f2 | cut -d '#' -f 1 | cut -d ' ' -f1 | grep -v '^$'); do {
+    for tag in $(printf "$line\n" | grep '^?'| cut -d '?' -f2 | cut -d '#' -f 1 | cut -d ' ' -f1 | grep -v '^$'); do {
       read_base_mode_tags[base_tags_count]="$tag"
       base_tags_count=$(($base_tags_count+1))
       was_base_tag=1
@@ -277,7 +277,7 @@ function set_supported_versions {
 
 function set_source_info {
   dir=$1
-  [[ ! -f $dir/stego.lock ]] && echo -e "\033[1;31m[ERROR]    Can't find \"stego.lock\" in ( $dir ). Try running with -D to specify the right directory.\e[0m\n" && exit 1
+  [[ ! -f $dir/stego.lock ]] && printf "\033[1;31m[ERROR]    Can't find \"stego.lock\" in ( $dir ). Try running with -D to specify the right directory.\e[0m\n\n" && exit 1
   j=0
   k=0
   while IFS= read -r line; do
@@ -286,7 +286,7 @@ function set_source_info {
 
     #echo "Text read from file: ( $line )"
     #echo "Text read from file, no comments: ( $( echo "$line" | cut -d '#' -f 1 ) )"
-    sources_info[k]=$(echo "$line" | cut -d '#' -f 1 | cut -d ' ' -f 1 )
+    sources_info[k]=$(printf "$line\n" | cut -d '#' -f 1 | cut -d ' ' -f 1 )
     k=$((k+1))
     [[ $k -eq 5 ]] && break #we only read the first four lines
   done < "$dir/stego.lock" 2>/dev/null
@@ -299,7 +299,7 @@ function set_source_info {
 function set_tests_info {
   dir="$1"
   if [[ ! -f "$dir"/kazoj.lock ]] ; then {
-    echo -e "\033[1;31m[ERROR]    Can't find \"kazoj.lock\" in \"$dir\". Try running with -K to specify the right directory.\e[0m\n"
+    printf "\033[1;31m[ERROR]    Can't find \"kazoj.lock\" in \"$dir\". Try running with -K to specify the right directory.\e[0m\n\n"
     return 1
   }
   fi
@@ -310,7 +310,7 @@ function set_tests_info {
     [[ $j -lt 1 || $j -eq 2 ]] && j=$((j+1)) && continue
     #echo "Text read from file: ( $line )"
     #echo "Text read from file, no comments: ( $( echo "$line" | cut -d '#' -f 1 ) )"
-    tests_info[k]=$(echo "$line" | cut -d '#' -f 1 | cut -d ' ' -f 1 )
+    tests_info[k]=$(printf "$line\n" | cut -d '#' -f 1 | cut -d ' ' -f 1 )
     k=$((k+1))
     j=$((j+1))
     [[ $k -lt 2 ]] || break #we only read two values
@@ -318,7 +318,7 @@ function set_tests_info {
   #echo "test info array size is " "${#tests_info[@]}" >&2
   count_tests_infos="${#tests_info[@]}"
   if [[ $count_tests_infos -eq 0 ]] ; then {
-    echo -e "\033[0;31m[WARN]\e[0m    \"\$count_tests_infos\" was 0 after doing set_tests_info().\n"
+    printf "\033[0;31m[WARN]\e[0m    \"\$count_tests_infos\" was 0 after doing set_tests_info().\n\n"
     return 1
   }
   fi
@@ -339,28 +339,28 @@ function set_supported_tests {
   #tests loop
   cases_path="$kazoj_dir/$cases_dir"
   if [[ ! -d $cases_path ]]; then {
-    echo -e "\033[0;33m[DEBUG]\e[0m    \"$cases_path\" was not a valid directory.\n"
+    printf "\033[0;33m[DEBUG]\e[0m    \"$cases_path\" was not a valid directory.\n\n"
     return 1
   }
   fi
   errorcases_path="$kazoj_dir/$errors_dir"
   if [[ ! -d $errorcases_path ]]; then {
-    echo -e "\033[0;33m[DEBUG]\e[0m    \"$errorcases_path\" was not a valid directory.\n"
+    printf "\033[0;33m[DEBUG]\e[0m    \"$errorcases_path\" was not a valid directory.\n\n"
     return 1
   }
   fi
   for FILE in $(ls "$cases_path") ; do {
     test_fp="$cases_path/$FILE"
-    extens=$(echo "$(realpath $FILE)" | cut -d '.' -f '2')
+    extens=$(printf "$(realpath $FILE)\n" | cut -d '.' -f '2')
     if [[ $extens = "stderr" || $extens = "stdout" ]] ; then {
       skipped=$((skipped+1))
-      [[ $verbose_flag -gt 1 && $quiet_flag -eq 0 ]] && echo -e "\033[0;37m[PREP-TEST]    Skip record $FILE (at $(dirname $test_fp)).\e[0m" >&2
+      [[ $verbose_flag -gt 1 && $quiet_flag -eq 0 ]] && printf "\033[0;37m[PREP-TEST]    Skip record $FILE (at $(dirname $test_fp)).\e[0m\n" >&2
       continue
     }
     fi
     if ! [[ -f $test_fp && -x $test_fp ]] ; then {
       skipped=$((skipped+1))
-      [[ $verbose_flag -gt 1 && $quiet_flag -eq 0 ]] && echo -e "\033[0;36m[PREP-TEST]    Skip test \"$FILE\" (at $(dirname $test_fp)), not an executable.\e[0m" >&2
+      [[ $verbose_flag -gt 1 && $quiet_flag -eq 0 ]] && printf "\033[0;36m[PREP-TEST]    Skip test \"$FILE\" (at $(dirname $test_fp)), not an executable.\e[0m\n" >&2
       continue
     }
     fi
@@ -371,16 +371,16 @@ function set_supported_tests {
   #errors loop
   for FILE in $(ls "$errorcases_path"); do {
     test_fp="$errorcases_path/$FILE"
-    extens=$(echo "$(realpath $FILE)" | cut -d '.' -f '2')
+    extens=$(printf "$(realpath $FILE)\n" | cut -d '.' -f '2')
     if [[ $extens = "stderr" || $extens = "stdout" ]] ; then {
       skipped=$((skipped+1))
-      [[ $verbose_flag -gt 1 && $quiet_flag -eq 0 ]] && echo -e "\033[0;37m[PREP-TEST]    Skip record $FILE (at $(dirname $test_fp)).\e[0m" >&2
+      [[ $verbose_flag -gt 1 && $quiet_flag -eq 0 ]] && printf "\033[0;37m[PREP-TEST]    Skip record $FILE (at $(dirname $test_fp)).\e[0m\n" >&2
       continue
     }
     fi
     if ! [[ -f $test_fp && -x $test_fp ]] ; then {
       skipped=$((skipped+1))
-      [[ $verbose_flag -gt 1 && $quiet_flag -eq 0 ]] && echo -e "\033[0;36m[PREP-TEST]    Skip errtest \"$FILE\" (at $(basename $test_fp)), not an executable.\e[0m" >&2
+      [[ $verbose_flag -gt 1 && $quiet_flag -eq 0 ]] && printf "\033[0;36m[PREP-TEST]    Skip errtest \"$FILE\" (at $(basename $test_fp)), not an executable.\e[0m\n" >&2
       continue
     }
     fi
@@ -406,26 +406,26 @@ function echo_tests_info {
   set_supported_tests "$kazoj_dir" 2>/dev/null
   echoed_cases_dir="${tests_info[0]}"
   echoed_errors_dir="${tests_info[1]}"
-  echo -e "\033[1;33m[DEBUG]    Tests dir is: ( $kazoj_dir ).\e[0m" >&2
-  echo -e "\033[1;33m[DEBUG]    Cases dir is: ( $echoed_cases_dir ).\e[0m" >&2
-  echo -e "\033[1;33m[DEBUG]      ( $count_tests_names ) cases ready.\e[0m" >&2
+  printf "\033[1;33m[DEBUG]    Tests dir is: ( $kazoj_dir ).\e[0m\n" >&2
+  printf "\033[1;33m[DEBUG]    Cases dir is: ( $echoed_cases_dir ).\e[0m\n" >&2
+  printf "\033[1;33m[DEBUG]      ( $count_tests_names ) cases ready.\e[0m\n" >&2
   if [[ $big_list_flag -gt 0 ]] ; then {
     for i in $(seq 0 $(($count_tests_names-1))) ; do {
-      echo -e "\033[1;33m[DEBUG]      ( ${read_tests_files[$i]} ).\e[0m" >&2
+      printf "\033[1;33m[DEBUG]      ( ${read_tests_files[$i]} ).\e[0m\n" >&2
     }
     done
   }
   fi
-  echo -e "\033[1;33m[DEBUG]    Errors dir is: ( $echoed_errors_dir ).\e[0m" >&2
-  echo -e "\033[1;33m[DEBUG]      ( $count_errortests_names ) error cases ready.\e[0m" >&2
+  printf "\033[1;33m[DEBUG]    Errors dir is: ( $echoed_errors_dir ).\e[0m\n" >&2
+  printf "\033[1;33m[DEBUG]      ( $count_errortests_names ) error cases ready.\e[0m\n" >&2
   if [[ $big_list_flag -gt 0 ]] ; then {
     for i in $(seq 0 $(($count_errortests_names-1))) ; do {
-      echo -e "\033[1;33m[DEBUG]      ( ${read_errortests_files[$i]} ).\e[0m" >&2
+      printf "\033[1;33m[DEBUG]      ( ${read_errortests_files[$i]} ).\e[0m\n" >&2
     }
     done
   }
   fi
-  echo -e "\033[1;33m[DEBUG]    ( $tot_tests ) total tests ready.\e[0m" >&2
+  printf "\033[1;33m[DEBUG]    ( $tot_tests ) total tests ready.\e[0m\n" >&2
   #echo "$count_tests_infos"
   #echo "test info array contents are: ( ${tests_info[@]} )" >&2
 }
@@ -437,25 +437,25 @@ function echo_othermode_tags {
   #Print remaining read versions not available in current mode
   if [[ $base_mode_flag -gt 0 ]] ; then {
     mode_txt="\033[1;34mgit\e[0m"
-    echo -e "  ( $count_git_versions ) supported tags when running in ( $mode_txt ) mode."
-    echo -e "  Run again in ( $mode_txt ) mode to use them."
+    printf "  ( $count_git_versions ) supported tags when running in ( $mode_txt ) mode.\n"
+    printf "  Run again in ( $mode_txt ) mode to use them.\n"
     for i in $(seq 0 $(($count_git_versions-1))); do {
-      (( $i % 4 == 0)) && [[ $i -ne 0 ]] && echo -en "\n"
-      echo -en "    \033[0;33m${read_git_mode_tags[i]}\e[0m"
+      (( $i % 4 == 0)) && [[ $i -ne 0 ]] && printf "\n"
+      printf "    \033[0;33m${read_git_mode_tags[i]}\e[0m"
     }
     done
   } else {
     mode_txt="\033[1;31mbase\e[0m"
-    echo -e "  ( $count_base_versions ) supported tags when running in ( $mode_txt ) mode."
-    echo -e "  Run again in ( $mode_txt ) mode to use them."
+    printf "  ( $count_base_versions ) supported tags when running in ( $mode_txt ) mode.\n"
+    printf "  Run again in ( $mode_txt ) mode to use them.\n"
     for i in $(seq 0 $(($count_base_versions-1))); do {
-      (( $i % 4 == 0)) && [[ $i -ne 0 ]] && echo -en "\n"
-      echo -en "    \033[0;33m${read_base_mode_tags[i]}\e[0m"
+      (( $i % 4 == 0)) && [[ $i -ne 0 ]] && printf "\n"
+      printf "    \033[0;33m${read_base_mode_tags[i]}\e[0m"
     }
     done
   }
   fi
-  echo ""
+  printf "\n"
 }
 
 function echo_supported_tags {
@@ -463,13 +463,13 @@ function echo_supported_tags {
   [[ $base_mode_flag -gt 0 ]] && mode_txt="\033[1;31mbase\e[0m"
   dir="$1"
   set_supported_versions "$dir"
-  echo -e "  ( $tot_vers ) supported tags for current mode ( $mode_txt )."
+  printf "  ( $tot_vers ) supported tags for current mode ( $mode_txt ).\n"
   for i in $(seq 0 $(($tot_vers-1))); do { #Print currently supported versions (only ones conforming to mode)
-    (( $i % 4 == 0)) && [[ $i -ne 0 ]] && echo -en "\n"
-    echo -en "    \033[1;32m${supported_versions[i]}\e[0m"
+    (( $i % 4 == 0)) && [[ $i -ne 0 ]] && printf "\n"
+    printf "    \033[1;32m${supported_versions[i]}\e[0m"
   }
   done
-  echo ""
+  printf "\n"
 }
 
 function git_mode_check {
@@ -477,8 +477,8 @@ function git_mode_check {
   #Check if we're inside a repo
   git rev-parse --is-inside-work-tree 2>/dev/null 1>&2
   is_git_repo="$?"
-  [[ $is_git_repo -gt 0 ]] && echo -e "\n\033[1;31m[ERROR]    Not running in a git repo. Try running with -B to use base mode.\e[0m\n" && exit 1
-  [[ $verbose_flag -gt 0 ]] && echo -e "\033[1;34m[MODE]    Running in git mode.\e[0m" >&2
+  [[ $is_git_repo -gt 0 ]] && printf "\n\033[1;31m[ERROR]    Not running in a git repo. Try running with -B to use base mode.\e[0m\n\n" && exit 1
+  [[ $verbose_flag -gt 0 ]] && printf "\033[1;34m[MODE]    Running in git mode.\e[0m\n" >&2
   #Check if status is clean
   if output=$(git status --untracked-files=no --porcelain) && [ -z "$output" ]; then
 	  return 0
@@ -489,7 +489,7 @@ function git_mode_check {
 
 function amboso_help {
   usage
-  echo -e "Arguments:
+  printf "Arguments:
 
   [-D ...]    BINDIR    Sets directory used to host tags
 
@@ -556,8 +556,8 @@ function amboso_help {
 }
 
 function usage {
-  echo -e "Usage:  $(basename $prog_name) [(-D|-K|-M|-S|-E|-G|-W) ...ARGS] [-TBtg] [-bripd] [-hHvVlLqcwXC] [TAG_QUERY]\n"
-  echo -e "    Query for a build version\n"
+  printf "Usage:  $(basename $prog_name) [(-D|-K|-M|-S|-E|-G|-W) ...ARGS] [-TBtg] [-bripd] [-hHvVlLqcwXC] [TAG_QUERY]\n"
+  printf "    Query for a build version\n"
   #echo_supported_tags "$milestones_dir"
   #echo ""
   #echo_othermode_tags "$milestones_dir"
@@ -566,7 +566,7 @@ function usage {
 function escape_colorcodes_tee {
   file="$1"
   outfile="$2"
-  echo "" >"$outfile"
+  printf "" >"$outfile"
   #sed -r 's/\/\\3/g' "$file"
   #sed -e 's/\\033\[/COLOR[/g' -e 's/COLOR\[1;3/"<colorTag[Heavy,/g' -e 's/COLOR\[0;3/"<colorTag[Light,/g' -e 's/\\e\[0m/\]>"/g' "$file" >>"$outfile"
   #sed 's/\x1B\[\([0-9]\{1,2\}\(;[0-9]\{1,2\}\)\?\)\?[mGK]//g' <"$file"
@@ -576,7 +576,7 @@ function escape_colorcodes_tee {
 function escape_colorcodes {
   file="$1"
   outfile="$2"
-  echo "" >"$outfile"
+  printf "" >"$outfile"
   #sed -r 's/\/\\3/g' "$file"
   #sed -e 's/\\033\[/COLOR[/g' -e 's/COLOR\[1;3/"<colorTag[Heavy,/g' -e 's/COLOR\[0;3/"<colorTag[Light,/g' -e 's/\\e\[0m/\]>"/g' "$file" >>"$outfile"
   #sed 's/\x1B\[\([0-9]\{1,2\}\(;[0-9]\{1,2\}\)\?\)\?[mGK]//g' <"$file"
@@ -585,8 +585,8 @@ function escape_colorcodes {
 
 function record_test {
   tfp="$1" # test_file_path
-  echo "" > "$tfp.stdout"
-  echo "" > "$tfp.stderr"
+  printf "" > "$tfp.stdout"
+  printf "" > "$tfp.stderr"
   tmp_stdout="$(mktemp)"
   tmp_stderr="$(mktemp)"
   run_test "$tfp" >>"$tmp_stdout" 2>>"$tmp_stderr"
@@ -594,10 +594,10 @@ function record_test {
   #echo "r: $res" >> "$tmp_stdout"
   escape_colorcodes_tee "$tmp_stdout" "$tfp.stdout"
   escape_colorcodes_tee "$tmp_stderr" "$tfp.stderr"
-  rm -f "$tmp_stdout" || echo "\033[1;31m[ERROR]    Failed removing tmpfile ($tmp_stdout). Why?\n"
-  [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;32m[TEST]    Removed tempfile "$tmp_stdout".\e[0m" >&2
-  rm -f "$tmp_stderr" || echo "\033[1;31m[ERROR]    Failed removing tmpfile ($tmp_stderr). Why?\n"
-  [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;32m[TEST]    Removed tempfile "$tmp_stderr".\e[0m" >&2
+  rm -f "$tmp_stdout" || printf "\033[1;31m[ERROR]    Failed removing tmpfile ($tmp_stdout). Why?\n\n"
+  [[ $verbose_flag -gt 0 ]] && printf "\033[0;32m[TEST]    Removed tempfile "$tmp_stdout".\e[0m\n" >&2
+  rm -f "$tmp_stderr" || printf "\033[1;31m[ERROR]    Failed removing tmpfile ($tmp_stderr). Why?\n\n"
+  [[ $verbose_flag -gt 0 ]] && printf "\033[0;32m[TEST]    Removed tempfile "$tmp_stderr".\e[0m\n" >&2
 }
 
 function run_test {
@@ -614,15 +614,15 @@ function delete_test {
   #WIP
   tfp="$1" # test_file_path
   (
-    echo "deleting $tfp" 2>/dev/null
+    printf "deleting $tfp\n" 2>/dev/null
     exit "$?"
   )
   res="$?"
 
   if [[ $res -eq 0 ]]; then {
-    echo -e "\033[0;32m[TEST]    Deleted $tfp.\e[0m" >&2
+    printf "\033[0;32m[TEST]    Deleted $tfp.\e[0m\n" >&2
   } else {
-    echo -e "\033[1;31m[TEST]    Failed deleting $tfp. How?\e[0m" >&2
+    printf "\033[1;31m[TEST]    Failed deleting $tfp. How?\e[0m\n" >&2
   }
   fi
 }
