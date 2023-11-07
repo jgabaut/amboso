@@ -2,7 +2,7 @@ export SHELL=/bin/bash
 VERSION="1.6.12"
 ANVIL_C_HEADER_VERSION="1.6.12"
 ECHO_VERSION="./amboso"
-RUN_VERSION := $(shell $(ECHO_VERSION) -v)
+RUN_VERSION := $(shell $(ECHO_VERSION) -qv)
 
 all: hello_world
 	@echo -e "\033[1;32mEnd of build.\e[0m\n"
