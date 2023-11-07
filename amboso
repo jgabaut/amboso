@@ -280,8 +280,8 @@ fi
 [[ $verbose_flag -gt 1 ]] && printf "\033[0;32m[PREP]    Done getopts.\e[0m\n" >&2
 [[ $verbose_flag -gt 0 && ! $prog_name = "anvil" ]] && printf "\033[1;36m[AMBOZO]\e[0m    Please, symlink me to \"anvil\".\n\n" >&2
 
-if [[ $(basename $(pwd)) == "amboso" ]] ; then {
-  amboso_fn_path="$(realpath $(pwd))/amboso_fn.sh"
+if [[ $(basename "$(pwd)") == "amboso" ]] ; then {
+  amboso_fn_path="$(realpath "$(pwd)")/amboso_fn.sh"
   if [[ -f $amboso_fn_path ]] ; then {
     [[ $verbose_flag -gt 1 ]] && printf "\033[0;35m[PREP]    Running inside amboso dir. Sourcing: \"$amboso_fn_path\".\e[0m\n" >&2
     source "$amboso_fn_path";
@@ -384,7 +384,7 @@ fi
 
 
 #Won't print call info for top level calls
-if [[ ${AMBOSO_LVL_REC} -gt 0 ]] ; then {
+if [[ ${AMBOSO_LVL_REC} -gt 1 ]] ; then {
 #and 1+ nested test calls ( with -T, from -t calling -T)
   [[ $quiet_flag -eq 0 && $verbose_flag -gt 0 ]] && printf "\033[1;34m[AMBOSO]    Amboso depth: ( $((${AMBOSO_LVL_REC}-1)) )\e[0m\n"
   if [[ $AMBOSO_LVL_REC -lt 2 ]] ; then {
