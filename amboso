@@ -1148,7 +1148,7 @@ if [[ $test_mode_flag -gt 0 ]]; then {
       [[ $verbose_flag -gt 0 ]] && printf "\033[0;32m[TEST]    Pass, both stderrs are not empty.\e[0m\n"
     } elif [[ -z "$run_tmp_escerr" ]]; then {
       [[ $verbose_flag -gt 0 ]] && printf "\033[0;35m[TEST]    Pass, current run stderr is empty. Is that expected?\e[0m\n">&2
-    }#FIXME SC2157 elif [[ -z "$relative_testpath.stderr" ]]; then {
+    } #FIXME SC2157 elif [[ -z "$relative_testpath.stderr" ]]; then {
      # [[ $verbose_flag -gt 0 ]] && printf "\033[0;35m[TEST]    Pass, registered stderr is empty. Is that expected?\e[0m\n" >&2
     #}
     fi
