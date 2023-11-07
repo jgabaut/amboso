@@ -36,14 +36,6 @@ amboso_testflag_version="1.4.9"
 export AMBOSO_LVL_REC="${AMBOSO_LVL_REC:-0}"
 # check recursion
 if [[ "${AMBOSO_LVL_REC}" -le "2" ]]; then
-  if [[ "${AMBOSO_LVL_REC}" -eq "0" ]]; then {
-    if [[ "$BASH_VERSION" < "4" ]] ; then {
-        echo -e "\033[1;31m[ERROR]    Unsupported bash version: {$BASH_VERSION} < 4\e[0m\n"
-        exit 1
-    }
-    fi
-  }
-  fi
   PARENT_COMMAND=$(ps -o comm= $PPID)
   [[ $PARENT_COMMAND = "$prog_name" ]] && echo "Unexpected result while checking amboso recursion level." && exit 1
 else
@@ -250,7 +242,7 @@ tot_opts=$OPTIND
 done
 
 if [[ $quiet_flag -eq 0 ]]; then {
-  printf "amboso  Copyright (C) 2023  jgabaut\n  This program comes with ABSOLUTELY NO WARRANTY; for details type \`$(basename $prog_name) -C\`.\n  This is free software, and you are welcome to redistribute it\n  under certain conditions; see file \`LICENSE\` for details.\n\n  Full source is available at https://github.com/jgabaut/amboso\n"
+  printf "amboso, version $amboso_currvers\nCopyright (C) 2023  jgabaut\n\n  This program comes with ABSOLUTELY NO WARRANTY; for details type \`$(basename $prog_name) -C\`.\n  This is free software, and you are welcome to redistribute it\n  under certain conditions; see file \`LICENSE\` for details.\n\n  Full source is available at https://github.com/jgabaut/amboso\n\n"
 }
 fi
 if [[ $quiet_flag -eq 0 && $show_warranty_flag -gt 0 ]]; then {
@@ -262,6 +254,15 @@ THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
 PURPOSE.  THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE PROGRAM
 IS WITH YOU.  SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF
 ALL NECESSARY SERVICING, REPAIR OR CORRECTION.\n"
+}
+fi
+
+if [[ "${AMBOSO_LVL_REC}" -eq "1" ]]; then {
+  if [[ "$BASH_VERSION" < "4" ]] ; then {
+      echo -e "\033[1;31m[ERROR]    Unsupported bash version: {$BASH_VERSION} < 4\e[0m\n"
+      exit 1
+  }
+  fi
 }
 fi
 
