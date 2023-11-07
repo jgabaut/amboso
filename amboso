@@ -36,6 +36,14 @@ amboso_testflag_version="1.4.9"
 export AMBOSO_LVL_REC="${AMBOSO_LVL_REC:-0}"
 # check recursion
 if [[ "${AMBOSO_LVL_REC}" -le "2" ]]; then
+  if [[ "${AMBOSO_LVL_REC}" -eq "0" ]]; then {
+    if [[ "$BASH_VERSION" < "4" ]] ; then {
+        echo -e "\033[1;31m[ERROR]    Unsupported bash version: {$BASH_VERSION} < 4\e[0m\n"
+        exit 1
+    }
+    fi
+  }
+  fi
   PARENT_COMMAND=$(ps -o comm= $PPID)
   [[ $PARENT_COMMAND = "$prog_name" ]] && echo "Unexpected result while checking amboso recursion level." && exit 1
 else
