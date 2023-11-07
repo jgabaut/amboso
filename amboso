@@ -30,9 +30,9 @@ kernel_release="$(uname -r)"
 kernel_version="$(uname -v)"
 machine_name="$(uname -m)"
 os_name="$(uname -o)"
-amboso_currvers="1.6.13"
-expected_AMBOSO_API_LVL="1.6.13"
-amboso_testflag_version="1.4.9"
+amboso_currvers="1.7.0"
+expected_AMBOSO_API_LVL="1.7.0"
+amboso_testflag_version="1.6.12"
 export AMBOSO_LVL_REC="${AMBOSO_LVL_REC:-0}"
 # check recursion
 if [[ "${AMBOSO_LVL_REC}" -le "2" ]]; then
