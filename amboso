@@ -226,10 +226,12 @@ while getopts "A:M:S:E:D:K:G:W:wBgVbpHhrivdlLtTqsczUXC" opt; do
 tot_opts=$OPTIND
 done
 
-if [[ $quiet_flag -eq 0 && $show_warranty_flag -eq 0 ]]; then {
-    printf "amboso  Copyright (C) 2023  jgabaut\n  This program comes with ABSOLUTELY NO WARRANTY; for details type \`$(basename $prog_name) -C\`.\n  This is free software, and you are welcome to redistribute it\n  under certain conditions; see file \`LICENSE\` for details.\n\n  Full source is available at https://github.com/jgabaut/amboso\n"
-} elif [[ $show_warranty_flag -gt 0 ]]; then {
-  printf "  THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY
+if [[ $quiet_flag -eq 0 ]]; then {
+  printf "amboso  Copyright (C) 2023  jgabaut\n  This program comes with ABSOLUTELY NO WARRANTY; for details type \`$(basename $prog_name) -C\`.\n  This is free software, and you are welcome to redistribute it\n  under certain conditions; see file \`LICENSE\` for details.\n\n  Full source is available at https://github.com/jgabaut/amboso\n"
+}
+fi
+if [[ $quiet_flag -eq 0 && $show_warranty_flag -gt 0 ]]; then {
+  printf "THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY
 APPLICABLE LAW.  EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT
 HOLDERS AND/OR OTHER PARTIES PROVIDE THE PROGRAM \"AS IS\" WITHOUT WARRANTY
 OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO,
