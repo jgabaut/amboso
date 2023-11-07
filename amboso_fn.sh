@@ -67,6 +67,11 @@ function echo_active_flags {
     done
   }
   fi
+  [[ $gen_C_headers_flag -gt 0 ]] && echo -n "G"
+  [[ $show_time_flag -gt 0 ]] && echo -n "w"
+  [[ $start_time_flag -gt 0 ]] && echo -n "W"
+  [[ $ignore_fit_check_flag -gt 0 ]] && echo -n "X"
+  [[ $show_warranty_flag -gt 0 ]] && echo -n "C"
   [[ $tell_uname_flag -gt 0 ]] && echo -n "U"
   [[ $pack_flag -gt 0 ]] && echo -n "z"
   [[ $quiet_flag -gt 0 ]] && echo -n "q"
@@ -542,6 +547,7 @@ function amboso_help {
     -w    watch    Always display timers regardless of verbosity.
     -X    experimental    Ignore the result of git_mode_check, which would stop git mode runs early when git status is not clean.
     -W ... START_TIME    Set start time of the program.
+    -C     Copyright    Prints warranty information, as per GPL-3.0 license.
 
   [...]    TAG_QUERY    Ask a tag for current mode
 
@@ -550,7 +556,7 @@ function amboso_help {
 }
 
 function usage {
-  echo -e "Usage:  $(basename $prog_name) [(-D|-K|-M|-S|-E|-G|-W) ...ARGS] [-TBtg] [-bripd] [-hHvVlLqcwX] [TAG_QUERY]\n"
+  echo -e "Usage:  $(basename $prog_name) [(-D|-K|-M|-S|-E|-G|-W) ...ARGS] [-TBtg] [-bripd] [-hHvVlLqcwXC] [TAG_QUERY]\n"
   echo -e "    Query for a build version\n"
   #echo_supported_tags "$milestones_dir"
   #echo ""
