@@ -1,6 +1,5 @@
 ^[[1;33m[MODE]    Running in test mode.^[[0m$
 ^[[1;33m[DEBUG]    No -D flag, using ( ./bin/ ) for target dir. Run with -V to see more.^[[0m$
-^[[1;33m[DEBUG]    No -K flag, using ( /home/juggernaut/repos/amboso/kazoj/ ) for target dir. Run with -V to see more.^[[0m$
 ^[[1;33m[DEBUG]    bone dir (NO -K passed to this call): ( bone )^[[0m$
 ^[[1;33m           kulpo dir (NO -K passed to this amboso call): ( kulpo )^[[0m$
 $

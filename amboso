@@ -1,5 +1,20 @@
 #!/bin/bash
-# Bash script to run a milestone build providing the version number.
+#  SPDX-License-Identifier: GPL-3.0-only
+#  Bash script to run a milestone build providing the version number.
+#    Copyright (C) 2023  jgabaut
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, version 3 of the License.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 # Will refuse to run as root. We don't need root privileges in here.
 amboso_start_time=`date +%s.%N`
 if [[ "$EUID" -eq 0 ]] ; then {
@@ -15,12 +30,13 @@ kernel_release="$(uname -r)"
 kernel_version="$(uname -v)"
 machine_name="$(uname -m)"
 os_name="$(uname -o)"
-amboso_currvers="1.6.11"
-expected_AMBOSO_API_LVL="1.6.11"
+amboso_currvers="1.6.12"
+expected_AMBOSO_API_LVL="1.6.12"
 amboso_testflag_version="1.4.9"
 export AMBOSO_LVL_REC="${AMBOSO_LVL_REC:-0}"
 # check recursion
 if [[ "${AMBOSO_LVL_REC}" -le "2" ]]; then
+  PARENT_COMMAND=$(ps -o comm= $PPID)
   [[ $PARENT_COMMAND = "$prog_name" ]] && echo "Unexpected result while checking amboso recursion level." && exit 1
 else
   echo -e "\n[AMBOSO]    Exceeded depth for recursion ( nested ${AMBOSO_LVL_REC} times).\n"
@@ -70,6 +86,7 @@ bighelp_flag=0
 smallhelp_flag=0
 vers_make_flag=0
 makefile_version=""
+vers_autoconf_flag=0
 use_autoconf_version=""
 git_mode_flag=1 #By default we run in git mode
 base_mode_flag=0
@@ -93,9 +110,13 @@ start_time_val=""
 start_time_set=0
 show_time_flag=0
 ignore_git_check_flag=0
+show_warranty_flag=0
 
-while getopts "A:M:S:E:D:K:G:W:wBgVbpHhrivdlLtTqsczUX" opt; do
+while getopts "A:M:S:E:D:K:G:W:wBgVbpHhrivdlLtTqsczUXC" opt; do
   case $opt in
+    C )
+      show_warranty_flag=1
+      ;;
     X )
       ignore_git_check_flag=1
       ;;
@@ -220,6 +241,22 @@ while getopts "A:M:S:E:D:K:G:W:wBgVbpHhrivdlLtTqsczUX" opt; do
 tot_opts=$OPTIND
 done
 
+if [[ $quiet_flag -eq 0 ]]; then {
+  printf "amboso  Copyright (C) 2023  jgabaut\n  This program comes with ABSOLUTELY NO WARRANTY; for details type \`$(basename $prog_name) -C\`.\n  This is free software, and you are welcome to redistribute it\n  under certain conditions; see file \`LICENSE\` for details.\n\n  Full source is available at https://github.com/jgabaut/amboso\n"
+}
+fi
+if [[ $quiet_flag -eq 0 && $show_warranty_flag -gt 0 ]]; then {
+  printf "THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY
+APPLICABLE LAW.  EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT
+HOLDERS AND/OR OTHER PARTIES PROVIDE THE PROGRAM \"AS IS\" WITHOUT WARRANTY
+OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO,
+THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE.  THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE PROGRAM
+IS WITH YOU.  SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF
+ALL NECESSARY SERVICING, REPAIR OR CORRECTION.\n"
+}
+fi
+
 if [[ $print_cfg_flag -gt 0 ]] ; then {
   #Reset output file
   echo "" > "$dotfile"
@@ -319,12 +356,13 @@ if [[ $expected_AMBOSO_API_LVL > $AMBOSO_API_LVL ]] ; then {
 }
 fi
 [[ $verbose_flag -gt 1 ]] && echo -e "\033[0;32m[PREP]    Printing active flags:\e[0m" >&2 && echo_active_flags >&2
-main_at=235
+main_at=359
 #PROG_START_LINE
-prog_start_line="235"
+prog_start_line="359"
 trace_flag=0
 trace_line="421"
 # Check env var to enable backtrace
+export AMBOSO_TRACING="${AMBOSO_TRACING:-0}"
 if [[ ${AMBOSO_TRACING} -gt 0 ]]; then {
   trace_line=0
   trace_flag=1;
@@ -335,7 +373,6 @@ if [[ ${AMBOSO_TRACING} -gt 0 ]]; then {
 }
 fi
 
-PARENT_COMMAND=$(ps -o comm= $PPID)
 [[ $verbose_flag -gt 1 ]] && echo -e "\033[0;37m[PREP]    Parent command is: ( $PARENT_COMMAND ).\e[0m" >&2
 
 
@@ -435,7 +472,7 @@ if [[ $test_mode_flag -gt 0 && ! $testdir_flag -gt 0 ]] ; then {
   res="$?"
   [[ $res -eq 0 ]] || echo -e "\033[0;33m[WARN]\e[0m    Problems when doing set_supported_tests($kazoj_dir).\n"
   kazoj_dir="$(pwd)/kazoj/"
-  echo -e "\033[1;33m[DEBUG]    No -K flag, using ( $kazoj_dir ) for target dir. Run with -V to see more.\e[0m" >&2 #&& usage && exit 1
+  [[ $quiet_flag -eq 0 ]] && echo -e "\033[1;33m[DEBUG]    No -K flag, using ( $kazoj_dir ) for target dir. Run with -V to see more.\e[0m" >&2 #&& usage && exit 1
 }
 fi
 if [[ $test_mode_flag -gt 0 && $test_info_was_set -gt 0 ]] ; then {
@@ -738,7 +775,7 @@ if [[ $small_test_mode_flag -gt 0 && $test_mode_flag -eq 0 ]] ; then {
   end_digraph
   if [[ $quiet_flag -eq 0 ]] ; then {
     echo -e "\033[1;33m[DEBUG]    -t assert: shortcut to run \"$prog_name\" with -T"
-    echo -e "\033[1;33m[DEBUG]    will pass: ( -qVb ) to subcall, if asserted.\n"
+    echo -e "\033[1;33m[DEBUG]    will pass: ( -qVbw ) to subcall, if asserted.\n"
   }
   fi
   quietm=""
@@ -751,12 +788,20 @@ if [[ $small_test_mode_flag -gt 0 && $test_mode_flag -eq 0 ]] ; then {
   [[ $build_flag -gt 0 ]] && buildm="b"
   [[ $init_flag -gt 0 ]] && buildm="b" && echo -e "\033[1;31m[DEBUG]    Recording all tests with -ti is deprecated.\n\n        Feature will be dropped in next major update.\n"
 
+  tot_successes=0
+  tot_failures=0
   start_t_tests=`date +%s.%N`
   for i in $(seq 0 $(($tot_tests-1))); do {
     [[ $quiet_flag -eq 0 ]] && echo -e "\033[1;35m[TEST-MACRO]    Running:  \"$prog_name -W $amboso_start_time -T$quietm$verbm$buildm$showtimem -K $kazoj_dir -D $milestones_dir ${supported_tests[$i]}\"\e[0m" >&2
     start_t_curr_test=`date +%s.%N`
     "$prog_name" -W "$amboso_start_time" -T"$quietm$verbm$buildm""$showtimem" -K "$kazoj_dir" -D "$milestones_dir" "${supported_tests[$i]}"
     retcod="$?"
+    if [[ $retcod -eq 0 ]] ; then {
+      tot_successes=$(($tot_successes+1))
+    } else {
+      tot_failures=$(($tot_failures+1))
+    }
+    fi
     if [[ $retcod -eq 69 ]] ; then {
       echo -e "\033[1;31m[PANIC]    A test call returned 69 while in macro mode. Doing the same.\e[0m\n"
       echo_timer "$amboso_start_time"  "Test returned 69" "1"
@@ -786,7 +831,7 @@ if [[ $small_test_mode_flag -gt 0 && $test_mode_flag -eq 0 ]] ; then {
   fi
   #echo -e "\033[0;34m[TEST]    Full testing took $display_zero$runtime_tests seconds ( $tot_tests done).\e[0m\n"
   echo_timer "$amboso_start_time"  "Test macro" "6"
-  exit 0
+  exit $tot_failures
 } elif [[ $small_test_mode_flag -gt 0 && $test_mode_flag -gt 0 ]] ; then {
   echo -e "\033[1;31m[PANIC]    [-t] used with [-T].\n\n        -t is a shortcut to run as -T on all tests found.\e[0m\n"
   echo_timer "$amboso_start_time"  "Wrong test flag usage" "1"
@@ -806,10 +851,14 @@ for i in $(seq 0 $(( $tot_opts - 2 )) ); do {
 }
 done
 
-
 # $0 is now target version, at position 1 in the array ??
 v_pos=1
-query="${!v_pos}"
+if [[ $# -eq 1 ]] ; then {
+  query="${!v_pos}"
+} else {
+  query=""
+}
+fi
 
 if [[ $quiet_flag -eq 0 && $verbose_flag -gt 1 ]]; then { #WIP
     echo -e "\033[1;35m[VERB]    SYNCPOINT: shifted args, query was: ( $query ).\e[0m" >&2

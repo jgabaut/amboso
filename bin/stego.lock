@@ -27,3 +27,4 @@ kazoj# tests folder name
 1.6.9# Correct pointer spacing for C header
 1.6.10# Remove extra newline in C header
 1.6.11# Fix DESC tag for C header
+1.6.12# Fix some unset variables, return tot_failures on -t call
