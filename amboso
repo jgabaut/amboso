@@ -1,6 +1,10 @@
 #!/bin/bash
 # Bash script to run a milestone build providing the version number.
 # Will refuse to run as root. We don't need root privileges in here.
+if [[ $- == *i* ]]; then {
+  printf "amboso  Copyright (C) 2023  jgabaut\n    This program comes with ABSOLUTELY NO WARRANTY; for details type `show w`.\n    This is free software, and you are welcome to redistribute it\n    under certain conditions; type `show c` for details.\n"
+}
+fi
 amboso_start_time=`date +%s.%N`
 if [[ "$EUID" -eq 0 ]] ; then {
   echo "[AMBOSO]    Please don't run me as root."
