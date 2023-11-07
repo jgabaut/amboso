@@ -130,7 +130,7 @@ function check_tags {
 
 	if [[ $verbose_flag -gt 1 ]] ; then {
 		for tag in "${read_versions[@]}"; do
-		if [[ " ${repo_tags[@]} " =~ " $tag " ]]; then
+		if [[ " ${repo_tags[*]} " =~ " $tag " ]]; then
 			if [[ $verbose_flag -gt 0 ]] ; then {
 				shown_tag="\033[1;32m$tag\e[0m"
 				printf "[AMBOSO]  Read Tag $shown_tag exists in the repo.\n" >&2
@@ -149,7 +149,7 @@ function check_tags {
 	fi
 
 	for tag in "${supported_versions[@]}"; do
-    	if [[ " ${repo_tags[@]} " =~ " $tag " ]]; then {
+    	if [[ " ${repo_tags[*]} " =~ " $tag " ]]; then {
 		if [[ $verbose_flag -gt 0 ]] ; then {
     			shown_tag="\033[1;32m$tag\e[0m"
         		printf "[AMBOSO]  Supported Tag $shown_tag exists in the repo.\n" >&2
@@ -349,9 +349,10 @@ function set_supported_tests {
     return 1
   }
   fi
-  for FILE in $(ls "$cases_path") ; do {
-    test_fp="$cases_path/$FILE"
-    extens=$(printf "$(realpath $FILE)\n" | cut -d '.' -f '2')
+  for FILE in "$cases_path"/* ; do {
+    [[ -e "$FILE" ]] || { printf "$FILE did not exist\n" ; continue ;}
+      test_fp="$cases_path/$(basename "$FILE")"
+      extens=$(printf "$(realpath "$(basename "$FILE")")\n" | cut -d '.' -f '2')
     if [[ $extens = "stderr" || $extens = "stdout" ]] ; then {
       skipped=$((skipped+1))
       [[ $verbose_flag -gt 1 && $quiet_flag -eq 0 ]] && printf "\033[0;37m[PREP-TEST]    Skip record $FILE (at $(dirname $test_fp)).\e[0m\n" >&2
@@ -364,14 +365,15 @@ function set_supported_tests {
       continue
     }
     fi
-    read_tests_files["$tests_filecount"]="$FILE"
+    read_tests_files["$tests_filecount"]="$(basename "$FILE")"
     tests_filecount=$(($tests_filecount+1))
   }
   done
   #errors loop
-  for FILE in $(ls "$errorcases_path"); do {
-    test_fp="$errorcases_path/$FILE"
-    extens=$(printf "$(realpath $FILE)\n" | cut -d '.' -f '2')
+  for FILE in "$errorcases_path"/* ; do {
+    [[ -e "$FILE" ]] || { printf "$FILE did not exist\n" ; continue ;}
+    test_fp="$cases_path/$(basename "$FILE")"
+    extens=$(printf "$(realpath "$(basename "$FILE")")\n" | cut -d '.' -f '2')
     if [[ $extens = "stderr" || $extens = "stdout" ]] ; then {
       skipped=$((skipped+1))
       [[ $verbose_flag -gt 1 && $quiet_flag -eq 0 ]] && printf "\033[0;37m[PREP-TEST]    Skip record $FILE (at $(dirname $test_fp)).\e[0m\n" >&2
@@ -384,7 +386,7 @@ function set_supported_tests {
       continue
     }
     fi
-    read_errortests_files["$errors_filecount"]="$FILE"
+    read_errortests_files["$errors_filecount"]="$(basename "$FILE")"
     errors_filecount=$(($errors_filecount+1))
   }
   done
