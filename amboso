@@ -531,7 +531,7 @@ if [[ $smallhelp_flag -gt 0 ]]; then {
     app "$(echo_node doing_help end_node)"
     end_digraph
   if [[ $AMBOSO_LVL_REC -gt 1 ]] ; then {
-    printf "[AMBOSO]    can't ask for help on a recursive call, try running \"$prog_name -h\" from a shell. ( depth $((${AMBOSO_LVL_REC}-1)) )\n\n        args: (\"$@\")\n" >&2
+    printf "[AMBOSO]    can't ask for help on a recursive call, try running \"$prog_name -h\" from a shell. ( depth $((${AMBOSO_LVL_REC}-1)) )\n\n        args: (\"$*\")\n" >&2
     echo_timer "$amboso_start_time"  "Recursive help?" "1"
     exit 1
   }
@@ -551,7 +551,7 @@ if [[ $bighelp_flag -gt 0 ]]; then {
     app "$(echo_node doing_big_help end_node)"
     end_digraph
   if [[ $AMBOSO_LVL_REC -gt 1 ]] ; then {
-    printf "[AMBOSO]    can't ask for help on a recursive call, try running \"$prog_name -H\" from a shell. ( depth $((${AMBOSO_LVL_REC}-1)) )\n\n        args: (\"$@\")\n" >&2
+    printf "[AMBOSO]    can't ask for help on a recursive call, try running \"$prog_name -H\" from a shell. ( depth $((${AMBOSO_LVL_REC}-1)) )\n\n        args: (\"$*\")\n" >&2
     echo_timer "$amboso_start_time"  "Recursive bighelp?" "1"
     exit 1
   }
