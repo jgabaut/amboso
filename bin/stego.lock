@@ -29,4 +29,4 @@ kazoj# tests folder name
 1.6.11# Fix DESC tag for C header
 1.6.12# Fix some unset variables, return tot_failures on -t call
 1.7.0# Improve runtime, check bash version, fix SC errors
-1.7.1# Swap -W and -C flags, SC pass on amboso_fn
+1.7.2# Fix broken kulpo tests, Drop amboso support for  1.7.1 Swap -W and -C flags, SC pass on amboso_fn
