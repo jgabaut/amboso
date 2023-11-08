@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="1.7.1"
+AMBOSO_API_LVL="1.7.2"
 at () {
     printf "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -375,7 +375,7 @@ function set_supported_tests {
   #errors loop
   for FILE in "$errorcases_path"/* ; do {
     [[ -e "$FILE" ]] || { printf "$FILE did not exist\n" ; continue ;}
-    test_fp="$cases_path/$(basename "$FILE")"
+    test_fp="$errorcases_path/$(basename "$FILE")"
     extens=$(printf "$(realpath "$(basename "$FILE")")\n" | cut -d '.' -f '2')
     if [[ $extens = "stderr" || $extens = "stdout" ]] ; then {
       skipped=$((skipped+1))
