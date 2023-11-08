@@ -69,9 +69,9 @@ function echo_active_flags {
   fi
   [[ $gen_C_headers_flag -gt 0 ]] && printf "G"
   [[ $show_time_flag -gt 0 ]] && printf "w"
-  [[ $start_time_flag -gt 0 ]] && printf "W"
+  [[ $start_time_flag -gt 0 ]] && printf "C"
   [[ $ignore_fit_check_flag -gt 0 ]] && printf"X"
-  [[ $show_warranty_flag -gt 0 ]] && printf "C"
+  [[ $show_warranty_flag -gt 0 ]] && printf "W"
   [[ $tell_uname_flag -gt 0 ]] && printf "U"
   [[ $pack_flag -gt 0 ]] && printf "z"
   [[ $quiet_flag -gt 0 ]] && printf "q"
@@ -551,8 +551,8 @@ function amboso_help {
     -c    control    Output dotfile \'amboso_cfg.dot\' while running.
     -w    watch    Always display timers regardless of verbosity.
     -X    experimental    Ignore the result of git_mode_check, which would stop git mode runs early when git status is not clean.
-    -W ... START_TIME    Set start time of the program.
-    -C     Copyright    Prints warranty information, as per GPL-3.0 license.
+    -C [...] START_TIME    Set start time of the program.
+    -W     Warranty    Prints warranty information, as per GPL-3.0 license.
 
   [...]    TAG_QUERY    Ask a tag for current mode
 
@@ -561,7 +561,7 @@ function amboso_help {
 }
 
 function usage {
-  printf "Usage:  $(basename "$prog_name") [(-D|-K|-M|-S|-E|-G|-W) ...ARGS] [-TBtg] [-bripd] [-hHvVlLqcwXC] [TAG_QUERY]\n"
+  printf "Usage:  $(basename "$prog_name") [(-D|-K|-M|-S|-E|-G|-C) ...ARGS] [-TBtg] [-bripd] [-hHvVlLqcwXW] [TAG_QUERY]\n"
   printf "    Query for a build version\n"
   #echo_supported_tags "$milestones_dir"
   #echo ""
