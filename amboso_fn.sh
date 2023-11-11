@@ -493,7 +493,7 @@ function git_mode_check {
 }
 
 function amboso_help {
-  usage
+  amboso_usage
   printf "Arguments:
 
   [-D ...]    BINDIR    Sets directory used to host tags
@@ -560,7 +560,7 @@ function amboso_help {
 
 }
 
-function usage {
+function amboso_usage {
   printf "Usage:  $(basename "$prog_name") [(-D|-K|-M|-S|-E|-G|-C) ...ARGS] [-TBtg] [-bripd] [-hHvVlLqcwXW] [TAG_QUERY]\n"
   printf "    Query for a build version\n"
   #echo_supported_tags "$milestones_dir"

@@ -536,7 +536,7 @@ if [[ $smallhelp_flag -gt 0 ]]; then {
   }
   fi
   echo_amboso_version
-  usage
+  amboso_usage
 
   printf "Try running with with -H for more info.\n\n"
   #"$prog_name" -H -D "$milestones_dir" | less
@@ -875,7 +875,7 @@ fi
 tot_left_args=$(( $# ))
 if [[ $tot_left_args -gt 1 ]]; then {
   printf "\n\033[1;31m[ERROR]    Unknown argument: \"$2\" (ignoring other $(($tot_left_args-1)) args).\e[0m\n\n"
-  usage
+  amboso_usage
   echo_timer "$amboso_start_time"  "Unknown arg [$2]" "1"
   exit 1
 }
@@ -1335,7 +1335,7 @@ if [[ ! -f "$script_path/$exec_entrypoint" && ! -z $version ]] ; then {
       #echo "" >&2 #new line for error output
       if [[ -z $source_name ]]; then {
 	    printf "\n\033[1;31m[WTF-ERROR]    Missing source file name. ( $version ).\e[0m\n\n"
-	    usage
+	    amboso_usage
         echo_timer "$amboso_start_time"  "Missing source name for [$version]" "1"
 	    exit 1
       }
