@@ -671,7 +671,7 @@ lex_stego_file() {
             next
         }
 
-        if ($0 ~ /^\s*\[[^A-Z_\[\]]+\]\s*$/) {
+        if ($0 ~ /^\s*\[[^A-Z_\[\]\\\/\$]+\]\s*$/) {
             # Extract and set the current scope
             if (match($0, /^\s*\[\s*([^A-Z_\[\]]+)\s*\]\s*$/, a)) {
                 current_scope=gensub(/\s*$/, "", "g", a[1])
@@ -680,7 +680,7 @@ lex_stego_file() {
                 print "\033[1;31m[LINT]\033[0m    Invalid header:    \033[1;31m" $0 "\033[0m" > "/dev/stderr"
                 error_flag=1
             }
-        } else if ($0 ~ /^[^A-Z=\[\]_\$\\\/]+ *= *[^A-Z=\[\]\$]+$/) {
+        } else if ($0 ~ /^[^A-Z=\[\]_\$\\\/{}]+ *= *[^A-Z=\[\]\${}]+$/) {
             # Check if the line is a valid variable assignment
             # Remove trailing comments outside quotes
             gsub(/#[^\n"]*$/, "")
@@ -707,7 +707,7 @@ lex_stego_file() {
             if (!(current_scope in scopes)) {
                 scopes[current_scope]++
             }
-        } else if ($0 ~ /^[^A-Z=\[\]\$\\]+ *$/) {
+        } else if ($0 ~ /^[^A-Z=\[\]\$\\_\/{}]+ *$/) {
             # Check if the line only has a left value (no equals sign and right value)
             # Remove trailing comments outside quotes
             gsub(/#[^\n"]*$/, "")
@@ -738,7 +738,8 @@ lex_stego_file() {
                     scopes[current_scope]++
                 }
             }
-        } else if ($0 ~ /^[^A-Z_\[\]_\$\\\/]+ *= *{[^}A-Z\\\$#\]\[]+ *}$/) {
+        } else if ($0 ~ /^[^A-Z_\[\]\$\\\/{}]+ *= *{[^}A-Z\\\$#\]\[]+ *}$/) {
+            # Check if line has a curly bracket rightval
             # Remove trailing comments outside quotes
             gsub(/#[^\n"]*$/, "")
             # Extract variable

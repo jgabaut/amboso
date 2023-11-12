@@ -1,0 +1,58 @@
+ # Main scope has no extra rules on lines.
+
+val = "myval"
+
+pi = 3.14
+        100= "int"
+- #ok
+
+  [ ok ]
+
+  # These are ok
+val = "myval"
+[ yes-dashes ]
+    [    myscope   ]
+[tight]
+foo = "bar"
+pi = 3.14
+100 =     str
+        100= "int"
+
+[ yes-dashes ]
+             -               =              farvalue
+[    spacing  ]
+foo = b     ar
+[tight]
+foo = "bar"
+what = "# ok"
+- #ok
+val = "myval"
+foo = "bar"
+    cat       =                   "bar"
+    dog       = "bar"
+test
+1203m12ok
+
+[yes-dashes]
+val = "myval#" #comment
+"val" = "myval#" #comment
+foo = "bar"
+man = "bar"
+              [    hi ]
+stuff =    { my thing! = "dood", cnowmp k èp wpm mpd      }
+foo = "fib"
+man = "bar"
+[tight]
+foo = "bar"
+foo = "bar"
+   foo2 =  bar
+[oh=man]
+100 =     str
+
+[ yes-dashes ]
+             -               =               val
+[    white ]
+[might]
+foo = b     ar
+[tight]
+foo = "bar"
