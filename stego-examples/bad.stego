@@ -1,0 +1,29 @@
+#stego file errors example
+
+[ errors ]
+
+  # These are not ok
+
+$hey = you # error1
+hi/ = err # error2
+\mine = evl #error3
+- "# error4"
+hey "# error5"
+hash#tag = "# error6"
+under_score = 1 # error7
+"1_foo" = ba #error8
+{} # error9
+unclosed-curly = {"this" #error10
+yoink {$} #error11
+
+
+  # These are header errors
+[ NO SPACES_ALLOWED ]
+[ no-missing-square-bracked
+[_NO_UNDERSCORES]
+[-NOCAPS]
+no[way]man
+no  =  "[way] man"
+[oh[no]]
+[oh]=no
+

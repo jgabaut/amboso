@@ -30,8 +30,8 @@ kernel_release="$(uname -r)"
 kernel_version="$(uname -v)"
 machine_name="$(uname -m)"
 os_name="$(uname -o)"
-amboso_currvers="1.7.2"
-expected_AMBOSO_API_LVL="1.7.2"
+amboso_currvers="1.7.3"
+expected_AMBOSO_API_LVL="1.7.3"
 amboso_testflag_version="1.7.2"
 export AMBOSO_LVL_REC="${AMBOSO_LVL_REC:-0}"
 # check recursion
@@ -111,9 +111,15 @@ start_time_set=0
 show_time_flag=0
 ignore_git_check_flag=0
 show_warranty_flag=0
+be_stego_parser_flag=0
+queried_stego_filepath=""
 
-while getopts "A:M:S:E:D:K:G:C:wBgVbpHhrivdlLtTqsczUXW" opt; do
+while getopts "A:M:S:E:D:K:G:C:x:wBgVbpHhrivdlLtTqsczUXW" opt; do
   case $opt in
+    x )
+      be_stego_parser_flag=1
+      queried_stego_filepath="$OPTARG"
+      ;;
     W )
       show_warranty_flag=1
       ;;
@@ -309,7 +315,8 @@ if [[ $(basename "$(pwd)") == "amboso" ]] ; then {
     source_res="$?"
     [[ $source_res -ne 0 ]] && printf "\033[1;31m[PREP]    Failed loading amboso_fn.\n\n    Using file: \"$amboso_fn_path\".\e[0m\n" >&2
   } else {
-    [[ $quiet_flag -eq 0 ]] && printf "\033[0;31m[WARN]    \"$amboso_fn_path\" was not a valid file. Not in valid super-repo.\e[0m\n" >&2 && try_default=1
+    [[ $quiet_flag -eq 0 ]] && printf "\033[0;31m[WARN]    \"$amboso_fn_path\" was not a valid file. Not in valid super-repo.\e[0m\n" >&2
+    try_default=1
   }
   fi
   if [[ $try_default -eq 1 && -f /usr/local/bin/amboso_fn.sh ]] ; then { #We only enter here if we failed sourcing
@@ -362,9 +369,9 @@ if [[ $expected_AMBOSO_API_LVL > $AMBOSO_API_LVL ]] ; then {
 }
 fi
 [[ $verbose_flag -gt 1 ]] && printf "\033[0;32m[PREP]    Printing active flags:\e[0m\n" >&2 && echo_active_flags >&2
-main_at=359
+main_at=369
 #PROG_START_LINE
-prog_start_line="359"
+prog_start_line="369"
 trace_flag=0
 trace_line="421"
 # Check env var to enable backtrace
@@ -399,6 +406,35 @@ if [[ ${AMBOSO_LVL_REC} -gt 1 ]] ; then {
     #Print lvl info for top level calls
     #echo "AMBOSO_LVL_REC: [$AMBOSO_LVL_REC]" >&2
     :
+}
+fi
+
+if [[ $be_stego_parser_flag -eq 1 ]] ; then {
+    filepath="$queried_stego_filepath"
+
+    [[ -f "$filepath" ]] || { printf "\033[1;31m[ERROR]\033[0m    \"$filepath\" was not a valid file.\n" ; exit 1 ; }
+
+    if [[ $big_list_flag -eq 1 ]] ; then {
+        lex_stego_file "$filepath"
+        exit $?
+    } elif [[ $small_list_flag -eq 1 ]] ; then {
+        lint_stego_file "$filepath" 0 # We call with verbose ($2) 0, and won't get the lexed tokens printed.
+        lint_res="$?"
+        if [[ $lint_res -eq 0 ]]; then {
+          printf "\033[1;36m[LINT]\033[0m    { Success on: \"$filepath\" }\n"
+          exit 0
+        } else {
+          printf "\033[1;31m[LINT]\033[0m    { Failure on: \"$filepath\" }\n"
+          exit 1
+        }
+        fi
+        exit $?
+    } else {
+        bash_gulp_stego "$filepath" 0
+        exit $?
+    }
+    fi
+    exit $?
 }
 fi
 
@@ -445,7 +481,8 @@ if [[ $base_mode_flag -gt 0 ]] ; then {
   printf "\033[1;31m[MODE]    Running in base mode, expecting full source builds.\e[0m\n" >&2
 }
 fi
-if [[ $git_mode_flag -gt 0 ]] ; then {
+if [[ $git_mode_flag -gt 0 && $be_stego_parser_flag -eq 0 ]] ; then {
+    # We skip git mode check if we're going to be stego parser.
   git_mode_check
   git_mode_check_res="$?"
   if [[ $git_mode_check_res -eq 0 ]]; then {
@@ -536,7 +573,7 @@ if [[ $smallhelp_flag -gt 0 ]]; then {
   }
   fi
   echo_amboso_version
-  usage
+  amboso_usage
 
   printf "Try running with with -H for more info.\n\n"
   #"$prog_name" -H -D "$milestones_dir" | less
@@ -875,7 +912,7 @@ fi
 tot_left_args=$(( $# ))
 if [[ $tot_left_args -gt 1 ]]; then {
   printf "\n\033[1;31m[ERROR]    Unknown argument: \"$2\" (ignoring other $(($tot_left_args-1)) args).\e[0m\n\n"
-  usage
+  amboso_usage
   echo_timer "$amboso_start_time"  "Unknown arg [$2]" "1"
   exit 1
 }
@@ -1335,7 +1372,7 @@ if [[ ! -f "$script_path/$exec_entrypoint" && ! -z $version ]] ; then {
       #echo "" >&2 #new line for error output
       if [[ -z $source_name ]]; then {
 	    printf "\n\033[1;31m[WTF-ERROR]    Missing source file name. ( $version ).\e[0m\n\n"
-	    usage
+	    amboso_usage
         echo_timer "$amboso_start_time"  "Missing source name for [$version]" "1"
 	    exit 1
       }

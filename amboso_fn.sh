@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="1.7.2"
+AMBOSO_API_LVL="1.7.3"
 at () {
     printf "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -68,6 +68,7 @@ function echo_active_flags {
   }
   fi
   [[ $gen_C_headers_flag -gt 0 ]] && printf "G"
+  [[ $be_stego_parser_flag -gt 0 ]] && printf "x"
   [[ $show_time_flag -gt 0 ]] && printf "w"
   [[ $start_time_flag -gt 0 ]] && printf "C"
   [[ $ignore_fit_check_flag -gt 0 ]] && printf"X"
@@ -493,7 +494,7 @@ function git_mode_check {
 }
 
 function amboso_help {
-  usage
+  amboso_usage
   printf "Arguments:
 
   [-D ...]    BINDIR    Sets directory used to host tags
@@ -521,6 +522,15 @@ function amboso_help {
     -T    test mode    (Tests TAG_QUERY)
 
     -t    test macro    (Recurses as -T\"\$PASSED_FLAGS\" on all tests)
+
+        Extra:
+
+    -x  <stego file>    stego parser    (Runs amboso as stego parser)
+
+        Optional:
+
+          -l    Lint    (Only lint the stego file)
+          -L    Lint    (Only lint the stego file)
 
   [-bripd]    operation    Combined operations on current tag.
 
@@ -560,12 +570,9 @@ function amboso_help {
 
 }
 
-function usage {
-  printf "Usage:  $(basename "$prog_name") [(-D|-K|-M|-S|-E|-G|-C) ...ARGS] [-TBtg] [-bripd] [-hHvVlLqcwXW] [TAG_QUERY]\n"
-  printf "    Query for a build version\n"
-  #echo_supported_tags "$milestones_dir"
-  #echo ""
-  #echo_othermode_tags "$milestones_dir"
+function amboso_usage {
+  printf "Usage:  $(basename "$prog_name") [(-D|-K|-M|-S|-E|-G|-C|-x) ...ARGS] [-TBtg] [-bripd] [-hHvVlLqcwXW] [TAG_QUERY]\n"
+  printf "    Query for a build version ( or stego files parser, with -x).\n"
 }
 
 function escape_colorcodes_tee {
@@ -628,6 +635,225 @@ function delete_test {
     printf "\033[0;32m[TEST]    Deleted $tfp.\e[0m\n" >&2
   } else {
     printf "\033[1;31m[TEST]    Failed deleting $tfp. How?\e[0m\n" >&2
+  }
+  fi
+}
+
+lex_stego_file() {
+    #
+    # Lex "scopes", "variables", "values" from stego file.
+    # For each error detected in the file, prints a notice to stderr.
+    # If any error is detected, it returns before printing to stdout.
+    # Otherwise, prints the parsed tokens to stdout, using this format:
+    #
+    ############################################################################
+    #                          #                                               #
+    #   Format notes           #            Actual Output                      #
+    #                          #                                               #
+    ############################################################################
+    #   main scope, named ""   #Variable: _dog, Value: bar                     #
+    #                          #------------------------                       #
+    #   other scope            #Scope: hi                                      #
+    #                          #Variable: hi_foo, Value: fib                   #
+    #                          #Variable: hi_man, Value: bar                   #
+    #                          #------------------------                       #
+    ############################################################################
+    #
+
+    input_file="$1"
+
+    awk '{
+        # Remove leading and trailing whitespaces
+        gsub(/^[ \t]+|[ \t]+$/, "")
+
+        # Skip empty lines
+        if ($0 == "") {
+            next
+        }
+
+        if ($0 ~ /^\s*\[[^A-Z_\[\]\\\/\$]+\]\s*$/) {
+            # Extract and set the current scope
+            if (match($0, /^\s*\[\s*([^A-Z_\[\]]+)\s*\]\s*$/, a)) {
+                current_scope=gensub(/\s*$/, "", "g", a[1])
+                scopes[current_scope]++
+            } else {
+                print "\033[1;31m[LINT]\033[0m    Invalid header:    \033[1;31m" $0 "\033[0m" > "/dev/stderr"
+                error_flag=1
+            }
+        } else if ($0 ~ /^[^A-Z=\[\]_\$\\\/{}]+ *= *[^A-Z=\[\]\${}]+$/) {
+            # Check if the line is a valid variable assignment
+            # Remove trailing comments outside quotes
+            gsub(/#[^\n"]*$/, "")
+
+            split($0, parts, "=")
+            variable=gensub(/^ *"?([^"]+)"? *$/, "\\1", "g", parts[1])
+            value=gensub(/^ *"?([^"]*)"? *$/, "\\1", "g", parts[2])
+
+            # Trim trailing whitespaces from variable and value
+            gsub(/[ \t]+$/, "", variable)
+            gsub(/[ \t]+$/, "", value)
+
+            # Check if left side contains disallowed characters
+            if (index(variable, " ") > 0 || (index(variable, "#") > 0 && index(variable, "\"") == 0)) {
+                print "\033[1;31m[LINT]\033[0m    Invalid left side (contains spaces or disallowed characters):    \033[1;31m" variable "\033[0m" > "/dev/stderr"
+                error_flag=1
+                next
+            }
+
+            if (current_scope == "main") {
+                variable = "main_" variable
+            }
+            values[current_scope "_" variable]=value
+            if (!(current_scope in scopes)) {
+                scopes[current_scope]++
+            }
+        } else if ($0 ~ /^[^A-Z=\[\]\$\\_\/{}]+ *$/) {
+            # Check if the line only has a left value (no equals sign and right value)
+            # Remove trailing comments outside quotes
+            gsub(/#[^\n"]*$/, "")
+
+            # Trim leading and trailing whitespaces
+            gsub(/^[ \t]+|[ \t]+$/, "")
+
+            # Extract the left value
+            left_value=gensub(/^ *"?([^"]+)"? *$/, "\\1", "g", $0)
+
+            # Trim trailing whitespaces from left value
+            gsub(/[ \t]+$/, "", left_value)
+
+            # Check if left value contains disallowed characters
+            if (index(left_value, " ") > 0 || index(left_value, "_") > 0 || index(left_value, "/") > 0 || (index(left_value, "\"") > 0 && index(left_value, "\"#") == 0)) {
+                print "\033[1;31m[LINT]\033[0m    Invalid left side (contains spaces or disallowed characters):    \033[1;31m" left_value "\033[0m" > "/dev/stderr"
+                error_flag=1
+            } else {
+                if (current_scope == "main") {
+                    left_value = "main_" left_value
+                }
+                if (left_value ~ /^[^0-9]+ *$/) {
+                    values[current_scope "_" left_value ]=null  # Treat it as NULL "value"
+                } else {
+                    values[current_scope "_" left_value ]=0  # Treat it as 0 "value"
+                }
+                if (!(current_scope in scopes)) {
+                    scopes[current_scope]++
+                }
+            }
+        } else if ($0 ~ /^[^A-Z_\[\]\$\\\/{}]+ *= *{[^}A-Z\\\$#\]\[]+ *}$/) {
+            # Check if line has a curly bracket rightval
+            # Remove trailing comments outside quotes
+            gsub(/#[^\n"]*$/, "")
+            # Extract variable
+            variable = gensub(/^ *"?([^{="]+)"? *=.*$/, "\\1", "g", $0)
+            value = gensub(/^.*= *{ *([^}A-Z\\\$]+) *}$/, "\\1", "g", $0)
+            # Trim trailing whitespaces from variable and value
+            gsub(/[ \t]+$/, "", variable)
+            gsub(/[ \t]+$/, "", value)
+            if (current_scope == "main") {
+                variable = "main_" variable
+            }
+            values[current_scope "_" variable]=value
+            if (!(current_scope in scopes)) {
+                scopes[current_scope]++
+            }
+        } else {
+                # Remove trailing comments outside quotes
+                gsub(/#[^\n"]*$/, "")
+                if ($0 ~ /^$/) {
+                    # This is a comment-only line and we can ignore it
+                    next
+                } else {
+                    print "\033[1;31m[LINT]\033[0m    Invalid line:    \033[1;31m" $0 "\033[0m" > "/dev/stderr"
+                    error_flag=1
+                }
+        }
+    } END {
+        if (error_flag == 1) {
+                print "\033[1;31m[LEX]\033[0m    Errors while lexing." > "/dev/stderr"
+        } else {
+            # Print each scope and its variable-value pairs
+            for (scope in scopes) {
+                print "Scope: " scope
+                for (var in values) {
+                    if (index(var, scope "_") == 1 || (scope == "main" && index(var, "main_") == 1)) {
+                        print "Variable: " var ", Value: " values[var]
+                    }
+                }
+                print "------------------------"
+            }
+        }
+    }' "$input_file"
+}
+
+parse_lexed_stego() {
+  # Parse "scopes", "variables", "values" from stego lexed tokens
+  # Expects format described in lex_stego_file()
+
+  input="$1"
+  # Read the output into Bash arrays
+  while IFS= read -r line; do
+      if [[ $line =~ ^Scope:\ (.*)$ ]]; then
+          current_scope="${BASH_REMATCH[1]}"
+      elif [[ $line =~ ^Variable:\ (.+),\ Value:\ (.*)$ ]]; then
+          variable="${BASH_REMATCH[1]}"
+          value="${BASH_REMATCH[2]}"
+          scopes+=("$current_scope")
+          variables+=("$variable")
+          values+=("$value")
+      fi
+  done <<< "$input"
+}
+
+lint_stego_file() {
+  #Try lexing input file. If verbose is 1, print the lexed tokens.
+  #If lex output is empty, return 1.
+
+  input="$1"
+  verbose="$2"
+
+  lex_output="$(lex_stego_file "$input")"
+  [[ $verbose -eq 1 ]] && printf "$lex_output\n"
+  if [[ -z "$lex_output" ]]; then
+    printf "\033[1;31m[CHECK]\033[0m    Errors occurred during lexing.\n"
+    return 1
+  fi
+  return 0
+}
+
+try_parsing_stego() {
+  # Lints the passed file. If verbose if passed as "1", also prints the lexed tokens to stdout.
+  # Then, if the lint was successful, tries parsing the lexed tokens.
+  # Upon return, arrays "scopes", "variables", "values" are set.
+
+  input="$1"
+  verbose="$2"
+  lexed_tokens="$(lex_stego_file "$input")"
+  if [[ ! -z $lexed_tokens ]]; then {
+    parse_lexed_stego "$lexed_tokens"
+    parse_res="$?"
+    return "$parse_res"
+  } else {
+    printf "\033[1;31m[PARSE]\033[0m    Lint failed.\n"
+    return 1
+  }
+  fi
+}
+
+bash_gulp_stego() {
+  # Try gulping the "scopes", "variables" and "values" bash arrays from parsing the passed file
+
+  input="$1"
+  filename="$input"
+  verbose="$2"
+  try_parsing_stego "$input" "$verbose"
+  parse_res="$?"
+  if [[ $parse_res -eq 0 ]]; then {
+    printf "[SUCCESS]    Parsed file \"$filename\"\n"
+    printf "\033[1;36m[Lexed variables]\033[0m    { ${variables[*]} }\n\n"
+    printf "\033[1;35m[Lexed values]\033[0m    { ${values[*]} }\n"
+    return 0
+  } else {
+    printf "\033[1;31m[ERROR]\033[0m    Failed parsing file { \033[1;34m$1\033[0m }\n"
+    return 1
   }
   fi
 }
