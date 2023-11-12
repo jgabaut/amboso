@@ -136,11 +136,11 @@ source_amboso_api() {
     printf "\033[1;31m[PANIC]    Couldn't load functions. Quitting.\e[0m\n"
     exit 2
   } elif [[ $AMBOSO_API_LVL > $expected_AMBOSO_API_LVL ]] ; then {
-    [[ $verbose_flag -gt 1 ]] && printf "\033[0;31m[WARN]    AMBOSO_API_LVL is greater than expected. Needed { \033[1;35m$expected_AMBOSO_API_LVL\033[0;31m } , { \033[1;34m$AMBOSO_API_LVL\033[0;31m } is higher.\e[0m\n" >&2
-    [[ $verbose_flag -gt 1 ]] && printf "\n\033[1;31m[WARN]    Continuing run with unexpected AMBOSO_API_LVL: Needed { \033[1;35m$expected_AMBOSO_API_LVL\033[1;31m } , { \033[1;34m$AMBOSO_API_LVL\033[1;31m } is higher.\e[0m\n"
+    [[ $verbose_flag -gt 0 ]] && printf "\033[0;31m[WARN]    AMBOSO_API_LVL is greater than expected. Needed { \033[1;35m$expected_AMBOSO_API_LVL\033[0;31m } , { \033[1;34m$AMBOSO_API_LVL\033[0;31m } is higher.\e[0m\n" >&2
+    [[ $verbose_flag -gt 0 ]] && printf "\n\033[1;31m[WARN]    Continuing run with unexpected AMBOSO_API_LVL: Needed { \033[1;35m$expected_AMBOSO_API_LVL\033[1;31m } , { \033[1;34m$AMBOSO_API_LVL\033[1;31m } is higher.\e[0m\n"
     #exit 2
   } elif [[ $AMBOSO_API_LVL = "$expected_AMBOSO_API_LVL" ]] ; then {
-    [[ $verbose_flag -gt 1 ]] && printf "\033[0;32m[PREP]   Running with \"\$AMBOSO_API_LVL\" [ \033[1;35m$AMBOSO_API_LVL\033[0;32m ]; min is { \033[1;36m$expected_AMBOSO_API_LVL\033[0;32m }.\e[0m\n" >&2
+    [[ $verbose_flag -gt 0 ]] && printf "\033[0;32m[PREP]   Running with \"\$AMBOSO_API_LVL\" [ \033[1;35m$AMBOSO_API_LVL\033[0;32m ]; min is { \033[1;36m$expected_AMBOSO_API_LVL\033[0;32m }.\e[0m\n" >&2
   }
   fi
 }
