@@ -68,6 +68,7 @@ function echo_active_flags {
   }
   fi
   [[ $gen_C_headers_flag -gt 0 ]] && printf "G"
+  [[ $be_stego_parser_flag -gt 0 ]] && printf "x"
   [[ $show_time_flag -gt 0 ]] && printf "w"
   [[ $start_time_flag -gt 0 ]] && printf "C"
   [[ $ignore_fit_check_flag -gt 0 ]] && printf"X"
@@ -522,6 +523,15 @@ function amboso_help {
 
     -t    test macro    (Recurses as -T\"\$PASSED_FLAGS\" on all tests)
 
+        Extra:
+
+    -x  <stego file>    stego parser    (Runs amboso as stego parser)
+
+        Optional:
+
+          -l    Lint    (Only lint the stego file)
+          -L    Lint    (Only lint the stego file)
+
   [-bripd]    operation    Combined operations on current tag.
 
           The operation changes semantics in test mode.
@@ -561,11 +571,8 @@ function amboso_help {
 }
 
 function amboso_usage {
-  printf "Usage:  $(basename "$prog_name") [(-D|-K|-M|-S|-E|-G|-C) ...ARGS] [-TBtg] [-bripd] [-hHvVlLqcwXW] [TAG_QUERY]\n"
-  printf "    Query for a build version\n"
-  #echo_supported_tags "$milestones_dir"
-  #echo ""
-  #echo_othermode_tags "$milestones_dir"
+  printf "Usage:  $(basename "$prog_name") [(-D|-K|-M|-S|-E|-G|-C|-x) ...ARGS] [-TBtg] [-bripd] [-hHvVlLqcwXW] [TAG_QUERY]\n"
+  printf "    Query for a build version ( or stego files parser, with -x).\n"
 }
 
 function escape_colorcodes_tee {

@@ -111,9 +111,15 @@ start_time_set=0
 show_time_flag=0
 ignore_git_check_flag=0
 show_warranty_flag=0
+be_stego_parser_flag=0
+queried_stego_filepath=""
 
-while getopts "A:M:S:E:D:K:G:C:wBgVbpHhrivdlLtTqsczUXW" opt; do
+while getopts "A:M:S:E:D:K:G:C:x:wBgVbpHhrivdlLtTqsczUXW" opt; do
   case $opt in
+    x )
+      be_stego_parser_flag=1
+      queried_stego_filepath="$OPTARG"
+      ;;
     W )
       show_warranty_flag=1
       ;;
@@ -362,9 +368,9 @@ if [[ $expected_AMBOSO_API_LVL > $AMBOSO_API_LVL ]] ; then {
 }
 fi
 [[ $verbose_flag -gt 1 ]] && printf "\033[0;32m[PREP]    Printing active flags:\e[0m\n" >&2 && echo_active_flags >&2
-main_at=359
+main_at=369
 #PROG_START_LINE
-prog_start_line="359"
+prog_start_line="369"
 trace_flag=0
 trace_line="421"
 # Check env var to enable backtrace
@@ -399,6 +405,35 @@ if [[ ${AMBOSO_LVL_REC} -gt 1 ]] ; then {
     #Print lvl info for top level calls
     #echo "AMBOSO_LVL_REC: [$AMBOSO_LVL_REC]" >&2
     :
+}
+fi
+
+if [[ $be_stego_parser_flag -eq 1 ]] ; then {
+    filepath="$queried_stego_filepath"
+
+    [[ -f "$filepath" ]] || { printf "\033[1;31m[ERROR]\033[0m    \"$filepath\" was not a valid file.\n" ; exit 1 ; }
+
+    if [[ $big_list_flag -eq 1 ]] ; then {
+        lex_stego_file "$filepath"
+        exit $?
+    } elif [[ $small_list_flag -eq 1 ]] ; then {
+        lint_stego_file "$filepath" 0 # We call with verbose ($2) 0, and won't get the lexed tokens printed.
+        lint_res="$?"
+        if [[ $lint_res -eq 0 ]]; then {
+          printf "\033[1;36m[LINT]\033[0m    { Success on: \"$filepath\" }\n"
+          exit 0
+        } else {
+          printf "\033[1;31m[LINT]\033[0m    { Failure on: \"$filepath\" }\n"
+          exit 1
+        }
+        fi
+        exit $?
+    } else {
+        bash_gulp_stego "$filepath" 0
+        exit $?
+    }
+    fi
+    exit $?
 }
 fi
 
@@ -445,7 +480,8 @@ if [[ $base_mode_flag -gt 0 ]] ; then {
   printf "\033[1;31m[MODE]    Running in base mode, expecting full source builds.\e[0m\n" >&2
 }
 fi
-if [[ $git_mode_flag -gt 0 ]] ; then {
+if [[ $git_mode_flag -gt 0 && $be_stego_parser_flag -eq 0 ]] ; then {
+    # We skip git mode check if we're going to be stego parser.
   git_mode_check
   git_mode_check_res="$?"
   if [[ $git_mode_check_res -eq 0 ]]; then {
