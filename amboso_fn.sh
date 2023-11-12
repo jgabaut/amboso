@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="1.7.3"
+AMBOSO_API_LVL="1.7.4"
 at () {
     printf "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -666,6 +666,9 @@ lex_stego_file() {
         # Remove leading and trailing whitespaces
         gsub(/^[ \t]+|[ \t]+$/, "")
 
+        # Remove trailing comments outside quotes
+        gsub(/#[^\n"]*$/, "")
+
         # Skip empty lines
         if ($0 == "") {
             next
@@ -682,8 +685,6 @@ lex_stego_file() {
             }
         } else if ($0 ~ /^[^A-Z=\[\]_\$\\\/{}]+ *= *[^A-Z=\[\]\${}]+$/) {
             # Check if the line is a valid variable assignment
-            # Remove trailing comments outside quotes
-            gsub(/#[^\n"]*$/, "")
 
             split($0, parts, "=")
             variable=gensub(/^ *"?([^"]+)"? *$/, "\\1", "g", parts[1])
@@ -709,8 +710,6 @@ lex_stego_file() {
             }
         } else if ($0 ~ /^[^A-Z=\[\]\$\\_\/{}]+ *$/) {
             # Check if the line only has a left value (no equals sign and right value)
-            # Remove trailing comments outside quotes
-            gsub(/#[^\n"]*$/, "")
 
             # Trim leading and trailing whitespaces
             gsub(/^[ \t]+|[ \t]+$/, "")
@@ -722,7 +721,7 @@ lex_stego_file() {
             gsub(/[ \t]+$/, "", left_value)
 
             # Check if left value contains disallowed characters
-            if (index(left_value, " ") > 0 || index(left_value, "_") > 0 || index(left_value, "/") > 0 || (index(left_value, "\"") > 0 && index(left_value, "\"#") == 0)) {
+            if (index(left_value, " ") > 0 || (index(left_value, "\"") > 0 && index(left_value, "\"#") == 0)) {
                 print "\033[1;31m[LINT]\033[0m    Invalid left side (contains spaces or disallowed characters):    \033[1;31m" left_value "\033[0m" > "/dev/stderr"
                 error_flag=1
             } else {
@@ -740,8 +739,6 @@ lex_stego_file() {
             }
         } else if ($0 ~ /^[^A-Z_\[\]\$\\\/{}]+ *= *{[^}A-Z\\\$#\]\[]+ *}$/) {
             # Check if line has a curly bracket rightval
-            # Remove trailing comments outside quotes
-            gsub(/#[^\n"]*$/, "")
             # Extract variable
             variable = gensub(/^ *"?([^{="]+)"? *=.*$/, "\\1", "g", $0)
             value = gensub(/^.*= *{ *([^}A-Z\\\$]+) *}$/, "\\1", "g", $0)
@@ -756,8 +753,6 @@ lex_stego_file() {
                 scopes[current_scope]++
             }
         } else {
-                # Remove trailing comments outside quotes
-                gsub(/#[^\n"]*$/, "")
                 if ($0 ~ /^$/) {
                     # This is a comment-only line and we can ignore it
                     next
@@ -847,13 +842,54 @@ bash_gulp_stego() {
   try_parsing_stego "$input" "$verbose"
   parse_res="$?"
   if [[ $parse_res -eq 0 ]]; then {
-    printf "[SUCCESS]    Parsed file \"$filename\"\n"
-    printf "\033[1;36m[Lexed variables]\033[0m    { ${variables[*]} }\n\n"
-    printf "\033[1;35m[Lexed values]\033[0m    { ${values[*]} }\n"
+    [[ $verbose -eq 1 ]] && printf "[SUCCESS]    Parsed file \"$filename\"\n"
+    [[ $verbose -eq 1 ]] && printf "\033[1;36m[Lexed variables]\033[0m    { ${variables[*]} }\n\n"
+    [[ $verbose -eq 1 ]] && printf "\033[1;35m[Lexed values]\033[0m    { ${values[*]} }\n"
     return 0
   } else {
     printf "\033[1;31m[ERROR]\033[0m    Failed parsing file { \033[1;34m$1\033[0m }\n"
     return 1
   }
   fi
+}
+
+print_amboso_stego_scopes() {
+  for ((i=0; i<${#scopes[@]}; i++)); do
+  scope="${scopes[i]}"
+  variable="${variables[i]}"
+  value="${values[i]}"
+  is_noscope=0
+  if [[ -z $scope ]] ; then {
+    is_noscope=1
+    #Display scope as "main", even tho it should be equal to ""
+    #printf "\033[1;35mScope:\033[0m \"main\", \033[1;33mVariable:\033[0m \"$variable\", Value: \"\033[1;36m$value\033[0m\"\n\n"
+  } else {
+    #Print values for all scopes
+    #printf "\033[1;34mScope:\033[0m \"$scope\", \033[1;33mVariable:\033[0m \"$variable\", Value: \"\033[1;36m$value\033[0m\"\n\n"
+    if [[ $scope = "build" ]] ; then {
+      if [[ $variable = "build_source" ]]; then {
+        printf "ANVIL_SOURCE: {$value}\n"
+      } elif [[ $variable = "build_bin" ]]; then {
+        printf "ANVIL_BIN: {$value}\n"
+      } elif [[ $variable = "build_make-vers" ]]; then {
+        printf "ANVIL_MAKE_VERS: {$value}\n"
+      } elif [[ $variable = "build_automake-vers" ]]; then {
+        printf "ANVIL_AUTOMAKE_VERS: {$value}\n"
+      } elif [[ $variable = "build_tests" ]]; then {
+        printf "ANVIL_TESTDIR: {$value}\n"
+      }
+      fi
+    } elif [[ $scope = "versions" ]] ; then {
+        tag="$(printf "$variable\n" | cut -f2 -d'_')"
+        if [[ $tag == \?* ]] ; then {
+          printf "ANVIL_BASE_VERSION: {$tag}\n"
+        } else {
+          printf "ANVIL_GIT_VERSION: {$tag}\n"
+        }
+        fi
+    }
+    fi
+  }
+  fi
+  done
 }
