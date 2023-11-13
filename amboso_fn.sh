@@ -929,7 +929,7 @@ set_amboso_stego_info() {
   base_tags_count=0
   read_tags=0
   for ((i=0; i<${#scopes[@]}; i++)); do
-    printf "{${variables[i]}} = {${values[i]}}\n"
+  [[ $verbose -gt 1 ]] && printf "{${variables[i]}} = {${values[i]}}\n"
   scope="${scopes[i]}"
   variable="${variables[i]}"
   value="${values[i]}"
@@ -977,13 +977,13 @@ set_amboso_stego_info() {
         if [[ $tag == \?* ]] ; then {
           [[ $verbose -gt 0 ]] && printf "ANVIL_BASE_VERSION: {$tag}\n"
           read_base_tags[base_tags_count]="$tag"
-          printf "${read_base_tags[base_tags_count]} at {$base_tags_count}\n"
+          #printf "${read_base_tags[base_tags_count]} at {$base_tags_count}\n"
           base_tags_count=$(($base_tags_count+1))
           read_tags=$(($read_tags+1))
         } else {
           [[ $verbose -gt 0 ]] && printf "ANVIL_GIT_VERSION: {$tag}\n"
           read_git_tags[git_tags_count]="$tag"
-          printf "${read_git_tags[git_tags_count]} at {$git_tags_count}\n"
+          #printf "${read_git_tags[git_tags_count]} at {$git_tags_count}\n"
           git_tags_count=$(($git_tags_count+1))
           read_tags=$(($read_tags+1))
         }
@@ -1035,8 +1035,8 @@ set_amboso_stego_info() {
   #echo "$count_git_versions"
   #echo "$count_base_versions"
   #echo_active_flags
-  echo "base version array contents are: ( ${read_base_tags[@]} )" >&2
-  echo "git version array contents are: ( ${read_git_tags[@]} )" >&2
+  #echo "base version array contents are: ( ${read_base_tags[@]} )" >&2
+  #echo "git version array contents are: ( ${read_git_tags[@]} )" >&2
   #echo "version array contents are: ( ${read_versions[@]} )" >&2
   if [[ $base_mode_flag -gt 0 ]] ; then {
     for i in $(seq 0 $(($count_base_versions-1))); do
