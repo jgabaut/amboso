@@ -1028,6 +1028,10 @@ set_amboso_stego_info() {
 
   count_git_versions="${#read_git_tags[@]}"
   count_base_versions="${#read_base_tags[@]}"
+  # Sort the SemVer tags
+  read_git_tags=($(printf "%s\n" "${read_git_tags[@]}" | sort -V))
+  read_base_tags=($(printf "%s\n" "${read_base_tags[@]}" | sort -V))
+
   #echo "$count_git_versions"
   #echo "$count_base_versions"
   #echo_active_flags
