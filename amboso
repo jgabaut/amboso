@@ -30,8 +30,8 @@ kernel_release="$(uname -r)"
 kernel_version="$(uname -v)"
 machine_name="$(uname -m)"
 os_name="$(uname -o)"
-amboso_currvers="1.7.4"
-expected_AMBOSO_API_LVL="1.7.4"
+amboso_currvers="1.7.5"
+expected_AMBOSO_API_LVL="1.7.5"
 amboso_testflag_version="1.7.2"
 export AMBOSO_LVL_REC="${AMBOSO_LVL_REC:-0}"
 # check recursion
@@ -603,6 +603,16 @@ fi
 
 #TODO: check if scripts_dir is needed anywhere... why
 scripts_dir="$milestones_dir" # MUST BE SET before checking for -S and -E
+#TODO: swap to new stego format
+set_amboso_stego_info "stego-examples/lock.stego" 0
+if [[ ! $? -eq 0 ]] ; then {
+  printf "UNIMPLEMENTED\n"
+  exit 1
+}
+fi
+exit 0
+
+
 set_supported_versions "$scripts_dir" # Might as well do it now
 set_source_info "$milestones_dir"
 kazoj_dir="${sources_info[3]}" #TODO: don't think this should be overwritten here if assigned earlier

@@ -32,3 +32,4 @@ kazoj# tests folder name
 1.7.2# Fix broken kulpo tests, Drop amboso support for  1.7.1 Swap -W and -C flags, SC pass on amboso_fn
 1.7.3# Add stego parsing functions
 1.7.4# Add print_amboso_stego_scopes()
+1.7.5#
