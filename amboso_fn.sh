@@ -1305,7 +1305,7 @@ amboso_main_call() {
 
   [[ "$AMBOSO_LVL_REC" -eq 1 ]] && printf "\033[1;35m[AMBOSO]    Current version: $amboso_currvers\e[0m\n\n"
 
-  [[ $quiet_flag -eq 0 ]] && printf "[ARGS]    \"$@\"\n"
+  [[ $quiet_flag -eq 0 ]] && printf "[ARGS]    \"$*\"\n"
   #Quit when $1 is "quit"
   if [[ $1 = "quit" ]] ; then {
       printf "\033[1;32m[INFO]\033[0m    Quitting.\n"
