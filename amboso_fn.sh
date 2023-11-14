@@ -550,6 +550,11 @@ lex_stego_file() {
     }
     fi
     input_file="$1"
+    # Check if awk is available
+    if ! command -v awk > /dev/null; then
+        printf "\033[1;31m[CRITICAL]    Error: awk is not installed. Please install awk before running this script.\033[0m\n"
+        exit 9
+    fi
 
     awk '{
         # Remove leading and trailing whitespaces
