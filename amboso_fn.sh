@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="1.7.5"
+AMBOSO_API_LVL="1.8.0"
 at () {
     printf "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -1044,7 +1044,7 @@ set_amboso_stego_info() {
       exit 6
   }
   fi
-  printf "\033[1;34m[INFO]    Read {$count_source_infos} amboso params.\033[0m\n"
+  [[ $verbose -gt 0 ]] && printf "\033[1;34m[INFO]    Read {$count_source_infos} amboso params.\033[0m\n"
 
   count_git_versions="${#read_git_tags[@]}"
   count_base_versions="${#read_base_tags[@]}"
@@ -1070,5 +1070,6 @@ set_amboso_stego_info() {
   fi
   tot_vers=${#supported_versions[@]}
 
-  printf "\033[1;34m[INFO]    Read {$tot_vers} tags.\033[0m\n"
+  [[ $verbose -gt 0 ]] && printf "\033[1;34m[INFO]    Read {$tot_vers} tags.\033[0m\n"
+  return 0
 }
