@@ -115,4 +115,4 @@ is_interactive=0
 [[ $# -eq 0 ]] && is_interactive=1
 
 source_amboso_api
-amboso_main $@
+amboso_main "$@"

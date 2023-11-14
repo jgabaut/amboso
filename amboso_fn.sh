@@ -973,7 +973,7 @@ amboso_parse_args() {
   #Increment depth counter
   AMBOSO_LVL_REC=$(($AMBOSO_LVL_REC+1))
   # check recursion
-  if [[ "${AMBOSO_LVL_REC}" -le "2" ]]; then
+  if [[ "${AMBOSO_LVL_REC}" -le "3" ]]; then
     PARENT_COMMAND=$(ps -o comm= $PPID)
     [[ $PARENT_COMMAND = "$prog_name" ]] && printf "Unexpected result while checking amboso recursion level.\n" && exit 1
   else
@@ -1180,7 +1180,7 @@ amboso_parse_args() {
   tot_opts=$OPTIND
   done
 
-  if [[ $quiet_flag -eq 0 && "${AMBOSO_LVL_REC}" -lt 2 ]]; then {
+  if [[ $quiet_flag -eq 0 && "${AMBOSO_LVL_REC}" -lt 3 ]]; then {
     printf "amboso, version $amboso_currvers\nCopyright (C) 2023  jgabaut\n\n  This program comes with ABSOLUTELY NO WARRANTY; for details type \`$(basename $prog_name) -W\`.\n  This is free software, and you are welcome to redistribute it\n  under certain conditions; see file \`LICENSE\` for details.\n\n  Full source is available at https://github.com/jgabaut/amboso\n\n"
   }
   fi
