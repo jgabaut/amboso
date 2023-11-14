@@ -2201,8 +2201,9 @@ amboso_parse_args() {
           comp_res=$?
         } else { #Building in git mode, we checkout the tag and move the binary after the build
           [[ $verbose_flag -gt 0 ]] && printf "\033[0;34m[BUILD]    Running in git mode, checking out ( $version ).\e[0m\n" #>&2
-          git checkout "$version"# 2>/dev/null #Repo goes back to tagged state
+          git checkout "$version" # 2>/dev/null #Repo goes back to tagged state
           checkout_res=$?
+          echo "checkout: $checkout_res"
           if [[ $checkout_res -gt 0 ]] ; then { #Checkout failed, we don't build and we set comp_res
             printf "\033[1;31m[ERROR]    Checkout of ( $version ) failed, this stego.lock tag does not work for the repo.\e[0m\n" #>&2
             comp_res=1
