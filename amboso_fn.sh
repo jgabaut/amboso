@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="1.7.4"
+AMBOSO_API_LVL="1.8.0"
 at () {
     printf "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -220,121 +220,8 @@ function gen_C_headers {
 
 }
 
-function set_supported_versions {
-  dir=$1
-  [[ ! -f $dir/stego.lock ]] && printf "\033[1;31m[ERROR]    Can't find \"stego.lock\" in ( $dir ).\e[0m\n\n" && exit 1
-  git_tags_count=0
-  base_tags_count=0
-  j=0
-  k=0
-  i=0
-
-  while IFS= read -r line; do {
-    #Skip the first five lines, reserved for header, source file and target executable names, test folder, and versions header
-    [[ $j -lt 7 ]] && j=$((j+1)) && continue
-
-    was_git_tag=0
-    was_base_tag=0
-    for tag in $(printf "$line\n" | grep -v '^?' | cut -d '#' -f 1 | cut -d ' ' -f 1 | grep -v '^$'); do {
-      read_git_mode_tags[git_tags_count]="$tag"
-      git_tags_count=$(($git_tags_count+1))
-      was_git_tag=1
-    }
-    done
-    for tag in $(printf "$line\n" | grep '^?'| cut -d '?' -f2 | cut -d '#' -f 1 | cut -d ' ' -f1 | grep -v '^$'); do {
-      read_base_mode_tags[base_tags_count]="$tag"
-      base_tags_count=$(($base_tags_count+1))
-      was_base_tag=1
-    }
-    done
-
-    #echo "Text read from file: ( $line )"
-    #echo "Text read from file, no comments: ( $( echo "$line" | cut -d '#' -f 1 ) )"
-    if [[ $base_mode_flag -gt 0 && $was_base_tag -gt 0 ]] ; then {
-      read_versions[k]=${read_base_mode_tags[$k]}
-      k=$((k+1))
-    } elif [[ $git_mode_flag -gt 0 && $was_git_tag -gt 0 ]] ; then {
-      read_versions[k]=${read_git_mode_tags[$k]}
-      k=$((k+1))
-    }
-    fi
-  }
-  done < "$dir/stego.lock" 2>/dev/null
-  #echo "version array size is " "${#read_versions[@]}" >&2
-  count_git_versions="${#read_git_mode_tags[@]}"
-  count_base_versions="${#read_base_mode_tags[@]}"
-  #echo "$count_versions"
-  #echo "version array contents are: ( ${read_versions[@]} )" >&2
-  if [[ $base_mode_flag -gt 0 ]] ; then {
-    for i in $(seq 0 $(($count_base_versions-1))); do
-      supported_versions[i]=${read_base_mode_tags[$i]}
-    done
-  } else {
-    for i in $(seq 0 $(($count_git_versions-1))); do
-      supported_versions[i]=${read_git_mode_tags[$i]}
-    done
-  }
-  fi
-
-  tot_vers=${#supported_versions[@]}
-}
-
-function set_source_info {
-  dir=$1
-  [[ ! -f $dir/stego.lock ]] && printf "\033[1;31m[ERROR]    Can't find \"stego.lock\" in ( $dir ). Try running with -D to specify the right directory.\e[0m\n\n" && exit 1
-  j=0
-  k=0
-  while IFS= read -r line; do
-    #Skip the first line header
-    [[ $j -lt 1 ]] && j=$((j+1)) && continue
-
-    #echo "Text read from file: ( $line )"
-    #echo "Text read from file, no comments: ( $( echo "$line" | cut -d '#' -f 1 ) )"
-    sources_info[k]=$(printf "$line\n" | cut -d '#' -f 1 | cut -d ' ' -f 1 )
-    k=$((k+1))
-    [[ $k -eq 5 ]] && break #we only read the first four lines
-  done < "$dir/stego.lock" 2>/dev/null
-  #echo "source info array size is " "${#sources_info[@]}" >&2
-  count_source_infos="${#sources_info[@]}"
-  #echo "$count_source_infos"
-  #echo "source info array contents are: ( ${sources_info[@]} )" >&2
-}
-
-function set_tests_info {
-  dir="$1"
-  if [[ ! -f "$dir"/kazoj.lock ]] ; then {
-    printf "\033[1;31m[ERROR]    Can't find \"kazoj.lock\" in \"$dir\". Try running with -K to specify the right directory.\e[0m\n\n"
-    return 1
-  }
-  fi
-  j=0
-  k=0
-  while IFS="$(printf '\n')" read -r line; do
-    #Skip the first and third line header
-    [[ $j -lt 1 || $j -eq 2 ]] && j=$((j+1)) && continue
-    #echo "Text read from file: ( $line )"
-    #echo "Text read from file, no comments: ( $( echo "$line" | cut -d '#' -f 1 ) )"
-    tests_info[k]=$(printf "$line\n" | cut -d '#' -f 1 | cut -d ' ' -f 1 )
-    k=$((k+1))
-    j=$((j+1))
-    [[ $k -lt 2 ]] || break #we only read two values
-  done < "$dir/kazoj.lock" 2>/dev/null
-  #echo "test info array size is " "${#tests_info[@]}" >&2
-  count_tests_infos="${#tests_info[@]}"
-  if [[ $count_tests_infos -eq 0 ]] ; then {
-    printf "\033[0;31m[WARN]\e[0m    \"\$count_tests_infos\" was 0 after doing set_tests_info().\n\n"
-    return 1
-  }
-  fi
-  #echo "$count_tests_infos"
-  #echo "test info array contents are: ( ${tests_info[@]} )" >&2
-}
-
 function set_supported_tests {
   kazoj_dir=$1
-  set_tests_info "$1"
-  cases_dir="${tests_info[0]}"
-  errors_dir="${tests_info[1]}"
   tests_filecount=0
   errors_filecount=0
   skipped=0
@@ -438,7 +325,6 @@ function echo_tests_info {
 
 function echo_othermode_tags {
   dir="$1"
-  set_supported_versions "$dir"
 
   #Print remaining read versions not available in current mode
   if [[ $base_mode_flag -gt 0 ]] ; then {
@@ -447,7 +333,7 @@ function echo_othermode_tags {
     printf "  Run again in ( $mode_txt ) mode to use them.\n"
     for i in $(seq 0 $(($count_git_versions-1))); do {
       (( $i % 4 == 0)) && [[ $i -ne 0 ]] && printf "\n"
-      printf "    \033[0;33m${read_git_mode_tags[i]}\e[0m"
+      printf "    \033[0;33m${read_git_tags[i]}\e[0m"
     }
     done
   } else {
@@ -456,7 +342,7 @@ function echo_othermode_tags {
     printf "  Run again in ( $mode_txt ) mode to use them.\n"
     for i in $(seq 0 $(($count_base_versions-1))); do {
       (( $i % 4 == 0)) && [[ $i -ne 0 ]] && printf "\n"
-      printf "    \033[0;33m${read_base_mode_tags[i]}\e[0m"
+      printf "    \033[0;33m${read_base_tags[i]}\e[0m"
     }
     done
   }
@@ -468,7 +354,6 @@ function echo_supported_tags {
   mode_txt="\033[1;34mgit\e[0m"
   [[ $base_mode_flag -gt 0 ]] && mode_txt="\033[1;31mbase\e[0m"
   dir="$1"
-  set_supported_versions "$dir"
   printf "  ( $tot_vers ) supported tags for current mode ( $mode_txt ).\n"
   for i in $(seq 0 $(($tot_vers-1))); do { #Print currently supported versions (only ones conforming to mode)
     (( $i % 4 == 0)) && [[ $i -ne 0 ]] && printf "\n"
@@ -659,8 +544,17 @@ lex_stego_file() {
     #                          #------------------------                       #
     ############################################################################
     #
-
+    if [[ ! -f $1 ]] ; then {
+      printf "\033[1;31m[ERROR]    ${FUNCNAME[0]}(): \"$1\" is not a valid file.\033[0m\n."
+      exit 8
+    }
+    fi
     input_file="$1"
+    # Check if awk is available
+    if ! command -v awk > /dev/null; then
+        printf "\033[1;31m[CRITICAL]    Error: awk is not installed. Please install awk before running this script.\033[0m\n"
+        exit 9
+    fi
 
     awk '{
         # Remove leading and trailing whitespaces
@@ -801,6 +695,11 @@ parse_lexed_stego() {
 lint_stego_file() {
   #Try lexing input file. If verbose is 1, print the lexed tokens.
   #If lex output is empty, return 1.
+  if [[ ! -f $1 ]] ; then {
+    printf "\033[1;31m[ERROR]    ${FUNCNAME[0]}(): \"$1\" is not a valid file.\033[0m\n."
+    exit 8
+  }
+  fi
 
   input="$1"
   verbose="$2"
@@ -818,7 +717,11 @@ try_parsing_stego() {
   # Lints the passed file. If verbose if passed as "1", also prints the lexed tokens to stdout.
   # Then, if the lint was successful, tries parsing the lexed tokens.
   # Upon return, arrays "scopes", "variables", "values" are set.
-
+  if [[ ! -f $1 ]] ; then {
+    printf "\033[1;31m[ERROR]    ${FUNCNAME[0]}(): \"$1\" is not a valid file.\033[0m\n."
+    exit 8
+  }
+  fi
   input="$1"
   verbose="$2"
   lexed_tokens="$(lex_stego_file "$input")"
@@ -835,6 +738,11 @@ try_parsing_stego() {
 
 bash_gulp_stego() {
   # Try gulping the "scopes", "variables" and "values" bash arrays from parsing the passed file
+  if [[ ! -f $1 ]] ; then {
+    printf "\033[1;31m[ERROR]    ${FUNCNAME[0]}(): \"$1\" is not a valid file.\033[0m\n"
+    exit 8
+  }
+  fi
 
   input="$1"
   filename="$input"
@@ -842,12 +750,12 @@ bash_gulp_stego() {
   try_parsing_stego "$input" "$verbose"
   parse_res="$?"
   if [[ $parse_res -eq 0 ]]; then {
-    [[ $verbose -eq 1 ]] && printf "[SUCCESS]    Parsed file \"$filename\"\n"
+    [[ $verbose -eq 1 ]] && printf "\033[1;32m[SUCCESS]    Parsed file \"$filename\"\033[0m\n"
     [[ $verbose -eq 1 ]] && printf "\033[1;36m[Lexed variables]\033[0m    { ${variables[*]} }\n\n"
     [[ $verbose -eq 1 ]] && printf "\033[1;35m[Lexed values]\033[0m    { ${values[*]} }\n"
     return 0
   } else {
-    printf "\033[1;31m[ERROR]\033[0m    Failed parsing file { \033[1;34m$1\033[0m }\n"
+    printf "\033[1;31m[ERROR]\033[0m    ${FUNCNAME[0]}(): Failed parsing file { \033[1;34m$1\033[0m }\n"
     return 1
   }
   fi
@@ -887,9 +795,172 @@ print_amboso_stego_scopes() {
           printf "ANVIL_GIT_VERSION: {$tag}\n"
         }
         fi
+    } elif [[ $scope = "tests" ]] ; then {
+        test_dir="$value"
+        if [[ $variable = "tests_tests-dir" ]] ; then {
+          printf "ANVIL_BONE_DIR: {$test_dir}\n"
+        } elif [[ $variable = "tests_errortests-dir" ]] ; then {
+          printf "ANVIL_KULPO_DIR: {$test_dir}\n"
+        }
+        fi
     }
     fi
   }
   fi
   done
+}
+
+set_amboso_stego_info() {
+  # Reads the passed file and sets
+  # - Amboso build info variables
+  # - Version tag variables
+  stego_file="$1"
+  verbose="$2"
+
+  bash_gulp_stego "$stego_file" 0 #&& print_amboso_stego_scopes
+  if [[ ! $? -eq 0 ]]; then {
+    printf "\033[1;31m[ERROR]    Failed parsing stego file at \"$stego_file\".\033[0m\n"
+    exit 7
+  }
+  fi
+  git_tags_count=0
+  base_tags_count=0
+  read_tags=0
+  for ((i=0; i<${#scopes[@]}; i++)); do
+  [[ $verbose -gt 1 ]] && printf "{${variables[i]}} = {${values[i]}}\n"
+  scope="${scopes[i]}"
+  variable="${variables[i]}"
+  value="${values[i]}"
+  is_noscope=0
+  if [[ -z $scope ]] ; then {
+    is_noscope=1
+    #Display scope as "main", even tho it should be equal to ""
+    #printf "\033[1;35mScope:\033[0m \"main\", \033[1;33mVariable:\033[0m \"$variable\", Value: \"\033[1;36m$value\033[0m\"\n\n"
+  } else {
+    #Print values for all scopes
+    #printf "\033[1;34mScope:\033[0m \"$scope\", \033[1;33mVariable:\033[0m \"$variable\", Value: \"\033[1;36m$value\033[0m\"\n\n"
+    if [[ $scope = "build" ]] ; then {
+      if [[ $variable = "build_source" ]]; then {
+        [[ $verbose -gt 0 ]] && printf "ANVIL_SOURCE: {$value}\n"
+        [[ $verbose -gt 0 ]] && printf "source_name: {$value} <- {$source_name}\n\n"
+        source_name="$value"
+        sources_info[0]="$source_name"
+      } elif [[ $variable = "build_bin" ]]; then {
+        [[ $verbose -gt 0 ]] && printf "ANVIL_BIN: {$value}\n"
+        [[ $verbose -gt 0 ]] && printf "exec_entrypoint: {$value} <- {$exec_entrypoint}\n\n"
+        exec_entrypoint="$value"
+        sources_info[1]="$exec_entrypoint"
+      } elif [[ $variable = "build_make-vers" ]]; then {
+        [[ $verbose -gt 0 ]] && printf "ANVIL_MAKE_VERS: {$value}\n"
+        [[ $verbose -gt 0 ]] && printf "makefile_version: {$value} <- {$makefile_version}\n\n"
+        makefile_version="$value"
+        sources_info[2]="$makefile_version"
+      } elif [[ $variable = "build_automake-vers" ]]; then {
+        [[ $verbose -gt 0 ]] && printf "ANVIL_AUTOMAKE_VERS: {$value}\n"
+        [[ $verbose -gt 0 ]] && printf "use_automake_version: {$value} <- {$use_automake_version}\n\n"
+        [[ $verbose -gt 0 ]] && printf "use_autoconf_version: {$value} <- {$use_autoconf_version}\n\n"
+        use_automake_version="$value"
+        use_autoconf_version="$value"
+        sources_info[4]="$use_automake_version"
+        sources_info[5]="$use_autoconf_version"
+      } elif [[ $variable = "build_tests" ]]; then {
+        [[ $verbose -gt 0 ]] && printf "ANVIL_TESTDIR: {$value}\n"
+        [[ $verbose -gt 0 ]] && printf "kazoj_dir: {$value} <- {$kazoj_dir}\n\n"
+        kazoj_dir="$value"
+        sources_info[3]="$kazoj_dir"
+      }
+      fi
+    } elif [[ $scope = "versions" ]] ; then {
+        tag="$(printf "$variable\n" | cut -f2 -d'_')"
+        if [[ $tag == \?* ]] ; then {
+          [[ $verbose -gt 0 ]] && printf "ANVIL_BASE_VERSION: {$tag}\n"
+          cut_tag="$(printf "$tag\n" | cut -f2 -d'?')"
+          read_base_tags[base_tags_count]="$cut_tag"
+          #printf "${read_base_tags[base_tags_count]} at {$base_tags_count}\n"
+          base_tags_count=$(($base_tags_count+1))
+          read_tags=$(($read_tags+1))
+        } else {
+          [[ $verbose -gt 0 ]] && printf "ANVIL_GIT_VERSION: {$tag}\n"
+          read_git_tags[git_tags_count]="$tag"
+          #printf "${read_git_tags[git_tags_count]} at {$git_tags_count}\n"
+          git_tags_count=$(($git_tags_count+1))
+          read_tags=$(($read_tags+1))
+        }
+        fi
+    } elif [[ $scope = "tests" ]] ; then {
+        read_dir="$value"
+        if [[ $variable = "tests_tests-dir" ]] ; then {
+          [[ $verbose -gt 0 ]] && printf "ANVIL_BONE_DIR: {$read_dir}\n"
+          tests_info[0]="$read_dir"
+          cases_dir="${tests_info[0]}"
+        } elif [[ $variable = "tests_errortests-dir" ]] ; then {
+          [[ $verbose -gt 0 ]] && printf "ANVIL_KULPO_DIR: {$read_dir}\n"
+          tests_info[1]="$read_dir"
+          errors_dir="${tests_info[1]}"
+        }
+        fi
+    }
+    fi
+  }
+  fi
+  done
+  count_source_infos="${#sources_info[@]}"
+  if [[ -z $exec_entrypoint ]] ; then {
+      printf "\033[1;31m[ERROR]    Missing binary name.\033[1;31m\n"
+      exit 1
+  }
+  fi
+  if [[ -z $source_name ]] ; then {
+      printf "\033[1;31m[ERROR]    Missing source name.\033[1;31m\n"
+      exit 2
+  }
+  fi
+  if [[ -z $makefile_version ]] ; then {
+      printf "\033[1;31m[ERROR]    Missing first version using make.\033[1;31m\n"
+      exit 3
+  }
+  fi
+  if [[ -z $use_automake_version ]] ; then {
+      printf "\033[1;31m[ERROR]    Missing first version using automake.\033[1;31m\n"
+      exit 4
+  }
+  fi
+  if [[ -z $use_autoconf_version ]] ; then {
+      printf "\033[1;31m[ERROR]    Missing first version using autoconf.\033[1;31m\n"
+      exit 5
+  }
+  fi
+  if [[ -z $kazoj_dir ]] ; then {
+      printf "\033[1;31m[ERROR]    Missing tests dir.\033[1;31m\n"
+      exit 6
+  }
+  fi
+  [[ $verbose -gt 0 ]] && printf "\033[1;34m[INFO]    Read {$count_source_infos} amboso params.\033[0m\n"
+
+  count_git_versions="${#read_git_tags[@]}"
+  count_base_versions="${#read_base_tags[@]}"
+  # Sort the SemVer tags
+  read_git_tags=($(printf "%s\n" "${read_git_tags[@]}" | sort -V))
+  read_base_tags=($(printf "%s\n" "${read_base_tags[@]}" | sort -V))
+
+  #echo "$count_git_versions"
+  #echo "$count_base_versions"
+  #echo_active_flags
+  #echo "base version array contents are: ( ${read_base_tags[@]} )" >&2
+  #echo "git version array contents are: ( ${read_git_tags[@]} )" >&2
+  #echo "version array contents are: ( ${read_versions[@]} )" >&2
+  if [[ $base_mode_flag -gt 0 ]] ; then {
+    for i in $(seq 0 $(($count_base_versions-1))); do
+      supported_versions[i]=${read_base_tags[$i]}
+    done
+  } else {
+    for i in $(seq 0 $(($count_git_versions-1))); do
+      supported_versions[i]=${read_git_tags[$i]}
+    done
+  }
+  fi
+  tot_vers=${#supported_versions[@]}
+
+  [[ $verbose -gt 0 ]] && printf "\033[1;34m[INFO]    Read {$tot_vers} tags.\033[0m\n"
+  return 0
 }

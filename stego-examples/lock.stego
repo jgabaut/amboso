@@ -6,32 +6,14 @@ make-vers = 0.3.0
 automake-vers = 2.0.0
 tests = kazoj
 
+[ tests ]
+
+tests-dir = bone
+errortests-dir = kulpo
+
 [ versions ]
 
 ?0.1.0# < 0.3.0, does not have Makefile
 ?0.9.0# >= 0.3.0, has Makefile
 1.0.0# First version with git mode support
 1.1.0# Introduced delete mode
-1.1.2# ( Hotfix ) Introduced list versions flag
-1.2.0# Introduced test mode
-1.3.0#
-1.3.1# Stable test mode
-1.3.2#
-1.4.8-b# Add make check
-1.4.9# Pass silent flag to init and purge
-1.5.2# Dump sysinfo
-1.6.0# Try running autoconf and ./configure
-1.6.2# -G to gen C header, check remote tags
-1.6.3# Better -G gen
-1.6.4# Gen C header for missing git tags drops errors
-1.6.5# Add global start time
-1.6.6# Better author tag for C headers
-1.6.8# Fix broken C header tags - Drops support for 1.6.7 Update C header style
-1.6.9# Correct pointer spacing for C header
-1.6.10# Remove extra newline in C header
-1.6.11# Fix DESC tag for C header
-1.6.12# Fix some unset variables, return tot_failures on -t call
-1.7.0# Improve runtime, check bash version, fix SC errors
-1.7.2# Fix broken kulpo tests, Drop amboso support for  1.7.1 Swap -W and -C flags, SC pass on amboso_fn
-1.7.3# Add stego parsing functions
-1.7.4# Add print_amboso_stego_scopes()
