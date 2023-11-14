@@ -960,7 +960,7 @@ set_amboso_stego_info() {
   }
   fi
   tot_vers=${#supported_versions[@]}
-
+  latest_version="${supported_versions[tot_vers-1]}"
   [[ $verbose -gt 0 ]] && printf "\033[1;34m[INFO]    Read {$tot_vers} tags.\033[0m\n"
   return 0
 }
@@ -1306,15 +1306,6 @@ amboso_parse_args() {
   [[ "$AMBOSO_LVL_REC" -eq 1 ]] && printf "\033[1;35m[AMBOSO]    Current version: $amboso_currvers\e[0m\n\n"
 
   [[ $quiet_flag -eq 0 ]] && for read_arg in "$@"; do { printf "[ARG]    \"$read_arg\"\n" ; } ; done
-  #Quit when $1 is "quit"
-  if [[ $1 = "quit" ]] ; then {
-      printf "\033[1;32m[INFO]\033[0m    Quitting.\n"
-      exit 0
-  } elif [[ $1 = "version" ]] ; then {
-      echo_amboso_version
-      return 0
-  }
-  fi
 
   app "$(echo_node loaded_fn silence_check)"
 
@@ -2533,16 +2524,26 @@ amboso_parse_args() {
 
 amboso_main() {
   if [[ ! $# -eq 0 ]] ; then {
-    cmd="$(printf "$1" | cut -f1 -d'-')"
+    cmd="$(printf -- "$1" | cut -f1 -d'-')"
+    echo "cmd: $cmd"
     if [[ ! -z $cmd ]] ; then {
       printf "COMMAND: {$cmd}\n"
-      if [[ $command = "quit" ]] ; then {
+      if [[ $cmd = "quit" ]] ; then {
+        unset AMBOSO_LVL_REC
         exit 0
       }
       fi
-      if [[ $command = "version" ]] ; then {
-        echo_amboso_version
-        shift
+      if [[ $cmd = "version" ]] ; then {
+        amboso_parse_args "-v"
+        unset AMBOSO_LVL_REC
+        return
+      }
+      fi
+      if [[ $cmd = "build" ]] ; then {
+        echo hi
+        amboso_parse_args "-Xb" "$latest_version"
+        unset AMBOSO_LVL_REC
+        return
       }
       fi
     }
@@ -2551,16 +2552,25 @@ amboso_main() {
   } else {
     while read -e -p "[AMBOSO-MAIN]$ " line ;
     do {
-      cmd="$(printf "'${line}'" | cut -f1 -d'-')"
+      cmd="$(printf -- "${line}" | cut -f1 -d'-')"
       if [[ ! -z $cmd ]] ; then {
         printf "COMMAND: {$cmd}\n"
-        if [[ $command = "quit" ]] ; then {
+        if [[ $cmd = "quit" ]] ; then {
+          unset AMBOSO_LVL_REC
           exit 0
         }
         fi
-        if [[ $command = "version" ]] ; then {
-          echo_amboso_version
-          shift
+        if [[ $cmd = "version" ]] ; then {
+          amboso_parse_args "-v"
+          unset AMBOSO_LVL_REC
+          return
+
+        }
+        fi
+        if [[ $cmd = "build" ]] ; then {
+          amboso_parse_args "-Xb"  "$latest_version"
+          unset AMBOSO_LVL_REC
+          return
         }
         fi
       }
