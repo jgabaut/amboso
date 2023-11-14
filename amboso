@@ -505,8 +505,7 @@ fi
 
 #We always notify of missing -K argument, if in test mode
 if [[ $test_mode_flag -gt 0 && ! $testdir_flag -gt 0 ]] ; then {
-  #TODO Use the standard path of $milestones_dir/stego.lock
-  set_amboso_stego_info "stego-examples/lock.stego" "$verbose_flag"
+  set_amboso_stego_info "$milestones_dir/stego.lock" "$verbose_flag"
   res="$?"
   [[ $res -eq 0 ]] || printf "\033[0;33m[WARN]\e[0m    Problems when doing set_amboso_stego_info($kazoj_dir).\n\n"
   set_supported_tests "$kazoj_dir"
@@ -601,7 +600,7 @@ fi
 #TODO: check if scripts_dir is needed anywhere... why
 scripts_dir="$milestones_dir" # MUST BE SET before checking for -S and -E
 #TODO: swap to new stego format
-set_amboso_stego_info "stego-examples/lock.stego" "$verbose_flag"
+set_amboso_stego_info "$milestones_dir/stego.lock" "$verbose_flag"
 if [[ ! $? -eq 0 ]] ; then {
   printf "\033[1;31m[CRITICAL]    Could not set amboso stego info.\033[0m\n"
   exit 1

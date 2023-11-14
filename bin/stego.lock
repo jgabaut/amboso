@@ -1,10 +1,18 @@
-[Build info]
-hello_world.c# source file name
-hello_world# executable file name
-0.3.0# make support version
-kazoj# tests folder name
-2.0.0# autoconf and automake support version
-[Supported versions]
+[ build ]
+
+source = hello_world.c
+bin = hello_world
+make-vers = 0.3.0
+automake-vers = 2.0.0
+tests = kazoj
+
+[ tests ]
+
+tests-dir = bone
+errortests-dir = kulpo
+
+[ versions ]
+
 ?0.1.0# < 0.3.0, does not have Makefile
 ?0.9.0# >= 0.3.0, has Makefile
 1.0.0# First version with git mode support
