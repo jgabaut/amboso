@@ -132,42 +132,45 @@ function check_tags {
     # For bash 3.x+, must not be in posix mode, may use temporary files
     while IFS='' read -r line; do repo_tags+=("$line"); done < <(git tag -l)
 
-	if [[ $verbose_flag -gt 1 ]] ; then {
-		for tag in "${read_versions[@]}"; do
-		if [[ " ${repo_tags[*]} " =~ " $tag " ]]; then
-			if [[ $verbose_flag -gt 0 ]] ; then {
-				shown_tag="\033[1;32m$tag\e[0m"
-				printf "[AMBOSO]  Read Tag $shown_tag exists in the repo.\n" >&2
-			}
-			fi
-		else {
-			if [[ $verbose_flag -gt 0 ]] ; then {
-				shown_tag="\033[1;31m$tag\e[0m"
-				printf "[AMBOSO]  Read Tag $shown_tag is missing in the repo.\n" >&2
-			}
-			fi
-		}
-		fi
-		done
-	}
-	fi
+    # LEGACY
+    #
+	#if [[ $verbose_flag -gt 1 ]] ; then {
+	#	for tag in "${read_versions[@]}"; do
+	#	if [[ " ${repo_tags[*]} " =~ " $tag " ]]; then
+	#		if [[ $verbose_flag -gt 0 ]] ; then {
+	#			shown_tag="\033[1;32m$tag\e[0m"
+	#			printf "[AMBOSO]  Read Tag $shown_tag exists in the repo.\n" >&2
+	#		}
+	#		fi
+	#	else {
+	#		if [[ $verbose_flag -gt 0 ]] ; then {
+	#			shown_tag="\033[1;31m$tag\e[0m"
+	#			printf "[AMBOSO]  Read Tag $shown_tag is missing in the repo.\n" >&2
+	#		}
+	#		fi
+	#	}
+	#	fi
+	#	done
+	#}
+	#fi
 
-	for tag in "${supported_versions[@]}"; do
-    	if [[ " ${repo_tags[*]} " =~ " $tag " ]]; then {
-		if [[ $verbose_flag -gt 0 ]] ; then {
-    			shown_tag="\033[1;32m$tag\e[0m"
-        		printf "[AMBOSO]  Supported Tag $shown_tag exists in the repo.\n" >&2
-		}
-		fi
+  for tag in "${supported_versions[@]}"; do
+    if [[ " ${repo_tags[*]} " =~ " $tag " ]]; then {
+      latest_version="$tag"
+      if [[ $verbose_flag -gt 0 ]] ; then {
+        shown_tag="\033[1;32m$tag\e[0m"
+        printf "[AMBOSO]  Supported Tag $shown_tag exists in the repo.\n" >&2
+      }
+      fi
 	} else {
-		if [[ $verbose_flag -gt 0 ]] ; then {
-    			shown_tag="\033[1;31m$tag\e[0m"
-        		printf "[AMBOSO]  Supported Tag $shown_tag is missing in the repo.\n" >&2
-		}
-		fi
- 	}
-    	fi
-	done
+      if [[ $verbose_flag -gt 0 ]] ; then {
+        shown_tag="\033[1;31m$tag\e[0m"
+        printf "[AMBOSO]  Supported Tag $shown_tag is missing in the repo.\n" >&2
+	  }
+	  fi
+    }
+    fi
+  done
 }
 
 function echo_tag_info {
@@ -962,6 +965,8 @@ set_amboso_stego_info() {
   tot_vers=${#supported_versions[@]}
   latest_version="${supported_versions[tot_vers-1]}"
   [[ $verbose -gt 0 ]] && printf "\033[1;34m[INFO]    Read {$tot_vers} tags.\033[0m\n"
+  #TODO: this slows down everything with the advantage of offering a "working" build command
+  check_tags
   return 0
 }
 
@@ -1759,6 +1764,7 @@ amboso_parse_args() {
   v_pos=1
   if [[ $# -eq 1 ]] ; then {
     query="${!v_pos}"
+    [[ $query = "latest" ]] && query="$latest_version"
   } else {
     query=""
   }
@@ -2541,7 +2547,7 @@ amboso_main() {
       fi
       if [[ $cmd = "build" ]] ; then {
         echo hi
-        amboso_parse_args "-Xb" "$latest_version"
+        amboso_parse_args "-Xb" "latest"
         unset AMBOSO_LVL_REC
         return
       }
@@ -2568,7 +2574,7 @@ amboso_main() {
         }
         fi
         if [[ $cmd = "build" ]] ; then {
-          amboso_parse_args "-Xb"  "$latest_version"
+          amboso_parse_args "-Xb"  "latest"
           unset AMBOSO_LVL_REC
           return
         }
