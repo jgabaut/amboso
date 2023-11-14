@@ -30,9 +30,11 @@ kernel_release="$(uname -r)"
 kernel_version="$(uname -v)"
 machine_name="$(uname -m)"
 os_name="$(uname -o)"
+
 amboso_currvers="1.9.0"
 expected_AMBOSO_API_LVL="1.9.0"
 amboso_testflag_version="1.9.0"
+
 #Function to try sourcing amboso_fn.sh
 source_amboso_api() {
   if [[ $(basename "$(pwd)") == "amboso" ]] ; then {
@@ -115,4 +117,5 @@ is_interactive=0
 [[ $# -eq 0 ]] && is_interactive=1
 
 source_amboso_api
+
 amboso_main "$@"
