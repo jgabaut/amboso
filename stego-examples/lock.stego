@@ -6,6 +6,11 @@ make-vers = 0.3.0
 automake-vers = 2.0.0
 tests = kazoj
 
+[ tests ]
+
+tests-dir = bone
+errortests-dir = kulpo
+
 [ versions ]
 
 ?0.1.0# < 0.3.0, does not have Makefile

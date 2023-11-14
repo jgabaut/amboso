@@ -505,11 +505,10 @@ fi
 
 #We always notify of missing -K argument, if in test mode
 if [[ $test_mode_flag -gt 0 && ! $testdir_flag -gt 0 ]] ; then {
-  set_source_info "$milestones_dir"
-  kazoj_dir="${sources_info[3]}"
-  set_tests_info "$kazoj_dir"
+  #TODO Use the standard path of $milestones_dir/stego.lock
+  set_amboso_stego_info "stego-examples/lock.stego" "$verbose_flag"
   res="$?"
-  [[ $res -eq 0 ]] || printf "\033[0;33m[WARN]\e[0m    Problems when doing set_tests_info($kazoj_dir).\n\n"
+  [[ $res -eq 0 ]] || printf "\033[0;33m[WARN]\e[0m    Problems when doing set_amboso_stego_info($kazoj_dir).\n\n"
   set_supported_tests "$kazoj_dir"
   res="$?"
   [[ $res -eq 0 ]] || printf "\033[0;33m[WARN]\e[0m    Problems when doing set_supported_tests($kazoj_dir).\n\n"
@@ -616,7 +615,7 @@ fi
 #      set_source_info "$milestones_dir"
 #      kazoj_dir="${sources_info[3]}" #TODO: don't think this should be overwritten here if assigned earlier
 #      use_automake_version="${sources_info[4]}"
-set_tests_info "$kazoj_dir"
+#      set_tests_info "$kazoj_dir"
 set_supported_tests "$kazoj_dir"
 
 if [[ $verbose_flag -gt 1 ]]; then {
@@ -632,7 +631,7 @@ if [[ $verbose_flag -gt 1 ]]; then { #WIP
 }
 fi
 
-#If we're in test mode and test dir was not passed, we check if "./kazoj" is a directory and use that. If it isn't, we may get the name from stego.lock. If that is not a directory, we quit immediately.
+#If we're in test mode and test dir was not set, we check if "./kazoj" is a directory and use that. If it isn't, we may get the name from stego.lock. If that is not a directory, we quit immediately.
 if [[ -z $kazoj_dir && $test_mode_flag -gt 0 ]] ; then {
   if [[ "$amboso_currvers" > "$amboso_testflag_version" || "$amboso_currvers" = "$amboso_testflag_version" ]] ; then {
      if [[ -d "./kazoj" ]]; then {

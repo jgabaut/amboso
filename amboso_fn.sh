@@ -905,6 +905,14 @@ print_amboso_stego_scopes() {
           printf "ANVIL_GIT_VERSION: {$tag}\n"
         }
         fi
+    } elif [[ $scope = "tests" ]] ; then {
+        test_dir="$value"
+        if [[ $variable = "tests_tests-dir" ]] ; then {
+          printf "ANVIL_BONE_DIR: {$test_dir}\n"
+        } elif [[ $variable = "tests_errortests-dir" ]] ; then {
+          printf "ANVIL_KULPO_DIR: {$test_dir}\n"
+        }
+        fi
     }
     fi
   }
@@ -986,6 +994,18 @@ set_amboso_stego_info() {
           #printf "${read_git_tags[git_tags_count]} at {$git_tags_count}\n"
           git_tags_count=$(($git_tags_count+1))
           read_tags=$(($read_tags+1))
+        }
+        fi
+    } elif [[ $scope = "tests" ]] ; then {
+        read_dir="$value"
+        if [[ $variable = "tests_tests-dir" ]] ; then {
+          [[ $verbose -gt 0 ]] && printf "ANVIL_BONE_DIR: {$read_dir}\n"
+          tests_info[0]="$read_dir"
+          cases_dir="${tests_info[0]}"
+        } elif [[ $variable = "tests_errortests-dir" ]] ; then {
+          [[ $verbose -gt 0 ]] && printf "ANVIL_KULPO_DIR: {$read_dir}\n"
+          tests_info[1]="$read_dir"
+          errors_dir="${tests_info[1]}"
         }
         fi
     }
