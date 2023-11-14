@@ -2542,13 +2542,13 @@ amboso_main() {
       }
       fi
       if [[ $cmd = "version" ]] ; then {
-        amboso_parse_args "-v"
+        (amboso_parse_args "-v")
         unset AMBOSO_LVL_REC
         return
       }
       fi
       if [[ $cmd = "build" ]] ; then {
-        amboso_parse_args "-Xb" "latest"
+        (amboso_parse_args "-Xb" "latest")
         unset AMBOSO_LVL_REC
         return
       }
@@ -2560,14 +2560,14 @@ amboso_main() {
         printf "    quit         Quit amboso\n\n"
         printf "    help         Print this message\n\n"
         printf "\033[1;35m[AMBOSO-MAIN]\033[0m    Amboso help (-h):\n\n"
-        amboso_parse_args "-Xh"
+        (amboso_parse_args "-Xh")
         unset AMBOSO_LVL_REC
         return
       }
       fi
     }
     fi
-    amboso_parse_args "$@"
+    (amboso_parse_args "$@")
   } else { # Repl
     while read -e -p "[AMBOSO-MAIN]$ " line ;
     do {
@@ -2580,14 +2580,14 @@ amboso_main() {
         }
         fi
         if [[ $cmd = "version" ]] ; then {
-          amboso_parse_args "-v"
+          (amboso_parse_args "-v")
           unset AMBOSO_LVL_REC
           return
 
         }
         fi
         if [[ $cmd = "build" ]] ; then {
-          amboso_parse_args "-Xb"  "latest"
+          (amboso_parse_args "-Xb"  "latest")
           unset AMBOSO_LVL_REC
           return
         }
@@ -2599,7 +2599,7 @@ amboso_main() {
           printf "    quit         Quit amboso\n\n"
           printf "    help         Print this message\n\n"
           printf "\033[1;35m[AMBOSO-MAIN]\033[0m    Amboso help (-h):\n\n"
-          amboso_parse_args "-Xh"
+          (amboso_parse_args "-Xh")
           unset AMBOSO_LVL_REC
           return
         }
@@ -2607,7 +2607,7 @@ amboso_main() {
       }
       fi
       printf "\033[1;35m[CMDLINE]\033[0m    \"\033[1;36m$line\033[0m\"\n"
-      amboso_parse_args "$line"
+      (amboso_parse_args "$line")
       unset AMBOSO_LVL_REC
     }
     done < "${1:-/dev/stdin}"
