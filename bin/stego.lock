@@ -41,3 +41,4 @@ errortests-dir = kulpo
 1.7.3# Add stego parsing functions
 1.7.4# Add print_amboso_stego_scopes()
 1.8.0# Update stego.lock format to work with bash_gulp_stego()
+1.9.0# Thin amboso
