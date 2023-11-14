@@ -332,9 +332,6 @@ function set_tests_info {
 
 function set_supported_tests {
   kazoj_dir=$1
-  set_tests_info "$1"
-  cases_dir="${tests_info[0]}"
-  errors_dir="${tests_info[1]}"
   tests_filecount=0
   errors_filecount=0
   skipped=0
