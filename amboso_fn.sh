@@ -965,8 +965,6 @@ set_amboso_stego_info() {
   tot_vers=${#supported_versions[@]}
   latest_version="${supported_versions[tot_vers-1]}"
   [[ $verbose -gt 0 ]] && printf "\033[1;34m[INFO]    Read {$tot_vers} tags.\033[0m\n"
-  #TODO: this slows down everything with the advantage of offering a "working" build command
-  check_tags
   return 0
 }
 
@@ -1764,7 +1762,12 @@ amboso_parse_args() {
   v_pos=1
   if [[ $# -eq 1 ]] ; then {
     query="${!v_pos}"
-    [[ $query = "latest" ]] && query="$latest_version"
+    if [[ $query = "latest" ]] ; then {
+        #TODO: calling the check slows down everything, with the advantage of offering a "working" build command
+        check_tags
+        query="$latest_version"
+    }
+    fi
   } else {
     query=""
   }
