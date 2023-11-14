@@ -1308,7 +1308,7 @@ amboso_parse_args() {
 
   [[ "$AMBOSO_LVL_REC" -eq 1 ]] && printf "\033[1;35m[AMBOSO]    Current version: $amboso_currvers\e[0m\n\n"
 
-  [[ $quiet_flag -eq 0 ]] && for read_arg in "$@"; do { printf "[ARG]    \"$read_arg\"\n" ; } ; done
+  [[ $quiet_flag -eq 0 && $verbose_flag -gt 0 ]] && for read_arg in "$@"; do { printf "[ARG]    \"$read_arg\"\n" ; } ; done
 
   app "$(echo_node loaded_fn silence_check)"
 
@@ -2568,6 +2568,9 @@ amboso_main() {
     }
     fi
     (amboso_parse_args "$@")
+    res="$?"
+    unset AMBOSO_LVL_REC
+    return "$res"
   } else { # Repl
     while read -e -p "[AMBOSO-MAIN]$ " line ;
     do {
@@ -2608,11 +2611,12 @@ amboso_main() {
       fi
       printf "\033[1;35m[CMDLINE]\033[0m    \"\033[1;36m$line\033[0m\"\n"
       (amboso_parse_args "$line")
+      res="$?"
       unset AMBOSO_LVL_REC
     }
     done < "${1:-/dev/stdin}"
   }
   fi
 
-  return 0
+  return "$res"
 }
