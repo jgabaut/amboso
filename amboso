@@ -599,7 +599,6 @@ fi
 
 #TODO: check if scripts_dir is needed anywhere... why
 scripts_dir="$milestones_dir" # MUST BE SET before checking for -S and -E
-#TODO: swap to new stego format
 set_amboso_stego_info "$milestones_dir/stego.lock" "$verbose_flag"
 if [[ ! $? -eq 0 ]] ; then {
   printf "\033[1;31m[CRITICAL]    Could not set amboso stego info.\033[0m\n"
