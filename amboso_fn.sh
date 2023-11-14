@@ -435,7 +435,6 @@ function echo_tests_info {
 
 function echo_othermode_tags {
   dir="$1"
-  set_supported_versions "$dir"
 
   #Print remaining read versions not available in current mode
   if [[ $base_mode_flag -gt 0 ]] ; then {
@@ -444,7 +443,7 @@ function echo_othermode_tags {
     printf "  Run again in ( $mode_txt ) mode to use them.\n"
     for i in $(seq 0 $(($count_git_versions-1))); do {
       (( $i % 4 == 0)) && [[ $i -ne 0 ]] && printf "\n"
-      printf "    \033[0;33m${read_git_mode_tags[i]}\e[0m"
+      printf "    \033[0;33m${read_git_tags[i]}\e[0m"
     }
     done
   } else {
@@ -453,7 +452,7 @@ function echo_othermode_tags {
     printf "  Run again in ( $mode_txt ) mode to use them.\n"
     for i in $(seq 0 $(($count_base_versions-1))); do {
       (( $i % 4 == 0)) && [[ $i -ne 0 ]] && printf "\n"
-      printf "    \033[0;33m${read_base_mode_tags[i]}\e[0m"
+      printf "    \033[0;33m${read_base_tags[i]}\e[0m"
     }
     done
   }
@@ -465,7 +464,6 @@ function echo_supported_tags {
   mode_txt="\033[1;34mgit\e[0m"
   [[ $base_mode_flag -gt 0 ]] && mode_txt="\033[1;31mbase\e[0m"
   dir="$1"
-  set_supported_versions "$dir"
   printf "  ( $tot_vers ) supported tags for current mode ( $mode_txt ).\n"
   for i in $(seq 0 $(($tot_vers-1))); do { #Print currently supported versions (only ones conforming to mode)
     (( $i % 4 == 0)) && [[ $i -ne 0 ]] && printf "\n"
@@ -981,7 +979,8 @@ set_amboso_stego_info() {
         tag="$(printf "$variable\n" | cut -f2 -d'_')"
         if [[ $tag == \?* ]] ; then {
           [[ $verbose -gt 0 ]] && printf "ANVIL_BASE_VERSION: {$tag}\n"
-          read_base_tags[base_tags_count]="$tag"
+          cut_tag="$(printf "$tag\n" | cut -f2 -d'?')"
+          read_base_tags[base_tags_count]="$cut_tag"
           #printf "${read_base_tags[base_tags_count]} at {$base_tags_count}\n"
           base_tags_count=$(($base_tags_count+1))
           read_tags=$(($read_tags+1))
