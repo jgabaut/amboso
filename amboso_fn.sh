@@ -2534,7 +2534,6 @@ amboso_parse_args() {
 amboso_main() {
   if [[ ! $# -eq 0 ]] ; then {
     cmd="$(printf -- "$1" | cut -f1 -d'-')"
-    echo "cmd: $cmd"
     if [[ ! -z $cmd ]] ; then {
       printf "COMMAND: {$cmd}\n"
       if [[ $cmd = "quit" ]] ; then {
@@ -2549,8 +2548,19 @@ amboso_main() {
       }
       fi
       if [[ $cmd = "build" ]] ; then {
-        echo hi
         amboso_parse_args "-Xb" "latest"
+        unset AMBOSO_LVL_REC
+        return
+      }
+      fi
+      if [[ $cmd = "help" ]] ; then {
+        printf "\033[1;35m[AMBOSO-MAIN]\033[0m    Quick commands:\n\n"
+        printf "    build        Build latest version\n\n"
+        printf "    version      Print amboso version\n\n"
+        printf "    quit         Quit amboso\n\n"
+        printf "    help         Print this message\n\n"
+        printf "\033[1;35m[AMBOSO-MAIN]\033[0m    Amboso help (-h):\n\n"
+        amboso_parse_args "-Xh"
         unset AMBOSO_LVL_REC
         return
       }
@@ -2558,7 +2568,7 @@ amboso_main() {
     }
     fi
     amboso_parse_args "$@"
-  } else {
+  } else { # Repl
     while read -e -p "[AMBOSO-MAIN]$ " line ;
     do {
       cmd="$(printf -- "${line}" | cut -f1 -d'-')"
@@ -2578,6 +2588,18 @@ amboso_main() {
         fi
         if [[ $cmd = "build" ]] ; then {
           amboso_parse_args "-Xb"  "latest"
+          unset AMBOSO_LVL_REC
+          return
+        }
+        fi
+        if [[ $cmd = "help" ]] ; then {
+          printf "\033[1;35m[AMBOSO-MAIN]\033[0m    Quick commands:\n\n"
+          printf "    build        Build latest version\n\n"
+          printf "    version      Print amboso version\n\n"
+          printf "    quit         Quit amboso\n\n"
+          printf "    help         Print this message\n\n"
+          printf "\033[1;35m[AMBOSO-MAIN]\033[0m    Amboso help (-h):\n\n"
+          amboso_parse_args "-Xh"
           unset AMBOSO_LVL_REC
           return
         }
