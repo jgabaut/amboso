@@ -965,7 +965,7 @@ set_amboso_stego_info() {
   return 0
 }
 
-amboso_main_call() {
+amboso_parse_args() {
   export AMBOSO_LVL_REC="${AMBOSO_LVL_REC:-0}"
   #Increment depth counter
   AMBOSO_LVL_REC=$(($AMBOSO_LVL_REC+1))
@@ -1305,11 +1305,14 @@ amboso_main_call() {
 
   [[ "$AMBOSO_LVL_REC" -eq 1 ]] && printf "\033[1;35m[AMBOSO]    Current version: $amboso_currvers\e[0m\n\n"
 
-  [[ $quiet_flag -eq 0 ]] && printf "[ARGS]    \"$*\"\n"
+  [[ $quiet_flag -eq 0 ]] && for read_arg in "$@"; do { printf "[ARG]    \"$read_arg\"\n" ; } ; done
   #Quit when $1 is "quit"
   if [[ $1 = "quit" ]] ; then {
       printf "\033[1;32m[INFO]\033[0m    Quitting.\n"
       exit 0
+  } elif [[ $1 = "version" ]] ; then {
+      echo_amboso_version
+      return 0
   }
   fi
 
@@ -2526,4 +2529,49 @@ amboso_main_call() {
   echo_timer "$amboso_start_time"  "Run" "6"
   exit 0
 
+}
+
+amboso_main() {
+  if [[ ! $# -eq 0 ]] ; then {
+    cmd="$(printf "$1" | cut -f1 -d'-')"
+    if [[ ! -z $cmd ]] ; then {
+      printf "COMMAND: {$cmd}\n"
+      if [[ $command = "quit" ]] ; then {
+        exit 0
+      }
+      fi
+      if [[ $command = "version" ]] ; then {
+        echo_amboso_version
+        shift
+      }
+      fi
+    }
+    fi
+    amboso_parse_args "$@"
+  } else {
+    while read -e -p "[AMBOSO-MAIN]$ " line ;
+    do {
+      cmd="$(printf "'${line}'" | cut -f1 -d'-')"
+      if [[ ! -z $cmd ]] ; then {
+        printf "COMMAND: {$cmd}\n"
+        if [[ $command = "quit" ]] ; then {
+          exit 0
+        }
+        fi
+        if [[ $command = "version" ]] ; then {
+          echo_amboso_version
+          shift
+        }
+        fi
+      }
+      fi
+      printf "\033[1;35m[CMDLINE]\033[0m    \"\033[1;36m$line\033[0m\"\n"
+      amboso_parse_args "$line"
+      unset AMBOSO_LVL_REC
+    }
+    done < "${1:-/dev/stdin}"
+  }
+  fi
+
+  return 0
 }

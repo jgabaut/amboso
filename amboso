@@ -115,33 +115,4 @@ is_interactive=0
 [[ $# -eq 0 ]] && is_interactive=1
 
 source_amboso_api
-
-if [[ $is_interactive -eq 0 ]] ; then {
-  amboso_main_call "$@"
-} else {
-  while read -e -p "[AMBOSO-MAIN]$ " line ;
-  do {
-    cmd="$(printf "'${line}'" | cut -f1 -d'-')"
-    if [[ ! -z $cmd ]] ; then {
-      printf "COMMAND: {$cmd}\n"
-      if [[ $command = "clear" ]] ; then {
-        clear
-      }
-      fi
-      if [[ $command = "quit" ]] ; then {
-        exit 0
-      }
-      fi
-      if [[ $command = "version" ]] ; then {
-        echo_amboso_version
-      }
-      fi
-    }
-    fi
-    printf "\033[1;35m[CMDLINE]\033[0m    \"\033[1;36m$line\033[0m\"\n"
-    amboso_main_call "$line"
-    unset AMBOSO_LVL_REC
-  }
-  done < "${1:-/dev/stdin}"
-}
-fi
+amboso_main $@
