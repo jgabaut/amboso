@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 expected_AMBOSO_API_LVL="1.9.1"
 
