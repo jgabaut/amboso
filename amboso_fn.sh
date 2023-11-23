@@ -1357,7 +1357,7 @@ amboso_parse_args() {
   }
   fi
 
-  [[ "$AMBOSO_LVL_REC" -eq 1 ]] && printf "\033[1;35m[AMBOSO]    Current version: $amboso_currvers\e[0m\n\n"
+  [[ "$verbose_flag" -gt 1 ]] && printf "\033[1;35m[AMBOSO]    Current version: $amboso_currvers\e[0m\n\n"
 
   [[ $quiet_flag -eq 0 && $verbose_flag -gt 0 ]] && for read_arg in "$@"; do { printf "[ARG]    \"$read_arg\"\n" ; } ; done
 
