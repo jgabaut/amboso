@@ -63,15 +63,16 @@ I did not want to learn how to write nice makefiles or chaining a couple git com
 
 To see how this marvelous work of art works, run:
 
+```sh
+  cd try-anvil
+  ./try_anvil
 ```
-$ ./try_anvil
-```
 
-## try-anvil
+## try-anvil dir
 
-All commands ran by the script will be shown on screen with a `+` before them.
+All commands ran by the scripts will be shown on screen with a `+` before them.
 
-It's a script running `./anvil` with various flags using the provided ./bin example references, so you can see how to call amboso with different flags.
+`try-anvil/try_anvil` It's a script running `./anvil` with various flags using the provided ./bin example references, so you can see how to call amboso with different flags.
 
 ### Note
 
@@ -87,9 +88,6 @@ It's a script running `./anvil` with various flags using the provided ./bin exam
 This command hints you to symlinking `./amboso` to `super_repo/anvil`, and shows differents outputs based on the queries made.
 
 It can now also show how the repo itself complies with amboso specs to run in git mode.
-
-TODO: I should probably update `./try_anvil` to show usage of test commands, should come soon.
-Altought I expect some headache due to the backtrace, we'll see.
 
 ## General usage <a name = "general_usage"></a>
 
@@ -125,7 +123,7 @@ I will look into this to ensure you don't have to stick to this name for the tar
 
 Contains a directory for each supported tag (directories **must** start with an extra v prepended to the tag name, like so:
 
-```
+```console
 super-repo
 ├── amboso
 │   ├── amboso
@@ -149,7 +147,9 @@ super-repo
 │   ├── LICENSE
 │   ├── Makefile
 │   ├── README.md
-│   └── try_anvil
+│   └── try-anvil
+│       ├── try_anvil
+│       └── try_anvil_auto
 ├── kazoj
 ```
 
@@ -163,7 +163,7 @@ Having to prepend every tag directory with 'v' may not be the best, but it's som
 
 The script **always** needs to know the directory containing the target builds, so **if you don't define one yourself** when running, by using -D :
 
-```
+```sh
 amboso -D SOME_DIR -h
 ```
 

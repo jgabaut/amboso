@@ -28,4 +28,4 @@ jobs:
 
     - name: (try_anvil_auto) Testing try_anvil, without the stepping
       run: |
-        ./try_anvil_auto || echo -e "\033[1;31mFailed.\e[0m\n"
+        ./try-anvil/try_anvil_auto || echo -e "\033[1;31mFailed.\e[0m\n"
