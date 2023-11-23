@@ -1,5 +1,3 @@
-export SHELL=/bin/bash
-
 VERSION="1.9.1"
 ANVIL_C_HEADER_VERSION="1.9.1"
 
