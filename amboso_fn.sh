@@ -2234,8 +2234,14 @@ amboso_parse_args() {
         if [[ $can_automake -gt 0 ]] ; then { #We support automake by doing autoreconf and ./configure before running make.
           tool_txt="automake"
           printf "\033[0;33m[MODE]    target ( $version ) >= ( $use_autoconf_version ), can autoconf.\e[0m\n" >&2
-      autoreconf
-      ./configure
+          autoreconf
+          if [[ $? -ne 0 ]] ; then {
+            printf "\033[1;33m[WARN]\033[0m    autoreconf failed. Doing {\033[1;34mautomake --add-missing\033[0m}\n" >&2
+            automake --add-missing
+            autoreconf
+          }
+          fi
+          ./configure
           printf "\033[0;32m[INFO]    Done 'autoreconf' and './configure'.\e[0m\n" >&2
         }
         fi
