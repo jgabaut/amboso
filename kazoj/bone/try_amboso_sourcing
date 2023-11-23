@@ -1,6 +1,6 @@
 #!/bin/bash
 
-expected_AMBOSO_API_LVL="1.9.0"
+expected_AMBOSO_API_LVL="1.9.1"
 
 verbose_flag=1
 #Function to try sourcing amboso_fn.sh
