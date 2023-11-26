@@ -42,3 +42,4 @@ errortests-dir = kulpo
 1.7.4# Add print_amboso_stego_scopes()
 1.9.0# Thin amboso
 1.9.1# Add amboso init quick command
+1.9.2# Fix missing quiet_flag
