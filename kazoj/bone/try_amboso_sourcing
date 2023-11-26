@@ -1,9 +1,10 @@
 #!/bin/bash
 
-expected_AMBOSO_API_LVL="1.9.1"
+expected_AMBOSO_API_LVL="1.9.2"
 
 verbose_flag=1
 tell_uname_flag=0
+quiet_flag=0
 #Function to try sourcing amboso_fn.sh
 source_amboso_api() {
   if [ "$(basename "$(pwd)")" = "amboso" ] ; then {
