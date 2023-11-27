@@ -2,14 +2,14 @@
 
 source = hello_world.c
 bin = hello_world
-make-vers = 0.3.0
-automake-vers = 2.0.0
+makevers = 0.3.0
+automakevers = 2.0.0
 tests = kazoj
 
 [ tests ]
 
-tests-dir = bone
-errortests-dir = kulpo
+testsdir = bone
+errortestsdir = kulpo
 
 [ versions ]
 

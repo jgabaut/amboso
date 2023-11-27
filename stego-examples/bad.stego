@@ -15,6 +15,7 @@ under_score = 1 # error7
 {} # error9
 unclosed-curly = {"this" #error10
 yoink {$} #error11
+             -               =              farvalue #error12
 
 
   # These are header errors

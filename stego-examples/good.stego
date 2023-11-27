@@ -19,7 +19,6 @@ pi = 3.14
         100= "int"
 
 [ yes_underscores ]
-             -               =              farvalue
 [    spacing  ]
 foo = b     ar
 [tight]
@@ -50,7 +49,6 @@ foo = "bar"
 100 =     str
 
 [ definitely_no_dashes ]
-             -               =               val
 [    white ]
 [might]
 foo = b     ar

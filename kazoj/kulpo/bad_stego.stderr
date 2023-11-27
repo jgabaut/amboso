@@ -9,6 +9,7 @@
 ^[[1;31m[LINT]^[[0m    Invalid line:    ^[[1;31m{} ^[[0m$
 ^[[1;31m[LINT]^[[0m    Invalid line:    ^[[1;31munclosed-curly = {"this" ^[[0m$
 ^[[1;31m[LINT]^[[0m    Invalid line:    ^[[1;31myoink {$} ^[[0m$
+^[[1;31m[LINT]^[[0m    Invalid line:    ^[[1;31m-               =              farvalue ^[[0m$
 ^[[1;31m[LINT]^[[0m    Invalid line:    ^[[1;31m[ NO SPACES_ALLOWED ]^[[0m$
 ^[[1;31m[LINT]^[[0m    Invalid line:    ^[[1;31m[ no_missing_square_bracket^[[0m$
 ^[[1;31m[LINT]^[[0m    Invalid line:    ^[[1;31m[-NO-DASHES]^[[0m$
