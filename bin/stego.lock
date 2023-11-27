@@ -2,14 +2,14 @@
 
 source = hello_world.c
 bin = hello_world
-make-vers = 0.3.0
-automake-vers = 2.0.0
+makevers = 0.3.0
+automakevers = 2.0.0
 tests = kazoj
 
 [ tests ]
 
-tests-dir = bone
-errortests-dir = kulpo
+testsdir = bone
+errortestsdir = kulpo
 
 [ versions ]
 
@@ -43,3 +43,4 @@ errortests-dir = kulpo
 1.9.0# Thin amboso
 1.9.1# Add amboso init quick command
 1.9.2# Fix missing quiet_flag
+1.9.3# Refuse dashes in stego file

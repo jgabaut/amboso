@@ -1,7 +1,7 @@
 export SHELL=/bin/bash
 
-VERSION="1.9.2"
-ANVIL_C_HEADER_VERSION="1.9.2"
+VERSION="1.9.3"
+ANVIL_C_HEADER_VERSION="1.9.3"
 
 ECHO_VERSION="./amboso"
 RUN_VERSION := $(shell $(ECHO_VERSION) -qv)

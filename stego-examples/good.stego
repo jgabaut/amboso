@@ -10,7 +10,7 @@ pi = 3.14
 
   # These are ok
 val = "myval"
-[ yes-dashes ]
+[ no_dashes ]
     [    myscope   ]
 [tight]
 foo = "bar"
@@ -18,8 +18,7 @@ pi = 3.14
 100 =     str
         100= "int"
 
-[ yes-dashes ]
-             -               =              farvalue
+[ yes_underscores ]
 [    spacing  ]
 foo = b     ar
 [tight]
@@ -33,7 +32,7 @@ foo = "bar"
 test
 1203m12ok
 
-[yes-dashes]
+[still_no_dashes]
 val = "myval#" #comment
 "val" = "myval#" #comment
 foo = "bar"
@@ -49,8 +48,7 @@ foo = "bar"
 [oh=man]
 100 =     str
 
-[ yes-dashes ]
-             -               =               val
+[ definitely_no_dashes ]
 [    white ]
 [might]
 foo = b     ar

@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="1.9.2"
+AMBOSO_API_LVL="1.9.3"
 at () {
     printf "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -210,7 +210,7 @@ function amboso_init_proj {
     mkdir -p "$target_dir"/tests/ok
     mkdir -p "$target_dir"/tests/errors
 
-    printf "[build]\nsource = main.c\nbin = hello_world\nmake-vers = 0.1.0\nautomake-vers = 0.1.0\ntests = tests\n[tests]\ntests-dir = ok\nerrortests-dir = errors\n[versions]\n0.1.0#\n" > "$target_dir"/bin/stego.lock
+    printf "[build]\nsource = main.c\nbin = hello_world\nmakevers = 0.1.0\nautomakevers = 0.1.0\ntests = tests\n[tests]\ntestsdir = ok\nerrortestsdir = errors\n[versions]\n0.1.0#\n" > "$target_dir"/bin/stego.lock
 
     printf "#include <stdio.h>\nint main(void) {\nprintf(\"Hello, World!\");\nreturn 0;\n}\n" > "$target_dir"/src/main.c
 
@@ -622,16 +622,16 @@ lex_stego_file() {
             next
         }
 
-        if ($0 ~ /^\s*\[[^A-Z_\[\]\\\/\$]+\]\s*$/) {
+        if ($0 ~ /^\s*\[[^-A-Z\[\]\\\/\$]+\]\s*$/) {
             # Extract and set the current scope
-            if (match($0, /^\s*\[\s*([^A-Z_\[\]]+)\s*\]\s*$/, a)) {
+            if (match($0, /^\s*\[\s*([^-A-Z\[\]]+)\s*\]\s*$/, a)) {
                 current_scope=gensub(/\s*$/, "", "g", a[1])
                 scopes[current_scope]++
             } else {
                 print "\033[1;31m[LINT]\033[0m    Invalid header:    \033[1;31m" $0 "\033[0m" > "/dev/stderr"
                 error_flag=1
             }
-        } else if ($0 ~ /^[^A-Z=\[\]_\$\\\/{}]+ *= *[^A-Z=\[\]\${}]+$/) {
+        } else if ($0 ~ /^[^-A-Z=\[\]_\$\\\/{}]+ *= *[^A-Z=\[\]\${}]+$/) {
             # Check if the line is a valid variable assignment
 
             split($0, parts, "=")
@@ -685,7 +685,7 @@ lex_stego_file() {
                     scopes[current_scope]++
                 }
             }
-        } else if ($0 ~ /^[^A-Z_\[\]\$\\\/{}]+ *= *{[^}A-Z\\\$#\]\[]+ *}$/) {
+        } else if ($0 ~ /^[^-A-Z_\[\]\$\\\/{}]+ *= *{[^}A-Z\\\$#\]\[]+ *}$/) {
             # Check if line has a curly bracket rightval
             # Extract variable
             variable = gensub(/^ *"?([^{="]+)"? *=.*$/, "\\1", "g", $0)
@@ -833,9 +833,9 @@ print_amboso_stego_scopes() {
         printf "ANVIL_SOURCE: {$value}\n"
       } elif [[ $variable = "build_bin" ]]; then {
         printf "ANVIL_BIN: {$value}\n"
-      } elif [[ $variable = "build_make-vers" ]]; then {
+      } elif [[ $variable = "build_makevers" ]]; then {
         printf "ANVIL_MAKE_VERS: {$value}\n"
-      } elif [[ $variable = "build_automake-vers" ]]; then {
+      } elif [[ $variable = "build_automakevers" ]]; then {
         printf "ANVIL_AUTOMAKE_VERS: {$value}\n"
       } elif [[ $variable = "build_tests" ]]; then {
         printf "ANVIL_TESTDIR: {$value}\n"
@@ -851,9 +851,9 @@ print_amboso_stego_scopes() {
         fi
     } elif [[ $scope = "tests" ]] ; then {
         test_dir="$value"
-        if [[ $variable = "tests_tests-dir" ]] ; then {
+        if [[ $variable = "tests_testsdir" ]] ; then {
           printf "ANVIL_BONE_DIR: {$test_dir}\n"
-        } elif [[ $variable = "tests_errortests-dir" ]] ; then {
+        } elif [[ $variable = "tests_errortestsdir" ]] ; then {
           printf "ANVIL_KULPO_DIR: {$test_dir}\n"
         }
         fi
@@ -904,12 +904,12 @@ set_amboso_stego_info() {
         [[ $verbose -gt 0 ]] && printf "exec_entrypoint: {$value} <- {$exec_entrypoint}\n\n"
         exec_entrypoint="$value"
         sources_info[1]="$exec_entrypoint"
-      } elif [[ $variable = "build_make-vers" ]]; then {
+      } elif [[ $variable = "build_makevers" ]]; then {
         [[ $verbose -gt 0 ]] && printf "ANVIL_MAKE_VERS: {$value}\n"
         [[ $verbose -gt 0 ]] && printf "makefile_version: {$value} <- {$makefile_version}\n\n"
         makefile_version="$value"
         sources_info[2]="$makefile_version"
-      } elif [[ $variable = "build_automake-vers" ]]; then {
+      } elif [[ $variable = "build_automakevers" ]]; then {
         [[ $verbose -gt 0 ]] && printf "ANVIL_AUTOMAKE_VERS: {$value}\n"
         [[ $verbose -gt 0 ]] && printf "use_automake_version: {$value} <- {$use_automake_version}\n\n"
         [[ $verbose -gt 0 ]] && printf "use_autoconf_version: {$value} <- {$use_autoconf_version}\n\n"
@@ -943,11 +943,11 @@ set_amboso_stego_info() {
         fi
     } elif [[ $scope = "tests" ]] ; then {
         read_dir="$value"
-        if [[ $variable = "tests_tests-dir" ]] ; then {
+        if [[ $variable = "tests_testsdir" ]] ; then {
           [[ $verbose -gt 0 ]] && printf "ANVIL_BONE_DIR: {$read_dir}\n"
           tests_info[0]="$read_dir"
           cases_dir="${tests_info[0]}"
-        } elif [[ $variable = "tests_errortests-dir" ]] ; then {
+        } elif [[ $variable = "tests_errortestsdir" ]] ; then {
           [[ $verbose -gt 0 ]] && printf "ANVIL_KULPO_DIR: {$read_dir}\n"
           tests_info[1]="$read_dir"
           errors_dir="${tests_info[1]}"
