@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="1.9.4"
+AMBOSO_API_LVL="1.9.5"
 at () {
     printf "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -631,7 +631,7 @@ lex_stego_file() {
                 print "\033[1;31m[LINT]\033[0m    Invalid header:    \033[1;31m" $0 "\033[0m" > "/dev/stderr"
                 error_flag=1
             }
-        } else if ($0 ~ /^[^-A-Z=\[\]_\$\\\/{}]+ *= *[^A-Z=\[\]\${}]+$/) {
+        } else if ($0 ~ /^[^-A-Z=\[\]_\$\\\/{}]+ *= *"[^A-Z=\[\]\${}]+"$/) {
             # Check if the line is a valid variable assignment
 
             split($0, parts, "=")

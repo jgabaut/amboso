@@ -1,15 +1,15 @@
 [ build ]
 
-source = hello_world.c
-bin = hello_world
-makevers = 0.3.0
-automakevers = 2.0.0
-tests = kazoj
+source = "hello_world.c"
+bin = "hello_world"
+makevers = "0.3.0"
+automakevers = "2.0.0"
+tests = "kazoj"
 
 [ tests ]
 
-testsdir = bone
-errortestsdir = kulpo
+testsdir = "bone"
+errortestsdir = "kulpo"
 
 [ versions ]
 
@@ -45,3 +45,4 @@ errortestsdir = kulpo
 1.9.2# Fix missing quiet_flag
 1.9.3# Refuse dashes in stego file
 1.9.4# Fix try_default in main script
+1.9.5# Force quotes on rightvalues for stego file

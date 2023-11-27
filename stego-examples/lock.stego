@@ -1,15 +1,15 @@
 [ build ]
 
-source = hello_world.c
-bin = hello_world
-makevers = 0.3.0
-automakevers = 2.0.0
-tests = kazoj
+source = "hello_world.c"
+bin = "hello_world"
+makevers = "0.3.0"
+automakevers = "2.0.0"
+tests = "kazoj"
 
 [ tests ]
 
-testsdir = bone
-errortestsdir = kulpo
+testsdir = "bone"
+errortestsdir = "kulpo"
 
 [ versions ]
 

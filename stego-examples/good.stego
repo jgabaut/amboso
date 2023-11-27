@@ -2,7 +2,7 @@
 
 val = "myval"
 
-pi = 3.14
+pi = "3.14"
         100= "int"
 - #ok
 
@@ -14,13 +14,11 @@ val = "myval"
     [    myscope   ]
 [tight]
 foo = "bar"
-pi = 3.14
-100 =     str
         100= "int"
 
 [ yes_underscores ]
 [    spacing  ]
-foo = b     ar
+foo = "b     ar"
 [tight]
 foo = "bar"
 what = "# ok"
@@ -33,8 +31,6 @@ test
 1203m12ok
 
 [still_no_dashes]
-val = "myval#" #comment
-"val" = "myval#" #comment
 foo = "bar"
 man = "bar"
               [    hi ]
@@ -44,13 +40,13 @@ man = "bar"
 [tight]
 foo = "bar"
 foo = "bar"
-   foo2 =  bar
+   foo2 =  "bar"
 [oh=man]
-100 =     str
+100 =     "str"
 
 [ definitely_no_dashes ]
 [    white ]
 [might]
-foo = b     ar
+foo = "b     ar"
 [tight]
 foo = "bar"
