@@ -43,3 +43,4 @@ errortests-dir = kulpo
 1.9.0# Thin amboso
 1.9.1# Add amboso init quick command
 1.9.2# Fix missing quiet_flag
+1.9.3# Refuse dashes in stego file

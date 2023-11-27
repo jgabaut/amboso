@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="1.9.2"
+AMBOSO_API_LVL="1.9.3"
 at () {
     printf "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -622,9 +622,9 @@ lex_stego_file() {
             next
         }
 
-        if ($0 ~ /^\s*\[[^A-Z_\[\]\\\/\$]+\]\s*$/) {
+        if ($0 ~ /^\s*\[[^-A-Z\[\]\\\/\$]+\]\s*$/) {
             # Extract and set the current scope
-            if (match($0, /^\s*\[\s*([^A-Z_\[\]]+)\s*\]\s*$/, a)) {
+            if (match($0, /^\s*\[\s*([^-A-Z\[\]]+)\s*\]\s*$/, a)) {
                 current_scope=gensub(/\s*$/, "", "g", a[1])
                 scopes[current_scope]++
             } else {

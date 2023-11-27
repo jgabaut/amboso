@@ -19,8 +19,8 @@ yoink {$} #error11
 
   # These are header errors
 [ NO SPACES_ALLOWED ]
-[ no-missing-square-bracked
-[_NO_UNDERSCORES]
+[ no_missing_square_bracket
+[-NO-DASHES]
 [-NOCAPS]
 no[way]man
 no  =  "[way] man"
