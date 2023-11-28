@@ -631,7 +631,7 @@ lex_stego_file() {
                 print "\033[1;31m[LINT]\033[0m    Invalid header:    \033[1;31m" $0 "\033[0m" > "/dev/stderr"
                 error_flag=1
             }
-        } else if ($0 ~ /^[^-A-Z=\[\]_\$\\\/{}]+ *= *"[^=\[\]\${}]+"$/) {
+        } else if ($0 ~ /^[^A-Z=\[\]_\$\\\/{}]+ *= *"[^=\[\]\${}]+"$/) {
             # Check if the line is a valid variable assignment
 
             split($0, parts, "=")
@@ -813,9 +813,9 @@ print_amboso_stego_scopes() {
       }
       fi
     } elif [[ $scope = "versions" ]] ; then {
-        tag="$(printf "$variable\n" | cut -f2 -d'_')"
-        if [[ $tag == \?* ]] ; then {
-          printf "ANVIL_BASE_VERSION: {$tag}\n"
+        tag="$(printf -- "$variable\n" | cut -f2 -d'_')"
+        if [[ $tag == -* ]] ; then {
+          printf -- "ANVIL_BASE_VERSION: {$tag}\n"
         } else {
           printf "ANVIL_GIT_VERSION: {$tag}\n"
         }
@@ -896,10 +896,10 @@ set_amboso_stego_info() {
       }
       fi
     } elif [[ $scope = "versions" ]] ; then {
-        tag="$(printf "$variable\n" | cut -f2 -d'_')"
-        if [[ $tag == \?* ]] ; then {
+        tag="$(printf -- "$variable\n" | cut -f2 -d'_')"
+        if [[ $tag == -* ]] ; then {
           [[ $verbose -gt 0 ]] && printf "ANVIL_BASE_VERSION: {$tag}\n"
-          cut_tag="$(printf "$tag\n" | cut -f2 -d'?')"
+          cut_tag="$(printf -- "$tag\n" | cut -f2 -d'-')"
           read_base_tags[base_tags_count]="$cut_tag"
           #printf "${read_base_tags[base_tags_count]} at {$base_tags_count}\n"
           base_tags_count=$(($base_tags_count+1))
