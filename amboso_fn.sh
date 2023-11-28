@@ -632,7 +632,7 @@ lex_stego_file() {
                 print "\033[1;31m[LINT]\033[0m    Invalid header:    \033[1;31m" $0 "\033[0m" > "/dev/stderr"
                 error_flag=1
             }
-        } else if ($0 ~ /^[^A-Z=\[\]_\$\\\/{}]+ *= *"[^=\[\]\${}]+"$/) {
+        } else if ($0 ~ /^"?[^"A-Z=\[\]_\$\\\/{}]+"? *= *"[^=\[\]\${}]+"$/) {
             # Check if the line is a valid variable assignment
 
             split($0, parts, "=")
