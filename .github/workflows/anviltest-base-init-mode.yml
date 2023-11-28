@@ -21,6 +21,6 @@ jobs:
 
     - name: Run distcheck
       run: make distcheck
-      
-    - name: Run ./amboso as base init mode, +verbose (-BiVV)
-      run: ./amboso -BiVV
+
+    - name: Run ./amboso as base init mode, +verbose (-Bi -V 2)
+      run: ./amboso -Bi -V 2
