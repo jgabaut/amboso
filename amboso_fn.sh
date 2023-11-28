@@ -631,7 +631,7 @@ lex_stego_file() {
                 print "\033[1;31m[LINT]\033[0m    Invalid header:    \033[1;31m" $0 "\033[0m" > "/dev/stderr"
                 error_flag=1
             }
-        } else if ($0 ~ /^[^-A-Z=\[\]_\$\\\/{}]+ *= *"[^A-Z=\[\]\${}]+"$/) {
+        } else if ($0 ~ /^[^-A-Z=\[\]_\$\\\/{}]+ *= *"[^=\[\]\${}]+"$/) {
             # Check if the line is a valid variable assignment
 
             split($0, parts, "=")
@@ -655,35 +655,6 @@ lex_stego_file() {
             values[current_scope "_" variable]=value
             if (!(current_scope in scopes)) {
                 scopes[current_scope]++
-            }
-        } else if ($0 ~ /^[^A-Z=\[\]\$\\_\/{}]+ *$/) {
-            # Check if the line only has a left value (no equals sign and right value)
-
-            # Trim leading and trailing whitespaces
-            gsub(/^[ \t]+|[ \t]+$/, "")
-
-            # Extract the left value
-            left_value=gensub(/^ *"?([^"]+)"? *$/, "\\1", "g", $0)
-
-            # Trim trailing whitespaces from left value
-            gsub(/[ \t]+$/, "", left_value)
-
-            # Check if left value contains disallowed characters
-            if (index(left_value, " ") > 0 || (index(left_value, "\"") > 0 && index(left_value, "\"#") == 0)) {
-                print "\033[1;31m[LINT]\033[0m    Invalid left side (contains spaces or disallowed characters):    \033[1;31m" left_value "\033[0m" > "/dev/stderr"
-                error_flag=1
-            } else {
-                if (current_scope == "main") {
-                    left_value = "main_" left_value
-                }
-                if (left_value ~ /^[^0-9]+ *$/) {
-                    values[current_scope "_" left_value ]=null  # Treat it as NULL "value"
-                } else {
-                    values[current_scope "_" left_value ]=0  # Treat it as 0 "value"
-                }
-                if (!(current_scope in scopes)) {
-                    scopes[current_scope]++
-                }
             }
         } else if ($0 ~ /^[^-A-Z_\[\]\$\\\/{}]+ *= *{[^}A-Z\\\$#\]\[]+ *}$/) {
             # Check if line has a curly bracket rightval

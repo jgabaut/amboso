@@ -4,7 +4,6 @@ val = "myval"
 
 pi = "3.14"
         100= "int"
-- #ok
 
   [ ok ]
 
@@ -22,13 +21,10 @@ foo = "b     ar"
 [tight]
 foo = "bar"
 what = "# ok"
-- #ok
 val = "myval"
 foo = "bar"
     cat       =                   "bar"
     dog       = "bar"
-test
-1203m12ok
 
 [still_no_dashes]
 foo = "bar"

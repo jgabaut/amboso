@@ -19,6 +19,8 @@ yoink {$} #error11
 100 =     str #error13
 val = "myval#" #error14
 "val" = "myval#" #error15
+- #error16
+test #error17
 
 
   # These are header errors
