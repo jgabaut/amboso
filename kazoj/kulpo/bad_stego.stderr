@@ -1,8 +1,8 @@
 ^[[1;31m[LINT]^[[0m    Invalid line:    ^[[1;31m$hey = you ^[[0m$
 ^[[1;31m[LINT]^[[0m    Invalid line:    ^[[1;31mhi/ = err ^[[0m$
 ^[[1;31m[LINT]^[[0m    Invalid line:    ^[[1;31m\mine = evl ^[[0m$
-^[[1;31m[LINT]^[[0m    Invalid left side (contains spaces or disallowed characters):    ^[[1;31m- "# error4"^[[0m$
-^[[1;31m[LINT]^[[0m    Invalid left side (contains spaces or disallowed characters):    ^[[1;31mhey "# error5"^[[0m$
+^[[1;31m[LINT]^[[0m    Invalid line:    ^[[1;31m- "# error4"^[[0m$
+^[[1;31m[LINT]^[[0m    Invalid line:    ^[[1;31mhey "# error5"^[[0m$
 ^[[1;31m[LINT]^[[0m    Invalid left side (contains spaces or disallowed characters):    ^[[1;31mhash#tag^[[0m$
 ^[[1;31m[LINT]^[[0m    Invalid line:    ^[[1;31munder_score = 1 ^[[0m$
 ^[[1;31m[LINT]^[[0m    Invalid line:    ^[[1;31m"1_foo" = ba ^[[0m$
@@ -10,6 +10,11 @@
 ^[[1;31m[LINT]^[[0m    Invalid line:    ^[[1;31munclosed-curly = {"this" ^[[0m$
 ^[[1;31m[LINT]^[[0m    Invalid line:    ^[[1;31myoink {$} ^[[0m$
 ^[[1;31m[LINT]^[[0m    Invalid line:    ^[[1;31m-               =              farvalue ^[[0m$
+^[[1;31m[LINT]^[[0m    Invalid line:    ^[[1;31m100 =     str ^[[0m$
+^[[1;31m[LINT]^[[0m    Invalid line:    ^[[1;31mval = "myval#" ^[[0m$
+^[[1;31m[LINT]^[[0m    Invalid line:    ^[[1;31m"val" = "myval#" ^[[0m$
+^[[1;31m[LINT]^[[0m    Invalid line:    ^[[1;31m- ^[[0m$
+^[[1;31m[LINT]^[[0m    Invalid line:    ^[[1;31mtest ^[[0m$
 ^[[1;31m[LINT]^[[0m    Invalid line:    ^[[1;31m[ NO SPACES_ALLOWED ]^[[0m$
 ^[[1;31m[LINT]^[[0m    Invalid line:    ^[[1;31m[ no_missing_square_bracket^[[0m$
 ^[[1;31m[LINT]^[[0m    Invalid line:    ^[[1;31m[-NO-DASHES]^[[0m$

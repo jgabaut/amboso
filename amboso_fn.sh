@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="1.9.4"
+AMBOSO_API_LVL="1.9.5"
 at () {
     printf "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -631,7 +631,7 @@ lex_stego_file() {
                 print "\033[1;31m[LINT]\033[0m    Invalid header:    \033[1;31m" $0 "\033[0m" > "/dev/stderr"
                 error_flag=1
             }
-        } else if ($0 ~ /^[^-A-Z=\[\]_\$\\\/{}]+ *= *[^A-Z=\[\]\${}]+$/) {
+        } else if ($0 ~ /^[^A-Z=\[\]_\$\\\/{}]+ *= *"[^=\[\]\${}]+"$/) {
             # Check if the line is a valid variable assignment
 
             split($0, parts, "=")
@@ -655,35 +655,6 @@ lex_stego_file() {
             values[current_scope "_" variable]=value
             if (!(current_scope in scopes)) {
                 scopes[current_scope]++
-            }
-        } else if ($0 ~ /^[^A-Z=\[\]\$\\_\/{}]+ *$/) {
-            # Check if the line only has a left value (no equals sign and right value)
-
-            # Trim leading and trailing whitespaces
-            gsub(/^[ \t]+|[ \t]+$/, "")
-
-            # Extract the left value
-            left_value=gensub(/^ *"?([^"]+)"? *$/, "\\1", "g", $0)
-
-            # Trim trailing whitespaces from left value
-            gsub(/[ \t]+$/, "", left_value)
-
-            # Check if left value contains disallowed characters
-            if (index(left_value, " ") > 0 || (index(left_value, "\"") > 0 && index(left_value, "\"#") == 0)) {
-                print "\033[1;31m[LINT]\033[0m    Invalid left side (contains spaces or disallowed characters):    \033[1;31m" left_value "\033[0m" > "/dev/stderr"
-                error_flag=1
-            } else {
-                if (current_scope == "main") {
-                    left_value = "main_" left_value
-                }
-                if (left_value ~ /^[^0-9]+ *$/) {
-                    values[current_scope "_" left_value ]=null  # Treat it as NULL "value"
-                } else {
-                    values[current_scope "_" left_value ]=0  # Treat it as 0 "value"
-                }
-                if (!(current_scope in scopes)) {
-                    scopes[current_scope]++
-                }
             }
         } else if ($0 ~ /^[^-A-Z_\[\]\$\\\/{}]+ *= *{[^}A-Z\\\$#\]\[]+ *}$/) {
             # Check if line has a curly bracket rightval
@@ -842,9 +813,9 @@ print_amboso_stego_scopes() {
       }
       fi
     } elif [[ $scope = "versions" ]] ; then {
-        tag="$(printf "$variable\n" | cut -f2 -d'_')"
-        if [[ $tag == \?* ]] ; then {
-          printf "ANVIL_BASE_VERSION: {$tag}\n"
+        tag="$(printf -- "$variable\n" | cut -f2 -d'_')"
+        if [[ $tag == -* ]] ; then {
+          printf -- "ANVIL_BASE_VERSION: {$tag}\n"
         } else {
           printf "ANVIL_GIT_VERSION: {$tag}\n"
         }
@@ -925,10 +896,10 @@ set_amboso_stego_info() {
       }
       fi
     } elif [[ $scope = "versions" ]] ; then {
-        tag="$(printf "$variable\n" | cut -f2 -d'_')"
-        if [[ $tag == \?* ]] ; then {
+        tag="$(printf -- "$variable\n" | cut -f2 -d'_')"
+        if [[ $tag == -* ]] ; then {
           [[ $verbose -gt 0 ]] && printf "ANVIL_BASE_VERSION: {$tag}\n"
-          cut_tag="$(printf "$tag\n" | cut -f2 -d'?')"
+          cut_tag="$(printf -- "$tag\n" | cut -f2 -d'-')"
           read_base_tags[base_tags_count]="$cut_tag"
           #printf "${read_base_tags[base_tags_count]} at {$base_tags_count}\n"
           base_tags_count=$(($base_tags_count+1))
