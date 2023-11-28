@@ -20,17 +20,17 @@ foo = "bar"
 foo = "b     ar"
 [tight]
 foo = "bar"
-what = "# ok"
+"what" = "# ok"
 val = "myval"
 foo = "bar"
     cat       =                   "bar"
     dog       = "bar"
 
 [still_no_dashes]
-foo = "bar"
+"foo" = "bar"
 man = "bar"
               [    hi ]
-stuff =    { my thing! = "dood", cnowmp k èp wpm mpd      }
+"stuff  " =    { my thing! = "dood", cnowmp k èp wpm mpd      }
 foo = "fib"
 man = "bar"
 [tight]

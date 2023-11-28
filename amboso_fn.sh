@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="1.9.5"
+AMBOSO_API_LVL="1.9.6"
 at () {
     printf "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -210,7 +210,7 @@ function amboso_init_proj {
     mkdir -p "$target_dir"/tests/ok
     mkdir -p "$target_dir"/tests/errors
 
-    printf "[build]\nsource = \"main.c\"\nbin = \"hello_world\"\nmakevers = \"0.1.0\"\nautomakevers = \"0.1.0\"\ntests = \"tests\"\n[tests]\ntestsdir = \"ok\"\nerrortestsdir = \"errors\"\n[versions]\n0.1.0 = \"hello_world\"\n" > "$target_dir"/bin/stego.lock
+    printf "[build]\nsource = \"main.c\"\nbin = \"hello_world\"\nmakevers = \"0.1.0\"\nautomakevers = \"0.1.0\"\ntests = \"tests\"\n[tests]\ntestsdir = \"ok\"\nerrortestsdir = \"errors\"\n[versions]\n\"0.1.0\" = \"hello_world\"\n" > "$target_dir"/bin/stego.lock
 
     printf "#include <stdio.h>\nint main(void) {\nprintf(\"Hello, World!\");\nreturn 0;\n}\n" > "$target_dir"/src/main.c
 
@@ -466,6 +466,8 @@ function amboso_help {
 
     -x  <stego file>    stego parser    (Runs amboso as stego parser)
 
+    -V  <[0-3]>           Set verbose level
+
         Optional:
 
           -l    Lint    (Only lint the stego file)
@@ -493,7 +495,6 @@ function amboso_help {
 
     -hH    help    Prints help info
     -v    version    Prints current version and quits
-    -V    verbose    More verbose output, can be >1
     -lL    list    Lists all valid tags (-L ignores current build mode to check for tags)
     -q    quiet    Less output (useful but not well implemented, recommended on recursive calls)
     -s    silent    Way less output (Some output expected on stderr before the flag is applied)
@@ -510,7 +511,7 @@ function amboso_help {
 }
 
 function amboso_usage {
-  printf "Usage:  $(basename "$prog_name") [(-D|-K|-M|-S|-E|-G|-C|-x) ...ARGS] [-TBtg] [-bripd] [-hHvVlLqcwXW] [TAG_QUERY]\n"
+  printf "Usage:  $(basename "$prog_name") [(-D|-K|-M|-S|-E|-G|-C|-x|-V) ...ARGS] [-TBtg] [-bripd] [-hHvlLqcwXW] [TAG_QUERY]\n"
   printf "    Query for a build version ( or stego files parser, with -x).\n"
 }
 
@@ -631,7 +632,7 @@ lex_stego_file() {
                 print "\033[1;31m[LINT]\033[0m    Invalid header:    \033[1;31m" $0 "\033[0m" > "/dev/stderr"
                 error_flag=1
             }
-        } else if ($0 ~ /^[^A-Z=\[\]_\$\\\/{}]+ *= *"[^=\[\]\${}]+"$/) {
+        } else if ($0 ~ /^"?[^"A-Z=\[\]_\$\\\/{}]+"? *= *"[^=\[\]\${}]+"$/) {
             # Check if the line is a valid variable assignment
 
             split($0, parts, "=")
@@ -1072,7 +1073,7 @@ amboso_parse_args() {
   be_stego_parser_flag=0
   queried_stego_filepath=""
 
-  while getopts "A:M:S:E:D:K:G:C:x:wBgVbpHhrivdlLtTqsczUXW" opt; do
+  while getopts "A:M:S:E:D:K:G:C:x:V:wBgbpHhrivdlLtTqsczUXW" opt; do
     case $opt in
       x )
         be_stego_parser_flag=1
@@ -1167,7 +1168,15 @@ amboso_parse_args() {
         test_mode_flag=1
         ;;
       V )
-        verbose_flag=$(($verbose_flag+1))
+        requested_lvl="$OPTARG"
+        verbose_lvl_re='^[0-9]$'
+        if ! [[ $requested_lvl =~ $verbose_lvl_re ]]; then {
+            printf "\033[1;31m[ERROR]\033[0m    Invalid verbose lvl: {%s}\n" "$requested_lvl"
+            return 1
+        } else {
+            verbose_flag="$requested_lvl"
+        }
+        fi
         ;;
       q )
         quiet_flag=1
@@ -1383,7 +1392,7 @@ amboso_parse_args() {
   fi
 
   #We always notify of missing -D argument
-  [[ ! $dir_flag -gt 0 ]] && milestones_dir="./bin/" && printf "\033[1;33m[DEBUG]    No -D flag, using ( $milestones_dir ) for target dir. Run with -V to see more.\e[0m\n" >&2 #&& usage && exit 1
+  [[ ! $dir_flag -gt 0 ]] && milestones_dir="./bin/" && printf "\033[1;33m[DEBUG]    No -D flag, using ( $milestones_dir ) for target dir. Run with -V <lvl> to see more.\e[0m\n" >&2 #&& usage && exit 1
 
 
   #We always notify of missing -K argument, if in test mode
@@ -1395,7 +1404,7 @@ amboso_parse_args() {
     res="$?"
     [[ $res -eq 0 ]] || printf "\033[0;33m[WARN]\e[0m    Problems when doing set_supported_tests($kazoj_dir).\n\n"
     kazoj_dir="$(pwd)/kazoj/"
-    [[ $quiet_flag -eq 0 ]] && printf "\033[1;33m[DEBUG]    No -K flag, using ( $kazoj_dir ) for target dir. Run with -V to see more.\e[0m\n" >&2 #&& usage && exit 1
+    [[ $quiet_flag -eq 0 ]] && printf "\033[1;33m[DEBUG]    No -K flag, using ( $kazoj_dir ) for target dir. Run with -V <lvl> to see more.\e[0m\n" >&2 #&& usage && exit 1
   }
   fi
   if [[ $test_mode_flag -gt 0 && $test_info_was_set -gt 0 ]] ; then {
@@ -1649,14 +1658,14 @@ amboso_parse_args() {
         count_bins=$(($count_bins +1))
       } else {
         verbose_hint=""
-        [[ $verbose_flag -lt 1 ]] && verbose_hint="Run with -V to see more info."
+        [[ $verbose_flag -lt 1 ]] && verbose_hint="Run with -V <lvl> to see more info."
         printf "\n\033[1;31m[INIT]    Failed build for $init_vers binary. $verbose_hint\e[0m\n\n"
         #try building again to get more output, since we discarded stderr before
         #
         #we could just pass -v to the first call if we have it on
         if [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]]; then {
           printf "[INIT]    Checking errors, running \033[1;33m$(basename "$prog_name") -bV$packm$ignore_gitcheck $init_vers\e[0m.\n" >&2
-      ("$prog_name" -C "$amboso_start_time" -M "$makefile_version" -S "$source_name" -D "$scripts_dir" -E "$exec_entrypoint" -bVV"$gitm""$basem""$packm""$ignore_gitcheck""$showtimem" "$init_vers") >&2
+      ("$prog_name" -C "$amboso_start_time" -M "$makefile_version" -S "$source_name" -D "$scripts_dir" -E "$exec_entrypoint" -V 2 -b"$gitm""$basem""$packm""$ignore_gitcheck""$showtimem" "$init_vers") >&2
         }
         fi
       }
@@ -2361,7 +2370,7 @@ amboso_parse_args() {
 
   } elif [[ ! -z $query ]] ; then {
     app "$(echo_node silence_check query_invalid)"
-    printf "\033[1;31m[QUERY]    ( $query ) invalid query, run with -V to see more.\e[0m\n"
+    printf "\033[1;31m[QUERY]    ( $query ) invalid query, run with -V <lvl> to see more.\e[0m\n"
     if [[ $verbose_flag -gt 0 ]] ; then {
         echo_tag_info $version
     }
@@ -2512,7 +2521,7 @@ amboso_parse_args() {
         [[ $verbose_flag -gt 0 ]] && printf "\033[0;33m[PURGE]    Removed ( $purge_vers ) using ( $tool_txt ).\e[0m\n" >&2
       } else {
         verbose_hint=""
-        [[ $verbose_flag -lt 1 ]] && verbose_hint="Run with -V to see more info."
+        [[ $verbose_flag -lt 1 ]] && verbose_hint="Run with -V <lvl> to see more info."
         printf "\n\033[1;31m[PURGE]    Failed delete for ( $purge_vers ) binary. $verbose_hint\e[0m\n\n"
         [[ $verbose_flag -gt 0 ]] && printf "\033[0;31m[PURGE]    Failed removing ( $purge_vers ) using ( $tool_txt ). $verbose_hint\e[0m\n" #>&2
         #try deleting again to get more output, since we discarded stderr before
@@ -2520,8 +2529,8 @@ amboso_parse_args() {
         #we could just pass -v to the first call if we have it on
         if [[ $verbose_flag -gt 0 ]]; then {
           printf "[PURGE]    Verbose flag was asserted as ($verbose_flag).\n" >&2
-          printf "[PURGE]    Checking errors, running \033[1;33m$(basename "$prog_name") -dVV $purge_vers\e[0m.\n" >&2
-          ("$prog_name" -C "$amboso_start_time" -M "$makefile_version" -S "$source_name" -D "$scripts_dir" -E "$exec_entrypoint" -dVV"$gitm""$basem""$ignore_gitcheck""$showtimem" "$purge_vers") #>&2
+          printf "[PURGE]    Checking errors, running \033[1;33m$(basename "$prog_name") -V 2 -d $purge_vers\e[0m.\n" >&2
+          ("$prog_name" -C "$amboso_start_time" -M "$makefile_version" -S "$source_name" -D "$scripts_dir" -E "$exec_entrypoint" -V 2 -d"$gitm""$basem""$ignore_gitcheck""$showtimem" "$purge_vers") #>&2
         }
         fi
       }
