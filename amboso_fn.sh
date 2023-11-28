@@ -210,7 +210,7 @@ function amboso_init_proj {
     mkdir -p "$target_dir"/tests/ok
     mkdir -p "$target_dir"/tests/errors
 
-    printf "[build]\nsource = \"main.c\"\nbin = \"hello_world\"\nmakevers = \"0.1.0\"\nautomakevers = \"0.1.0\"\ntests = \"tests\"\n[tests]\ntestsdir = \"ok\"\nerrortestsdir = \"errors\"\n[versions]\n0.1.0 = \"hello_world\"\n" > "$target_dir"/bin/stego.lock
+    printf "[build]\nsource = \"main.c\"\nbin = \"hello_world\"\nmakevers = \"0.1.0\"\nautomakevers = \"0.1.0\"\ntests = \"tests\"\n[tests]\ntestsdir = \"ok\"\nerrortestsdir = \"errors\"\n[versions]\n\"0.1.0\" = \"hello_world\"\n" > "$target_dir"/bin/stego.lock
 
     printf "#include <stdio.h>\nint main(void) {\nprintf(\"Hello, World!\");\nreturn 0;\n}\n" > "$target_dir"/src/main.c
 
