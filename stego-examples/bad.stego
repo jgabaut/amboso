@@ -21,6 +21,7 @@ val = "myval#" #error14
 "val" = "myval#" #error15
 - #error16
 test #error17
+" = try #error18
 
 
   # These are header errors
