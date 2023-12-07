@@ -7,7 +7,7 @@
 + [What is this thing?](#witt)
   + [Prerequisites](#prerequisites)
   + [See how it behaves](#tryanvil)
-+ [General Usage](#general_usage)
++ [General Usage](#generalusage)
   + [stego.lock](#stego)
   + [Hard failure](#bin)
   + [Tests directory](#kazoj)
@@ -89,21 +89,29 @@ This command hints you to symlinking `./amboso` to `super_repo/anvil`, and shows
 
 It can now also show how the repo itself complies with amboso specs to run in git mode.
 
-## General usage <a name = "general_usage"></a>
+## General usage <a name = "generalusage"></a>
 
 ## stego.lock <a name = "stego"></a>
 
 This file contains user-defined tags for supported versions and fundamental CLI arguments you don't want to type again.
 
-Defined tags are terminated by a `#` character, which marks start of comment.
-
-You can define either git-mode tags or base-mode tags , each supported when running in the corresponding mode.
-
-Definition of a base-mode tag **must** start with a `?`, like so
+Defined env arguments are in this format:
 ```
-?my_value=1# A nice comment
+envvalue = "val"
 ```
-The `?` character will not be a part of your tag name, it only marks base-mode tags when at the start of a tag name.
+
+Defined tags are in this format:
+```
+"0.1.0" = "Desc"
+```
+
+You can define both git-mode tags and base-mode tags , each supported when running in the corresponding mode.
+
+Definition of a base-mode tag **must** start with a `-`, like so
+```
+"-0.0.1" = "1"# A nice comment
+```
+The `-` character will not be a part of your tag name, it only marks base-mode tags when at the start of a tag name.
 
 ## Hard failure <a name = "bin"></a>
 
