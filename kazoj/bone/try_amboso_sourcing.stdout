@@ -1,2 +1,2 @@
-[TEST]    source_amboso_api()$
-[RES]    {0}$
+[TEST]    source_amboso_api()
+[RES]    {0}

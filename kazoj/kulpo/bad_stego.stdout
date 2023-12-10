@@ -1,2 +1,2 @@
-^[[1;31m[CHECK]^[[0m    Errors occurred during lexing.$
-^[[1;31m[LINT]^[[0m    { Failure on: "./stego-examples/bad.stego" }$
+^[[1;31m[CHECK]^[[0m    Errors occurred during lexing.
+^[[1;31m[LINT]^[[0m    { Failure on: "./stego-examples/bad.stego" }

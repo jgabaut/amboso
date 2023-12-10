@@ -1,7 +1,7 @@
-^[[1;33m[MODE]    Running in test mode.^[[0m$
-^[[1;33m[DEBUG]    No -D flag, using ( ./bin/ ) for target dir. Run with -V <lvl> to see more.^[[0m$
-^[[1;33m[DEBUG]    bone dir (NO -K passed to this call): ( bone )^[[0m$
-^[[1;33m           kulpo dir (NO -K passed to this amboso call): ( kulpo )^[[0m$
-$
-^[[1;31m[PANIC]    Running  "amboso" using test mode in a program that will be called by test mode is not supported.^[[0m$
-$
+^[[1;33m[MODE]    Running in test mode.^[[0m
+^[[1;33m[DEBUG]    No -D flag, using ( ./bin/ ) for target dir. Run with -V <lvl> to see more.^[[0m
+^[[1;33m[DEBUG]    bone dir (NO -K passed to this call): ( bone )^[[0m
+^[[1;33m           kulpo dir (NO -K passed to this amboso call): ( kulpo )^[[0m
+
+^[[1;31m[PANIC]    Running  "amboso" using test mode in a program that will be called by test mode is not supported.^[[0m
+
