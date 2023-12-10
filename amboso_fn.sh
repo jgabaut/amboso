@@ -522,7 +522,7 @@ function escape_colorcodes_tee {
   #sed -r 's/\/\\3/g' "$file"
   #sed -e 's/\\033\[/COLOR[/g' -e 's/COLOR\[1;3/"<colorTag[Heavy,/g' -e 's/COLOR\[0;3/"<colorTag[Light,/g' -e 's/\\e\[0m/\]>"/g' "$file" >>"$outfile"
   #sed 's/\x1B\[\([0-9]\{1,2\}\(;[0-9]\{1,2\}\)\?\)\?[mGK]//g' <"$file"
-  cat -v "$file" | tee "$outfile"
+  cat "$file" | tee "$outfile"
 }
 
 function escape_colorcodes {

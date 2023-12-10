@@ -1,1 +1,1 @@
-^[[1;36m[LINT]^[[0m    { Success on: "./stego-examples/good.stego" }
+[1;36m[LINT][0m    { Success on: "./stego-examples/good.stego" }
