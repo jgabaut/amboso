@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="1.9.7"
+AMBOSO_API_LVL="1.9.8"
 at () {
     printf "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -187,7 +187,22 @@ function amboso_init_proj {
     target_dir="$1"
     if [[ ! -d "$target_dir" ]] ; then {
         printf "\033[1;31m[ERROR]\033[0m    Invalid dir: {$target_dir}.\n"
-        return 1
+        if [[ ! -e "$target_dir" ]] ; then {
+            printf "\033[1;33m[WARN]\033[0m    Trying to mkdir: {$target_dir}.\n"
+            mkdir "$target_dir"
+            mkdir_res="$?"
+            if [[ "$mkdir_res" -eq 0 ]] ; then {
+                printf "\033[1;32m[INFO]\033[0m    Created dir: {$target_dir}.\n"
+            } else {
+                printf "\033[1;31m[ERROR]\033[0m    Failed mkdir for: {$target_dir}.\n"
+                return 1
+            }
+            fi
+        } else {
+            printf "\033[1;31m[ERROR]\033[0m    {$target_dir} already exists and it is not a directory.\n"
+            return 1
+        }
+        fi
     }
     fi
     is_git_repo=0
