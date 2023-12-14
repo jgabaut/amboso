@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="1.9.7"
+AMBOSO_API_LVL="1.9.8"
 at () {
     printf "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -187,7 +187,22 @@ function amboso_init_proj {
     target_dir="$1"
     if [[ ! -d "$target_dir" ]] ; then {
         printf "\033[1;31m[ERROR]\033[0m    Invalid dir: {$target_dir}.\n"
-        return 1
+        if [[ ! -e "$target_dir" ]] ; then {
+            printf "\033[1;33m[WARN]\033[0m    Trying to mkdir: {$target_dir}.\n"
+            mkdir "$target_dir"
+            mkdir_res="$?"
+            if [[ "$mkdir_res" -eq 0 ]] ; then {
+                printf "\033[1;32m[INFO]\033[0m    Created dir: {$target_dir}.\n"
+            } else {
+                printf "\033[1;31m[ERROR]\033[0m    Failed mkdir for: {$target_dir}.\n"
+                return 1
+            }
+            fi
+        } else {
+            printf "\033[1;31m[ERROR]\033[0m    {$target_dir} already exists and it is not a directory.\n"
+            return 1
+        }
+        fi
     }
     fi
     is_git_repo=0
@@ -446,6 +461,8 @@ function amboso_help {
 
     [-M ...]    MAKETAG    Sets minimum tag for using make as build/clean step
 
+    [-C ...]    CONFIG_STR    Sets configure arg for automake
+
     [-G ...]    C_HEADER_DIR    Sets desidered output directory for C header of specified version
 
   [-tgBT]    mode    Sets run mode
@@ -501,7 +518,7 @@ function amboso_help {
     -c    control    Output dotfile \'amboso_cfg.dot\' while running.
     -w    watch    Always display timers regardless of verbosity.
     -X    experimental    Ignore the result of git_mode_check, which would stop git mode runs early when git status is not clean.
-    -C [...] START_TIME    Set start time of the program.
+    -Y [...] START_TIME    Set start time of the program.
     -W     Warranty    Prints warranty information, as per GPL-3.0 license.
 
   [...]    TAG_QUERY    Ask a tag for current mode
@@ -511,7 +528,7 @@ function amboso_help {
 }
 
 function amboso_usage {
-  printf "Usage:  $(basename "$prog_name") [(-D|-K|-M|-S|-E|-G|-C|-x|-V) ...ARGS] [-TBtg] [-bripd] [-hHvlLqcwXW] [TAG_QUERY]\n"
+  printf "Usage:  $(basename "$prog_name") [(-D|-K|-M|-S|-E|-G|-C|-x|-V|-Y) ...ARGS] [-TBtg] [-bripd] [-hHvlLqcwXW] [TAG_QUERY]\n"
   printf "    Query for a build version ( or stego files parser, with -x).\n"
 }
 
@@ -1072,9 +1089,15 @@ amboso_parse_args() {
   show_warranty_flag=0
   be_stego_parser_flag=0
   queried_stego_filepath=""
+  pass_autoconf_arg_flag=0
+  autoconf_arg=""
 
-  while getopts "A:M:S:E:D:K:G:C:x:V:wBgbpHhrivdlLtTqsczUXW" opt; do
+  while getopts "A:M:S:E:D:K:G:Y:x:V:C:wBgbpHhrivdlLtTqsczUXW" opt; do
     case $opt in
+      C )
+        pass_autoconf_arg_flag=1
+        autoconf_arg="$OPTARG"
+        ;;
       x )
         be_stego_parser_flag=1
         queried_stego_filepath="$OPTARG"
@@ -1089,9 +1112,8 @@ amboso_parse_args() {
         gen_C_headers_flag=1
         gen_C_headers_destdir="$OPTARG"
         if [[ ! -d $gen_C_headers_destdir ]] ; then {
-            printf "\033[1;31m[ERROR]    ($gen_C_headers_destdir) was not a valid directory.\e[0m\n"
-            printf "\033[1;33m[AMBOSO]    Run with -h for help.\e[0m\n"
-            exit 1
+            printf "\033[1;33m[WARN]    ($gen_C_headers_destdir) was not a valid directory.\e[0m\n"
+            gen_C_headers_set=1 #TODO: this reads horribly. It's a patch to allow the called function to still be called, since now it will try to make the directory
         } else {
                 gen_C_headers_set=1
         }
@@ -1116,7 +1138,7 @@ amboso_parse_args() {
       w )
         show_time_flag=1
         ;;
-      C )
+      Y )
         start_time_val="$OPTARG"
         amboso_start_time="$start_time_val"
         start_time_set=1
@@ -1651,8 +1673,8 @@ amboso_parse_args() {
       [[ $git_mode_flag -gt 0 ]] && gitm="g" #We make sure to pass on eventual git mode to the subcalls
       [[ $quiet_flag -gt 0 ]] && quietm="q" #We make sure to pass on eventual quiet mode to the subcalls
       #First pass sets the verbose flag but redirects stderr to /dev/null
-      [[ $verbose_flag -gt 0 ]] && printf "\033[0;35m[VERB]    Running \"$(dirname "$(basename $prog_name)") -C $amboso_start_time -M $makefile_version -S $source_name -E $exec_entrypoint -D $scripts_dir -b$verb$gitm$basem$quietm$silentm$packm$ignore_gitcheck$showtimem $init_vers\" ( $(($i+1)) / $tot_vers )\033[0m\n" >&2
-      "$prog_name" -C "$amboso_start_time" -M "$makefile_version" -S "$source_name" -E "$exec_entrypoint" -D "$scripts_dir" -b"$verb""$gitm""$basem""$quietm""$silentm""$packm""$ignore_gitcheck""$showtimem" "$init_vers" 2>/dev/null
+      [[ $verbose_flag -gt 0 ]] && printf "\033[0;35m[VERB]    Running \"$(dirname "$(basename $prog_name)") -Y $amboso_start_time -M $makefile_version -S $source_name -E $exec_entrypoint -D $scripts_dir -b$verb$gitm$basem$quietm$silentm$packm$ignore_gitcheck$showtimem $init_vers\" ( $(($i+1)) / $tot_vers )\033[0m\n" >&2
+      "$prog_name" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -E "$exec_entrypoint" -D "$scripts_dir" -b"$verb""$gitm""$basem""$quietm""$silentm""$packm""$ignore_gitcheck""$showtimem" "$init_vers" 2>/dev/null
       if [[ $? -eq 0 ]] ; then {
         [[ $verbose_flag -gt 0 ]] && printf "\033[0;32m[INIT]    $init_vers binary ready.\e[0m\n" >&2
         count_bins=$(($count_bins +1))
@@ -1665,7 +1687,7 @@ amboso_parse_args() {
         #we could just pass -v to the first call if we have it on
         if [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]]; then {
           printf "[INIT]    Checking errors, running \033[1;33m$(basename "$prog_name") -bV$packm$ignore_gitcheck $init_vers\e[0m.\n" >&2
-      ("$prog_name" -C "$amboso_start_time" -M "$makefile_version" -S "$source_name" -D "$scripts_dir" -E "$exec_entrypoint" -V 2 -b"$gitm""$basem""$packm""$ignore_gitcheck""$showtimem" "$init_vers") >&2
+      ("$prog_name" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -D "$scripts_dir" -E "$exec_entrypoint" -V 2 -b"$gitm""$basem""$packm""$ignore_gitcheck""$showtimem" "$init_vers") >&2
         }
         fi
       }
@@ -1730,9 +1752,9 @@ amboso_parse_args() {
     tot_failures=0
     start_t_tests=`date +%s.%N`
     for i in $(seq 0 $(($tot_tests-1))); do {
-      [[ $quiet_flag -eq 0 ]] && printf "\033[1;35m[TEST-MACRO]    Running:  \"$prog_name -C $amboso_start_time -T$quietm$verbm$buildm$showtimem -K $kazoj_dir -D $milestones_dir ${supported_tests[$i]}\"\e[0m\n" >&2
+      [[ $quiet_flag -eq 0 ]] && printf "\033[1;35m[TEST-MACRO]    Running:  \"$prog_name -Y $amboso_start_time -T$quietm$verbm$buildm$showtimem -K $kazoj_dir -D $milestones_dir ${supported_tests[$i]}\"\e[0m\n" >&2
       start_t_curr_test=`date +%s.%N`
-      "$prog_name" -C "$amboso_start_time" -T"$quietm$verbm$buildm""$showtimem" -K "$kazoj_dir" -D "$milestones_dir" "${supported_tests[$i]}"
+      "$prog_name" -Y "$amboso_start_time" -T"$quietm$verbm$buildm""$showtimem" -K "$kazoj_dir" -D "$milestones_dir" "${supported_tests[$i]}"
       retcod="$?"
       if [[ $retcod -eq 0 ]] ; then {
         tot_successes=$(($tot_successes+1))
@@ -1769,6 +1791,8 @@ amboso_parse_args() {
     fi
     #echo -e "\033[0;34m[TEST]    Full testing took $display_zero$runtime_tests seconds ( $tot_tests done).\e[0m\n"
     echo_timer "$amboso_start_time"  "Test macro" "6"
+    printf "\033[1;35m[TEST]    Successes: {\033[0m\033[1;32m%s\033[1;35m}\033[0m\n" "$tot_successes"
+    printf "\033[1;35m[TEST]    Failures: {\033[0m\033[1;31m%s\033[1;35m}\033[0m\n" "$tot_failures"
     exit $tot_failures
   } elif [[ $small_test_mode_flag -gt 0 && $test_mode_flag -gt 0 ]] ; then {
     printf "\033[1;31m[PANIC]    [-t] used with [-T].\n\n        -t is a shortcut to run as -T on all tests found.\e[0m\n\n"
@@ -1955,7 +1979,7 @@ amboso_parse_args() {
         [[ $verbose_flag -gt 0 ]] && verb="V" && printf "\n[TEST]    Recording ALL: ( $(($i+1)) / $tot_tests ) ( $TEST )\n" >&2
         printf "\033[1;35m[TEST]    Running:\e[0m    \033[1;34m\"$prog_name -K $kazoj_dir -D $scripts_dir -bT$quietm$verb$showtimem $TEST 2>/dev/null \"\e[0m\n"
         start_t=`date +%s.%N`
-        ( "$prog_name" -C "$amboso_start_time" -K "$kazoj_dir" -D "$scripts_dir" -b"$quietm""$verb""$showtimem"T "$TEST" 2>/dev/null ; exit "$?")
+        ( "$prog_name" -Y "$amboso_start_time" -K "$kazoj_dir" -D "$scripts_dir" -b"$quietm""$verb""$showtimem"T "$TEST" 2>/dev/null ; exit "$?")
         record_res="$?"
         if [[ $record_res -eq 69 ]]; then {
           printf "\033[1;31m[PANIC]    Unsupported: a test call returned 69. Will do the same.\e[0m\n\n" &&
@@ -2224,7 +2248,18 @@ amboso_parse_args() {
             autoreconf
           }
           fi
-          ./configure
+          configure_arg=""
+          if [[ "$pass_autoconf_arg_flag" -eq 1 ]] ; then {
+              configure_arg="$autoconf_arg"
+              printf "\033[1;34m[CONF]    Running \"\033[1;36m%s\033[1;34m\"\033[0m\n" "./configure $configure_arg"
+          }
+          fi
+          ./configure "$configure_arg"
+          configure_res="$?"
+          if [[ "$configure_res" -ne 0 ]]; then {
+              printf "\033[1;33m[WARN]    ./configure returned {\033[1;31m%s\033[1;33m}\033[0m\n" "$configure_res"
+          }
+          fi
           printf "\033[0;32m[INFO]    Done 'autoreconf' and './configure'.\e[0m\n" >&2
         }
         fi
@@ -2507,10 +2542,10 @@ amboso_parse_args() {
       [[ $git_mode_flag -gt 0 ]] && gitm="g" #We make sure to pass on eventual git mode to the subcalls
       [[ $quiet_flag -gt 0 ]] && quietm="q" #We make sure to pass on eventual quiet flag mode to the subcalls
       if [[ $quiet_flag -eq 0 ]] ; then {
-        printf "\033[1;35m[PURGE]    Running \"$(basename "$prog_name") -C $amboso_start_time-M $makefile_version -S $source_name -E $exec_entrypoint -D $scripts_dir -d$verb$gitm$basem$quietm$silentm$packm$ignore_gitcheck$showtimem $purge_vers 2>/dev/null\"\e[0m\n"
+        printf "\033[1;35m[PURGE]    Running \"$(basename "$prog_name") -Y $amboso_start_time-M $makefile_version -S $source_name -E $exec_entrypoint -D $scripts_dir -d$verb$gitm$basem$quietm$silentm$packm$ignore_gitcheck$showtimem $purge_vers 2>/dev/null\"\e[0m\n"
       }
       fi
-      ( $prog_name -C "$amboso_start_time" -M "$makefile_version" -S "$source_name" -E "$exec_entrypoint" -D "$scripts_dir" -d"$verb""$gitm""$basem""$quietm""$silentm""$packm""$ignore_gitcheck""$showtimem" "$purge_vers" ) 2>/dev/null
+      ( $prog_name -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -E "$exec_entrypoint" -D "$scripts_dir" -d"$verb""$gitm""$basem""$quietm""$silentm""$packm""$ignore_gitcheck""$showtimem" "$purge_vers" ) 2>/dev/null
       clean_res="$?"
       #To be sure delete OP is gonna be the returning op here, we assume pack just never makes the script return, so it will always go to delete OP safely.
 
@@ -2530,7 +2565,7 @@ amboso_parse_args() {
         if [[ $verbose_flag -gt 0 ]]; then {
           printf "[PURGE]    Verbose flag was asserted as ($verbose_flag).\n" >&2
           printf "[PURGE]    Checking errors, running \033[1;33m$(basename "$prog_name") -V 2 -d $purge_vers\e[0m.\n" >&2
-          ("$prog_name" -C "$amboso_start_time" -M "$makefile_version" -S "$source_name" -D "$scripts_dir" -E "$exec_entrypoint" -V 2 -d"$gitm""$basem""$ignore_gitcheck""$showtimem" "$purge_vers") #>&2
+          ("$prog_name" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -D "$scripts_dir" -E "$exec_entrypoint" -V 2 -d"$gitm""$basem""$ignore_gitcheck""$showtimem" "$purge_vers") #>&2
         }
         fi
       }
