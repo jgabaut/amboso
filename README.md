@@ -23,9 +23,15 @@
 
 ### Note
 
-- I noticed one of the files inside `/kazoj/` was causing problems on some filesystems, since it had a collision when checked ignoring case.
+This script has reached a size where I prefer moving development to a different language.
 
-- I'm sorry about the mistake, from version `1.4.7-b` the repo won't support the tags contaning colliding files anymore.
+At the moment, a complementary implementation in Rust is being worked on [at this repo link](https://github.com/jgabaut/invil).
+
+Having to rely on the Rust compiler is less flexible than a shell script, but the runtime alone can have such better results it's worth the move.
+
+Since version 1.8, a steady stream of patches have been included to ease the transition, with 2.0, to the Rust implementation as the refence one.
+
+Notably, version 1.9.x is highly unstable (in the sense that breaking changes have been made at patch level), and as such, should be considered deprecated once 2.0 is reached.
 
 ## What is this thing? <a name = "witt"></a>
 
