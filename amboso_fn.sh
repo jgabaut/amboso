@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="1.9.8"
+AMBOSO_API_LVL="1.9.9"
 at () {
     printf "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -461,7 +461,7 @@ function amboso_help {
 
     [-M ...]    MAKETAG    Sets minimum tag for using make as build/clean step
 
-    [-C ...]    CONFIG_STR    Sets configure arg for automake
+    [-C ...]    CONFIG_FILE    Filename for ./configure args for automake
 
     [-G ...]    C_HEADER_DIR    Sets desidered output directory for C header of specified version
 
@@ -1090,13 +1090,14 @@ amboso_parse_args() {
   be_stego_parser_flag=0
   queried_stego_filepath=""
   pass_autoconf_arg_flag=0
-  autoconf_arg=""
+  autoconf_arg_file=""
 
   while getopts "A:M:S:E:D:K:G:Y:x:V:C:wBgbpHhrivdlLtTqsczUXW" opt; do
     case $opt in
       C )
         pass_autoconf_arg_flag=1
-        autoconf_arg="$OPTARG"
+        autoconf_arg_file="$OPTARG"
+        [[ -f "$autoconf_arg_file" ]] || { printf "\033[1;31m[ERROR]\033[0m    Invalid file for configure argument: {\033[1;33m%s\033[0m}\n" "$autoconf_arg_file" ; exit 1 ; } ;
         ;;
       x )
         be_stego_parser_flag=1
@@ -2250,7 +2251,7 @@ amboso_parse_args() {
           fi
           configure_arg=""
           if [[ "$pass_autoconf_arg_flag" -eq 1 ]] ; then {
-              configure_arg="$autoconf_arg"
+              configure_arg="$(cat "$autoconf_arg_file")"
               printf "\033[1;34m[CONF]    Running \"\033[1;36m%s\033[1;34m\"\033[0m\n" "./configure $configure_arg"
           }
           fi
