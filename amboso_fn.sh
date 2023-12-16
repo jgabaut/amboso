@@ -207,7 +207,7 @@ function amboso_init_proj {
     }
     fi
     is_git_repo=0
-    ( cd "$target_dir" || printf "\033[1;31m[CRITICAL]\033[0m    cd failed for {$target_dir}.\n"; return 1
+    ( cd "$target_dir" || { printf "\033[1;31m[CRITICAL]\033[0m    cd failed for {$target_dir}.\n"; return 1 ; } ;
       #Check if target dir is a repo
       git rev-parse --is-inside-work-tree 2>/dev/null 1>&2
     )
@@ -246,7 +246,7 @@ function amboso_init_proj {
       ln -s "amboso/amboso" "anvil"
       [[ $quiet_flag -eq 0 ]] && printf "\033[1;32m[INFO]\033[0m    Symlinked \"\033[1;34mamboso/amboso\033[0m\" to \"\033[1;35m./anvil\033[0m\"\n"
     )
-    [[ $? -eq 0 ]] || printf "\033[1;31m[ERROR]\033[0m    git prep failed for {$target_dir}.\n"; return 1
+    [[ $? -eq 0 ]] || { printf "\033[1;31m[ERROR]\033[0m    git prep failed for {$target_dir}.\n"; return 1 ; } ;
     [[ $quiet_flag -eq 0 ]] && printf "\033[1;35m[INFO]\033[0m    Done init for {\033[1;36m$target_dir\033[0m\n"
 }
 
@@ -1796,7 +1796,6 @@ amboso_parse_args() {
     printf "\033[1;31m[PANIC]    [-t] used with [-T].\n\n        -t is a shortcut to run as -T on all tests found.\e[0m\n\n"
     echo_timer "$amboso_start_time"  "Wrong test flag usage" "1"
     exit 1
-    echo "UNREACHABLE"
   }
   fi
 
@@ -2649,7 +2648,7 @@ amboso_main() {
     unset AMBOSO_LVL_REC
     return "$res"
   } else { # Repl
-    while read -e -p "[AMBOSO-MAIN]$ " line ;
+    while read  -re -p "[AMBOSO-MAIN]$ " line ;
     do {
       cmd="$(printf -- "${line}" | cut -f1 -d'-')"
       if [[ ! -z $cmd ]] ; then {
