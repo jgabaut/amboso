@@ -647,7 +647,7 @@ lex_stego_file() {
                 print "\033[1;31m[LINT]\033[0m    Invalid header:    \033[1;31m" $0 "\033[0m" > "/dev/stderr"
                 error_flag=1
             }
-        } else if ($0 ~ /^"?[^"A-Z=\[\]_\$\\\/{}]+"? *= *"[^=\[\]\${}]+"$/) {
+        } else if ($0 ~ /^"?[^"=\[\]_\$\\\/{}]+"? *= *"[^=\[\]\${}]+"$/) {
             # Check if the line is a valid variable assignment
 
             split($0, parts, "=")
@@ -915,9 +915,9 @@ set_amboso_stego_info() {
       fi
     } elif [[ $scope = "versions" ]] ; then {
         tag="$(printf -- "$variable\n" | cut -f2 -d'_')"
-        if [[ $tag == -* ]] ; then {
+        if [[ $tag == B* ]] ; then {
           [[ $verbose -gt 0 ]] && printf "ANVIL_BASE_VERSION: {$tag}\n"
-          cut_tag="$(printf -- "$tag\n" | cut -f2 -d'-')"
+          cut_tag="$(printf -- "$tag\n" | cut -f2 -d'B')"
           read_base_tags[base_tags_count]="$cut_tag"
           #printf "${read_base_tags[base_tags_count]} at {$base_tags_count}\n"
           base_tags_count=$(($base_tags_count+1))
@@ -1029,7 +1029,7 @@ set_amboso_stego_info() {
     done
   }
   fi
-  tot_vers=${#supported_versions[@]}
+  tot_vers="${#supported_versions[@]}"
   latest_version="${supported_versions[tot_vers-1]}"
   [[ $verbose -gt 0 ]] && printf "\033[1;34m[INFO]    Read {$tot_vers} tags.\033[0m\n"
   return 0

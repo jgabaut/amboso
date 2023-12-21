@@ -13,8 +13,8 @@ errortestsdir = "kulpo"
 
 [ versions ]
 
-"-0.1.0" = " < 0.3.0, does not have Makefile"
-"-0.9.0" = "> 0.3.0, has Makefile"
+"B0.1.0" = " < 0.3.0, does not have Makefile"
+"B0.9.0" = "> 0.3.0, has Makefile"
 "1.0.0" = "First version with git mode support"
 "1.1.0" = "Introduced delete mode"
 "1.1.2" = "( Hotfix ) Introduced list versions flag"
