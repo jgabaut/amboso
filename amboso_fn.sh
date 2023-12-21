@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="1.9.9"
+AMBOSO_API_LVL="2.0.0"
 at () {
     printf "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -311,7 +311,7 @@ function set_supported_tests {
   }
   fi
   for FILE in "$cases_path"/* ; do {
-    [[ -e "$FILE" ]] || { printf "$FILE did not exist\n" ; continue ;}
+    [[ -e "$FILE" ]] || { printf "\033[1;33m[WARN]\033[0m {$FILE} did not exist.\n" ; continue ;}
       test_fp="$cases_path/$(basename "$FILE")"
       extens=$(printf "$(realpath "$(basename "$FILE")")\n" | cut -d '.' -f '2')
     if [[ $extens = "stderr" || $extens = "stdout" ]] ; then {
@@ -332,7 +332,7 @@ function set_supported_tests {
   done
   #errors loop
   for FILE in "$errorcases_path"/* ; do {
-    [[ -e "$FILE" ]] || { printf "$FILE did not exist\n" ; continue ;}
+    [[ -e "$FILE" ]] || { printf "\033[1;33m[WARN]\033[0m    {$FILE} did not exist.\n" ; continue ;}
     test_fp="$errorcases_path/$(basename "$FILE")"
     extens=$(printf "$(realpath "$(basename "$FILE")")\n" | cut -d '.' -f '2')
     if [[ $extens = "stderr" || $extens = "stdout" ]] ; then {
@@ -982,6 +982,33 @@ set_amboso_stego_info() {
 
   count_git_versions="${#read_git_tags[@]}"
   count_base_versions="${#read_base_tags[@]}"
+  strict_regex='^([1-9][0-9]*|0)\.([1-9][0-9]*|0)\.([1-9][0-9]*|0)$'
+  full_regex='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-((0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(\+([0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*))?$'
+
+  for gt in "${read_git_tags[@]}" ; do {
+      if [[ ! "$gt" =~ $strict_regex ]] ; then {
+        if [[ "$gt" =~ $full_regex ]] ; then {
+            printf "\033[1;33m[WARN]\033[0m    Pre-release and build metadata is not allowed for strict semver.\n"
+        }
+        fi
+        printf "\033[1;31m[ERROR]\033[0m    Invalid key: {$gt}\n"
+        exit 1;
+      }
+      fi
+  }
+  done
+  for bt in "${read_base_tags[@]}" ; do {
+      if [[ ! "$bt" =~ $strict_regex ]] ; then {
+        if [[ "$gt" =~ $full_regex ]] ; then {
+            printf "\033[1;33m[WARN]\033[0m    Pre-release and build metadata is not allowed for strict semver.\n"
+        }
+        fi
+        printf "\033[1;31m[ERROR]\033[0m    Invalid key: {$bt}\n"
+        exit 1;
+      }
+      fi
+  }
+  done
   # Sort the SemVer tags
   read_git_tags=($(printf "%s\n" "${read_git_tags[@]}" | sort -V))
   read_base_tags=($(printf "%s\n" "${read_base_tags[@]}" | sort -V))
