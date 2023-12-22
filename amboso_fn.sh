@@ -1398,7 +1398,7 @@ amboso_parse_args() {
         ;;
       D )
         dir_flag=1
-        milestones_dir="$OPTARG"
+        scripts_dir="$OPTARG"
         ;;
       K )
         testdir_flag=1
@@ -1672,12 +1672,12 @@ amboso_parse_args() {
   fi
 
   #We always notify of missing -D argument
-  [[ ! $dir_flag -gt 0 ]] && milestones_dir="./bin/" && log_cl "No -D flag, using ( $milestones_dir ) for target dir. Run with -V <lvl> to see more." debug >&2 #&& usage && exit 1
+  [[ ! $dir_flag -gt 0 ]] && scripts_dir="./bin/" && log_cl "No -D flag, using ( $scripts_dir ) for target dir. Run with -V <lvl> to see more." debug >&2 #&& usage && exit 1
 
 
   #We always notify of missing -K argument, if in test mode
   if [[ $test_mode_flag -gt 0 && ! $testdir_flag -gt 0 ]] ; then {
-    set_amboso_stego_info "$milestones_dir/stego.lock" "$verbose_flag"
+    set_amboso_stego_info "$scripts_dir/stego.lock" "$verbose_flag"
     res="$?"
     [[ $res -eq 0 ]] || log_cl "Problems when doing set_amboso_stego_info($kazoj_dir).\n" warn
     set_supported_tests "$kazoj_dir"
@@ -1744,7 +1744,7 @@ amboso_parse_args() {
     amboso_usage
 
     printf "Try running with with -H for more info.\n\n"
-    #"$prog_name" -H -D "$milestones_dir" | less
+    #"$prog_name" -H -D "$scripts_dir" | less
     echo_timer "$amboso_start_time"  "Show help" "2"
     exit 0
   }
@@ -1768,22 +1768,13 @@ amboso_parse_args() {
   fi
 
   #Syncpoint: we assert we know these names after this. WIP
-
-  #TODO: check if scripts_dir is needed anywhere... why
-  scripts_dir="$milestones_dir" # MUST BE SET before checking for -S and -E
-  set_amboso_stego_info "$milestones_dir/stego.lock" "$verbose_flag"
+  set_amboso_stego_info "$scripts_dir/stego.lock" "$verbose_flag"
   if [[ ! $? -eq 0 ]] ; then {
     log_cl "[CRITICAL]    Could not set amboso stego info." error
     exit 1
   }
   fi
 
-  # LEGACY
-  #      set_supported_versions "$scripts_dir" # Might as well do it now
-  #      set_source_info "$milestones_dir"
-  #      kazoj_dir="${sources_info[3]}" #TODO: don't think this should be overwritten here if assigned earlier
-  #      use_automake_version="${sources_info[4]}"
-  #      set_tests_info "$kazoj_dir"
   set_supported_tests "$kazoj_dir"
 
   if [[ $verbose_flag -gt 1 ]]; then {
@@ -2011,9 +2002,9 @@ amboso_parse_args() {
     tot_failures=0
     start_t_tests=$(date +%s.%N)
     for i in $(seq 0 $(($tot_tests-1))); do {
-      [[ $quiet_flag -eq 0 ]] && log_cl "[TEST-MACRO]    Running:  \"$prog_name -Y $amboso_start_time -V $verbm -T$quietm$buildm$showtimem -K $kazoj_dir -D $milestones_dir ${supported_tests[$i]}\"" info >&2
+      [[ $quiet_flag -eq 0 ]] && log_cl "[TEST-MACRO]    Running:  \"$prog_name -Y $amboso_start_time -V $verbm -T$quietm$buildm$showtimem -K $kazoj_dir -D $scripts_dir ${supported_tests[$i]}\"" info >&2
       start_t_curr_test=$(date +%s.%N)
-      "$prog_name" -Y "$amboso_start_time" -V "$verbm" -T"$quietm$buildm""$showtimem" -K "$kazoj_dir" -D "$milestones_dir" "${supported_tests[$i]}"
+      "$prog_name" -Y "$amboso_start_time" -V "$verbm" -T"$quietm$buildm""$showtimem" -K "$kazoj_dir" -D "$scripts_dir" "${supported_tests[$i]}"
       retcod="$?"
       if [[ $retcod -eq 0 ]] ; then {
         tot_successes=$(($tot_successes+1))
