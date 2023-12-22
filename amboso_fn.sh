@@ -51,6 +51,12 @@ trace () {
   fi
 }
 
+function echo_amboso_splash {
+    amboso_version="$1"
+    prog_name="$2"
+    printf "amboso, v$amboso_version\nCopyright (C) 2023  jgabaut\n\n  This program comes with ABSOLUTELY NO WARRANTY; for details type \`$prog_name -W\`.\n  This is free software, and you are welcome to redistribute it\n  under certain conditions; see file \`LICENSE\` for details.\n\n  Full source is available at https://github.com/jgabaut/amboso\n\n"
+}
+
 function echo_invil_notice {
   printf "\033[1;35m[INFO]    The bash implementation of amboso is being ported to Rust.\033[0m\n"
   printf "\033[1;34m[INFO]    amboso v2.x is going to \033[1;35mtry\033[1;34m to maintain compatibility with \033[1;36minvil\033[1;34m, the new reference implementation.\033[0m\n"
@@ -1340,7 +1346,7 @@ amboso_parse_args() {
   CFLAGS="${CFLAGS:-}"
 
   if [[ $quiet_flag -eq 0 && "${AMBOSO_LVL_REC}" -lt 2 ]]; then {
-    printf "amboso, v$amboso_currvers\nCopyright (C) 2023  jgabaut\n\n  This program comes with ABSOLUTELY NO WARRANTY; for details type \`$(basename "$prog_name") -W\`.\n  This is free software, and you are welcome to redistribute it\n  under certain conditions; see file \`LICENSE\` for details.\n\n  Full source is available at https://github.com/jgabaut/amboso\n\n"
+    echo_amboso_splash "$amboso_currvers" "$(basename "$prog_name")"
     awk_check="$(awk -W version 2>/dev/null | grep mawk)"
     if [[ ! -z "$awk_check" ]] ; then {
         printf "\033[1;33m[WARN]    awk seems to be mawk. The script may fail unexpectedly. See issue: https://github.com/jgabaut/amboso/issues/58\033[0m\n"
@@ -2751,7 +2757,7 @@ amboso_main() {
     unset AMBOSO_LVL_REC
     return "$res"
   } else { # Try doing make
-    try_doing_make
+    (amboso_parse_args "")
     return "$?"
 
     # Legacy: REPL
