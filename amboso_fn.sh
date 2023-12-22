@@ -1522,6 +1522,9 @@ amboso_parse_args() {
     if [[ "${BASH_VERSINFO:-0}" -lt "4" ]] ; then {
         log_cl "Bash version: {$BASH_VERSION} is less than 4\n" warn
         log_cl "amboso may not work as expected. See issue: https://github.com/jgabaut/amboso/issues/21\n" warn
+    } elif [[ "${BASH_VERSINFO:-0}" -eq "4" ]] ; then {
+        log_cl "Bash version: {$BASH_VERSION} is less than 5\n" warn
+        log_cl "amboso may not work as expected.\n" warn
     }
     fi
   }
