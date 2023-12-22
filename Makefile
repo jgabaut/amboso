@@ -1,6 +1,6 @@
 export SHELL=/bin/bash
 
-VERSION="2.0.0"
+VERSION="2.0.0-rc1"
 ANVIL_C_HEADER_VERSION="2.0.0"
 
 ECHO_VERSION="./amboso"
