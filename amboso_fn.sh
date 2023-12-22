@@ -2757,7 +2757,7 @@ amboso_main() {
     unset AMBOSO_LVL_REC
     return "$res"
   } else { # Try doing make
-    (amboso_parse_args "")
+    (amboso_parse_args "$@")
     unset AMBOSO_LVL_REC
     return "$?"
 
