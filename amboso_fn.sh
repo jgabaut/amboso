@@ -1296,7 +1296,7 @@ amboso_parse_args() {
 
   if [[ $quiet_flag -eq 0 && "${AMBOSO_LVL_REC}" -lt 2 ]]; then {
     printf "amboso, v$amboso_currvers\nCopyright (C) 2023  jgabaut\n\n  This program comes with ABSOLUTELY NO WARRANTY; for details type \`$(basename "$prog_name") -W\`.\n  This is free software, and you are welcome to redistribute it\n  under certain conditions; see file \`LICENSE\` for details.\n\n  Full source is available at https://github.com/jgabaut/amboso\n\n"
-    awk_check="$(awk -W version | grep mawk)"
+    awk_check="$(awk -W version 2>/dev/null | grep mawk)"
     if [[ ! -z "$awk_check" ]] ; then {
         printf "\033[1;33m[WARN]    awk seems to be mawk. The script may fail unexpectedly. See issue: https://github.com/jgabaut/amboso/issues/58\033[0m\n"
         return 1
