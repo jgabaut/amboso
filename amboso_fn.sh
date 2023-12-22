@@ -51,6 +51,12 @@ trace () {
   fi
 }
 
+function echo_invil_notice {
+  printf "\033[1;35m[INFO]    The bash implementation of amboso is being ported to Rust.\033[0m\n"
+  printf "\033[1;34m[INFO]    amboso v2.x is going to \033[1;35mtry\033[1;34m to maintain compatibility with \033[1;36minvil\033[1;34m, the new reference implementation.\033[0m\n"
+  printf "\033[1;35m[INFO]    You can find the new version at \033[1;35mhttps://github.com/jgabaut/invil\033[1;35m.\033[0m\n"
+}
+
 function echo_active_flags {
   printf "[DEBUG]    Current flags:\n\n"
   printf "           [MODE]    -"
@@ -1301,6 +1307,7 @@ amboso_parse_args() {
         printf "\033[1;33m[WARN]    awk seems to be mawk. The script may fail unexpectedly. See issue: https://github.com/jgabaut/amboso/issues/58\033[0m\n"
     }
     fi
+    echo_invil_notice
   }
   fi
   if [[ $quiet_flag -eq 0 && $show_warranty_flag -gt 0 && "${AMBOSO_LVL_REC}" -eq 1 ]]; then {
