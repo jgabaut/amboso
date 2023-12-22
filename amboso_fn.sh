@@ -1044,7 +1044,15 @@ set_amboso_stego_info() {
   }
   fi
   tot_vers="${#supported_versions[@]}"
-  latest_version="${supported_versions[tot_vers-1]}"
+  latest_idx=0
+  if [[ "$tot_vers" -eq 0 ]] ; then {
+    printf "\033[1;33m[WARN]\033[0m    Empty supported versions map.\n"
+    latest_idx=0
+  } else {
+    latest_idx="$(( $tot_vers - 1))"
+  }
+  fi
+  latest_version="${supported_versions[latest_idx]}"
   [[ $verbose -gt 0 ]] && printf "\033[1;34m[INFO]    Read {$tot_vers} tags.\033[0m\n"
   return 0
 }
@@ -1288,6 +1296,12 @@ amboso_parse_args() {
 
   if [[ $quiet_flag -eq 0 && "${AMBOSO_LVL_REC}" -lt 2 ]]; then {
     printf "amboso, v$amboso_currvers\nCopyright (C) 2023  jgabaut\n\n  This program comes with ABSOLUTELY NO WARRANTY; for details type \`$(basename "$prog_name") -W\`.\n  This is free software, and you are welcome to redistribute it\n  under certain conditions; see file \`LICENSE\` for details.\n\n  Full source is available at https://github.com/jgabaut/amboso\n\n"
+    awk_check="$(awk -W version | grep mawk)"
+    if [[ ! -z "$awk_check" ]] ; then {
+        printf "\033[1;33m[WARN]    awk seems to be mawk. The script may fail unexpectedly. See issue: https://github.com/jgabaut/amboso/issues/58\033[0m\n"
+        return 1
+    }
+    fi
   }
   fi
   if [[ $quiet_flag -eq 0 && $show_warranty_flag -gt 0 && "${AMBOSO_LVL_REC}" -eq 1 ]]; then {
