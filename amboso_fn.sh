@@ -58,9 +58,9 @@ function echo_invil_notice {
 }
 
 function echo_active_flags {
-  printf "           [ENV]\n\n"
-  printf "    CC == \"%s\"\n" "$CC"
-  printf "    CFLAGS == \"%s\"\n" "$CFLAGS"
+  printf "[ENV]      Args:\n\n"
+  printf "           CC \"%s\"\n" "$CC"
+  printf "           CFLAGS \"%s\"\n\n" "$CFLAGS"
   printf "[DEBUG]    Current flags:\n\n"
 
   printf "           [MODE]    -"
