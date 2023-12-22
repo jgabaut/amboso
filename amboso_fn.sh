@@ -1317,8 +1317,8 @@ amboso_parse_args() {
 
   if [[ "${AMBOSO_LVL_REC}" -eq "1" ]]; then {
     if [[ "${BASH_VERSINFO:-0}" -lt "4" ]] ; then {
-        printf "\033[1;31m[WARN]    Bash version: {$BASH_VERSION} is less than 4\e[0m\n\n"
-        printf "\033[1;31m[WARN]    amboso may not work as expected.\n\n"
+        printf "\033[1;31m[WARN]    Bash version: {$BASH_VERSION} is less than 4\033[0m\n\n"
+        printf "\033[1;31m[WARN]    amboso may not work as expected. See issue: https://github.com/jgabaut/amboso/issues/21\033[0m\n\n"
     }
     fi
   }
