@@ -71,7 +71,7 @@ function echo_active_flags {
   [[ $be_stego_parser_flag -gt 0 ]] && printf "x"
   [[ $show_time_flag -gt 0 ]] && printf "w"
   [[ $start_time_flag -gt 0 ]] && printf "C"
-  [[ $ignore_git_check_flag -gt 0 ]] && printf"X"
+  [[ $ignore_git_check_flag -gt 0 ]] && printf "X"
   [[ $show_warranty_flag -gt 0 ]] && printf "W"
   [[ $tell_uname_flag -gt 0 ]] && printf "U"
   [[ $pack_flag -gt 0 ]] && printf "z"
@@ -313,8 +313,15 @@ function set_supported_tests {
   for FILE in "$cases_path"/* ; do {
     [[ -e "$FILE" ]] || { printf "\033[1;33m[WARN]\033[0m {$FILE} did not exist.\n" ; continue ;}
       test_fp="$cases_path/$(basename "$FILE")"
-      extens=$(printf "$(realpath "$(basename "$FILE")")\n" | cut -d '.' -f '2')
-    if [[ $extens = "stderr" || $extens = "stdout" ]] ; then {
+      extens=$(printf "$(realpath "$(basename "$FILE")")\n" | awk -F"." '{print $2}')
+      if [[ "$extens" != "k" ]] ; then {
+      [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && printf "\033[1;33m[WARN]\033[0m    {$test_fp} does not have .k extension.\n"
+        skipped=$((skipped+1))
+        continue
+      }
+      fi
+      double_extens=$(printf "$(realpath "$(basename "$FILE")")\n" | awk -F"." '{print $3}')
+    if [[ "$double_extens" = "stderr" || "$double_extens" = "stdout" ]] ; then {
       skipped=$((skipped+1))
       [[ $verbose_flag -gt 1 && $quiet_flag -eq 0 ]] && printf "\033[0;37m[PREP-TEST]    Skip record $FILE (at $(dirname "$test_fp")).\e[0m\n" >&2
       continue
@@ -334,8 +341,15 @@ function set_supported_tests {
   for FILE in "$errorcases_path"/* ; do {
     [[ -e "$FILE" ]] || { printf "\033[1;33m[WARN]\033[0m    {$FILE} did not exist.\n" ; continue ;}
     test_fp="$errorcases_path/$(basename "$FILE")"
-    extens=$(printf "$(realpath "$(basename "$FILE")")\n" | cut -d '.' -f '2')
-    if [[ $extens = "stderr" || $extens = "stdout" ]] ; then {
+    extens=$(printf "$(realpath "$(basename "$FILE")")\n" | awk -F"." '{print $2}')
+    if [[ "$extens" != "k" ]] ; then {
+      [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && printf "\033[1;33m[WARN]\033[0m    {$test_fp} does not have .k extension.\n"
+      skipped=$((skipped+1))
+      continue
+    }
+    fi
+    double_extens=$(printf "$(realpath "$(basename "$FILE")")\n" | awk -F"." '{print $3}')
+    if [[ "$double_extens" = "stderr" || "$double_extens" = "stdout" ]] ; then {
       skipped=$((skipped+1))
       [[ $verbose_flag -gt 1 && $quiet_flag -eq 0 ]] && printf "\033[0;37m[PREP-TEST]    Skip record $FILE (at $(dirname "$test_fp")).\e[0m\n" >&2
       continue
@@ -1220,11 +1234,11 @@ amboso_parse_args() {
       V )
         requested_lvl="$OPTARG"
         verbose_lvl_re='^[0-9]$'
-        if ! [[ $requested_lvl =~ $verbose_lvl_re ]]; then {
+        if ! [[ "$requested_lvl" =~ $verbose_lvl_re ]]; then {
             printf "\033[1;31m[ERROR]\033[0m    Invalid verbose lvl: {%s}\n" "$requested_lvl"
             return 1
         } else {
-            verbose_flag="$requested_lvl"
+        verbose_flag="$( printf "$requested_lvl\n" | awk -F" " '{print $1}')"
         }
         fi
         ;;
@@ -1764,12 +1778,12 @@ amboso_parse_args() {
     }
     fi
     quietm=""
-    verbm=""
+    verbm=0
     buildm=""
     showtimem=""
     [[ $show_time_flag -gt 0 ]] && showtimem="w"
     [[ $quiet_flag -gt 0 ]] && quietm="q"
-    [[ $verbose_flag -gt 0 ]] && verbm="V"
+    [[ $verbose_flag -gt 0 ]] && verbm="$verbose_flag"
     [[ $build_flag -gt 0 ]] && buildm="b"
     [[ $init_flag -gt 0 ]] && buildm="b" && printf "\033[1;31m[DEBUG]    Recording all tests with -ti is deprecated.\n\n        Feature will be dropped in next major update.\n\n"
 
@@ -1777,9 +1791,9 @@ amboso_parse_args() {
     tot_failures=0
     start_t_tests=$(date +%s.%N)
     for i in $(seq 0 $(($tot_tests-1))); do {
-      [[ $quiet_flag -eq 0 ]] && printf "\033[1;35m[TEST-MACRO]    Running:  \"$prog_name -Y $amboso_start_time -T$quietm$verbm$buildm$showtimem -K $kazoj_dir -D $milestones_dir ${supported_tests[$i]}\"\e[0m\n" >&2
+      [[ $quiet_flag -eq 0 ]] && printf "\033[1;35m[TEST-MACRO]    Running:  \"$prog_name -Y $amboso_start_time -V $verbm -T$quietm$buildm$showtimem -K $kazoj_dir -D $milestones_dir ${supported_tests[$i]}\"\e[0m\n" >&2
       start_t_curr_test=$(date +%s.%N)
-      "$prog_name" -Y "$amboso_start_time" -T"$quietm$verbm$buildm""$showtimem" -K "$kazoj_dir" -D "$milestones_dir" "${supported_tests[$i]}"
+      "$prog_name" -Y "$amboso_start_time" -V "$verbm" -T"$quietm$buildm""$showtimem" -K "$kazoj_dir" -D "$milestones_dir" "${supported_tests[$i]}"
       retcod="$?"
       if [[ $retcod -eq 0 ]] ; then {
         tot_successes=$(($tot_successes+1))
@@ -1995,15 +2009,15 @@ amboso_parse_args() {
       printf "\033[1;33m[DEBUG]    ( $tot_tests ) total tests ready.\e[0m\n" >&2
       for i in $(seq 0 $(($tot_tests-1))); do {
         TEST="${supported_tests[$i]}"
-        verb=""
+        verb=0
         quietm=""
         showtimem=""
         [[ $show_time_flag -gt 0 ]] && showtimem="w"
         [[ $quiet_flag -gt 0 ]] && quietm="q" #We make sure to pass on eventual quiet flag mode to the subcalls
-        [[ $verbose_flag -gt 0 ]] && verb="V" && printf "\n[TEST]    Recording ALL: ( $(($i+1)) / $tot_tests ) ( $TEST )\n" >&2
-        printf "\033[1;35m[TEST]    Running:\e[0m    \033[1;34m\"$prog_name -K $kazoj_dir -D $scripts_dir -bT$quietm$verb$showtimem $TEST 2>/dev/null \"\e[0m\n"
+        [[ $verbose_flag -gt 0 ]] && verb="$verbose_flag" && printf "\n[TEST]    Recording ALL: ( $(($i+1)) / $tot_tests ) ( $TEST )\n" >&2
+        printf "\033[1;35m[TEST]    Running:\e[0m    \033[1;34m\"$prog_name -K $kazoj_dir -D $scripts_dir -V $verb -bT$quietm$showtimem $TEST 2>/dev/null \"\e[0m\n"
         start_t=$(date +%s.%N)
-        ( "$prog_name" -Y "$amboso_start_time" -K "$kazoj_dir" -D "$scripts_dir" -b"$quietm""$verb""$showtimem"T "$TEST" 2>/dev/null ; exit "$?")
+        ( "$prog_name" -Y "$amboso_start_time" -K "$kazoj_dir" -D "$scripts_dir" -V "$verb" -b"$quietm""$showtimem"T "$TEST" 2>/dev/null ; exit "$?")
         record_res="$?"
         if [[ $record_res -eq 69 ]]; then {
           printf "\033[1;31m[PANIC]    Unsupported: a test call returned 69. Will do the same.\e[0m\n\n" &&
