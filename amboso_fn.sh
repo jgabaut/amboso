@@ -57,6 +57,34 @@ function echo_invil_notice {
   printf "\033[1;35m[INFO]    You can find the new version at \033[1;35mhttps://github.com/jgabaut/invil\033[1;35m.\033[0m\n"
 }
 
+function try_make {
+  if [[ -f "./Makefile" ]] ; then {
+    printf "\033[1;33m[INFO]\033[0m    Found Makefile.\n"
+    make
+    make_res="$?"
+    if [[ "$make_res" -ne 0 ]] ; then {
+        printf "\033[1;33m[INFO]\033[0m    \"make\" failed.\n"
+        return "$make_res"
+    }
+    fi
+  } elif [[ -f "./configure.ac" && -f "./Makefile.am" ]] ; then {
+    printf "\033[1;33m[INFO]\033[0m    Found:\n\n    configure.ac\n\n    Makefile.am\n"
+    autoreconf
+    automake --add-missing
+    autoreconf
+    ./configure
+    make
+    make_res="$?"
+    if [[ "$make_res" -ne 0 ]] ; then {
+        printf "\033[1;33m[INFO]\033[0m    \"automake\" failed.\n"
+        return "$make_res"
+    }
+    fi
+    return 1
+  }
+  fi
+}
+
 function echo_active_flags {
   printf "[ENV]      Args:\n\n"
   printf "           CC \"%s\"\n" "$CC"
@@ -1901,6 +1929,7 @@ amboso_parse_args() {
   tot_left_args=$(( $# ))
   if [[ $tot_left_args -gt 1 ]]; then {
     printf "\n\033[1;31m[ERROR]    Unknown argument: \"$2\" (ignoring other $(($tot_left_args-1)) args).\e[0m\n\n"
+    printf "\033[1;31m[ERROR]\033[0m    Current \$@: \"$@\"\n"
     amboso_usage
     echo_timer "$amboso_start_time"  "Unknown arg [$2]" "1"
     exit 1
@@ -1910,12 +1939,14 @@ amboso_parse_args() {
   #If we don't have init or purge flag, we bail on a missing version argument
   if [[ $tot_left_args -lt 1 && $purge_flag -eq 0 && $init_flag -eq 0 && $test_mode_flag -eq 0 ]]; then {
     app "$(echo_node silence_check missing_query)"
+    try_make
+    make_res="$?"
     app "$(echo_node missing_query end_node)"
     end_digraph
-    printf "\033[1;31m[ERROR]    Missing query.\e[0m\n\n"
-    printf "\033[1;33m           Run with -h for help.\e[0m\n\n"
+    #printf "\033[1;31m[ERROR]    Missing query.\e[0m\n\n"
+    #printf "\033[1;33m           Run with -h for help.\e[0m\n\n"
     echo_timer "$amboso_start_time"  "Missing query" "1"
-    return 1
+    return "$make_res"
   } elif [[ $tot_left_args -lt 1 && $test_mode_flag -gt 0 ]] ; then {
     app "$(echo_node silence_check missing_test_query)"
     app "$(echo_node missing_test_query end_node)"
@@ -2716,56 +2747,61 @@ amboso_main() {
     unset AMBOSO_LVL_REC
     return "$res"
   } else { # Repl
-    while read  -re -p "[AMBOSO-MAIN]$ " line ;
-    do {
-      cmd="$(printf -- "${line}" | cut -f1 -d'-')"
-      if [[ ! -z $cmd ]] ; then {
-        printf "COMMAND: {$cmd}\n"
-        if [[ $cmd = "quit" ]] ; then {
-          unset AMBOSO_LVL_REC
-          exit 0
-        }
-        fi
-        if [[ $cmd = "version" ]] ; then {
-          (amboso_parse_args "-v")
-          unset AMBOSO_LVL_REC
-          return
+    try_make
+    return "$?"
 
-        }
-        fi
-        if [[ $cmd = "build" ]] ; then {
-          (amboso_parse_args "-Xb"  "latest")
-          unset AMBOSO_LVL_REC
-          return
-        }
-        fi
-        if [[ $cmd = "init" ]] ; then {
-          (amboso_init_proj "$2")
-          unset AMBOSO_LVL_REC
-          return
-        }
-        fi
-        if [[ $cmd = "help" ]] ; then {
-          printf "\033[1;35m[AMBOSO-MAIN]\033[0m    Quick commands:\n\n"
-          printf "    build        Build latest version\n\n"
-          printf "    init         Prepare current dir for an amboso project\n\n"
-          printf "    version      Print amboso version\n\n"
-          printf "    quit         Quit amboso\n\n"
-          printf "    help         Print this message\n\n"
-          printf "\033[1;35m[AMBOSO-MAIN]\033[0m    Amboso help (-h):\n\n"
-          (amboso_parse_args "-Xh")
-          unset AMBOSO_LVL_REC
-          return
-        }
-        fi
-      }
-      fi
-      printf "\033[1;35m[CMDLINE]\033[0m    \"\033[1;36m$line\033[0m\"\n"
-      (amboso_parse_args "$line")
-      res="$?"
-      unset AMBOSO_LVL_REC
-    }
-    done < "${1:-/dev/stdin}"
+    #TODO: move repl
+    #
+    #while read  -re -p "[AMBOSO-MAIN]$ " line ;
+    #do {
+    #  cmd="$(printf -- "${line}" | cut -f1 -d'-')"
+    #  if [[ ! -z $cmd ]] ; then {
+    #    printf "COMMAND: {$cmd}\n"
+    #    if [[ $cmd = "quit" ]] ; then {
+    #      unset AMBOSO_LVL_REC
+    #      exit 0
+    #    }
+    #    fi
+    #    if [[ $cmd = "version" ]] ; then {
+    #      (amboso_parse_args "-v")
+    #      unset AMBOSO_LVL_REC
+    #      return
+
+    #    }
+    #    fi
+    #    if [[ $cmd = "build" ]] ; then {
+    #      (amboso_parse_args "-Xb"  "latest")
+    #      unset AMBOSO_LVL_REC
+    #      return
+    #    }
+    #    fi
+    #    if [[ $cmd = "init" ]] ; then {
+    #      (amboso_init_proj "$2")
+    #      unset AMBOSO_LVL_REC
+    #      return
+    #    }
+    #    fi
+    #    if [[ $cmd = "help" ]] ; then {
+    #      printf "\033[1;35m[AMBOSO-MAIN]\033[0m    Quick commands:\n\n"
+    #      printf "    build        Build latest version\n\n"
+    #      printf "    init         Prepare current dir for an amboso project\n\n"
+    #      printf "    version      Print amboso version\n\n"
+    #      printf "    quit         Quit amboso\n\n"
+    #      printf "    help         Print this message\n\n"
+    #      printf "\033[1;35m[AMBOSO-MAIN]\033[0m    Amboso help (-h):\n\n"
+    #      (amboso_parse_args "-Xh")
+    #      unset AMBOSO_LVL_REC
+    #      return
+    #    }
+    #    fi
+    #  }
+    #  fi
+    #  printf "\033[1;35m[CMDLINE]\033[0m    \"\033[1;36m$line\033[0m\"\n"
+    #  (amboso_parse_args "$line")
+    #  res="$?"
+    #  unset AMBOSO_LVL_REC
+    #}
+    #done < "${1:-/dev/stdin}"
   }
   fi
 
