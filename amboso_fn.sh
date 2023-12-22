@@ -83,7 +83,6 @@ function log_cl {
     lvl_2_tag="WARN"
     lvl_1_tag="ERROR"
 
-
     msg="$1"
     lvl="$2"
     color="$3"
@@ -331,28 +330,6 @@ function check_tags {
     # From: https://www.shellcheck.net/wiki/SC2207
     # For bash 3.x+, must not be in posix mode, may use temporary files
     while IFS='' read -r line; do repo_tags+=("$line"); done < <(git tag -l)
-
-    # LEGACY
-    #
-	#if [[ $verbose_flag -gt 1 ]] ; then {
-	#	for tag in "${read_versions[@]}"; do
-	#	if [[ " ${repo_tags[*]} " =~ " $tag " ]]; then
-	#		if [[ $verbose_flag -gt 0 ]] ; then {
-	#			shown_tag="\033[1;32m$tag\e[0m"
-	#			printf "[AMBOSO]  Read Tag $shown_tag exists in the repo.\n" >&2
-	#		}
-	#		fi
-	#	else {
-	#		if [[ $verbose_flag -gt 0 ]] ; then {
-	#			shown_tag="\033[1;31m$tag\e[0m"
-	#			printf "[AMBOSO]  Read Tag $shown_tag is missing in the repo.\n" >&2
-	#		}
-	#		fi
-	#	}
-	#	fi
-	#	done
-	#}
-	#fi
 
   for tag in "${supported_versions[@]}"; do
     if [[ " ${repo_tags[*]} " =~ " $tag " ]]; then {
