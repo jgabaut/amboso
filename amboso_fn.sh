@@ -1086,7 +1086,7 @@ amboso_parse_args() {
 
 
   #Prepare flag values to default value
-  amboso_version="amboso version $amboso_currvers"
+  amboso_version="amboso, v$amboso_currvers"
   purge_flag=0
   run_flag=0 #By default we don't run the binary
   build_flag=0
@@ -1275,8 +1275,19 @@ amboso_parse_args() {
   tot_opts=$OPTIND
   done
 
+  if [[ $version_flag -eq 1 ]] ; then {
+    echo_amboso_version_short
+    echo_timer "$amboso_start_time"  "Version flag, 1" "2"
+    exit 0
+  } elif [[ $version_flag -gt 1 ]] ; then {
+    echo_amboso_version
+    echo_timer "$amboso_start_time"  "Version flag, >1" "2"
+    exit 0
+  }
+  fi
+
   if [[ $quiet_flag -eq 0 && "${AMBOSO_LVL_REC}" -lt 2 ]]; then {
-    printf "amboso, version $amboso_currvers\nCopyright (C) 2023  jgabaut\n\n  This program comes with ABSOLUTELY NO WARRANTY; for details type \`$(basename "$prog_name") -W\`.\n  This is free software, and you are welcome to redistribute it\n  under certain conditions; see file \`LICENSE\` for details.\n\n  Full source is available at https://github.com/jgabaut/amboso\n\n"
+    printf "amboso, v$amboso_currvers\nCopyright (C) 2023  jgabaut\n\n  This program comes with ABSOLUTELY NO WARRANTY; for details type \`$(basename "$prog_name") -W\`.\n  This is free software, and you are welcome to redistribute it\n  under certain conditions; see file \`LICENSE\` for details.\n\n  Full source is available at https://github.com/jgabaut/amboso\n\n"
   }
   fi
   if [[ $quiet_flag -eq 0 && $show_warranty_flag -gt 0 && "${AMBOSO_LVL_REC}" -eq 1 ]]; then {
@@ -1384,17 +1395,6 @@ amboso_parse_args() {
       }
       fi
       exit $?
-  }
-  fi
-
-  if [[ $version_flag -eq 1 ]] ; then {
-    echo_amboso_version_short
-    echo_timer "$amboso_start_time"  "Version flag, 1" "2"
-    exit 0
-  } elif [[ $version_flag -gt 1 ]] ; then {
-    echo_amboso_version
-    echo_timer "$amboso_start_time"  "Version flag, >1" "2"
-    exit 0
   }
   fi
 
