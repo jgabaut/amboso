@@ -1902,6 +1902,8 @@ amboso_parse_args() {
       packm=""
       ignore_gitcheck=""
       showtimem=""
+      plainm=""
+      [[ $allow_color_flag -le 0 ]] && plainm="P"
       [[ $ignore_git_check_flag -gt 0 ]] && ignore_gitcheck="X"
       [[ $show_time_flag -gt 0 ]] && showtimem="w"
       [[ $pack_flag -gt 0 ]] && packm="z" #Pass pack op mode
@@ -1912,8 +1914,8 @@ amboso_parse_args() {
       [[ $git_mode_flag -gt 0 ]] && gitm="g" #We make sure to pass on eventual git mode to the subcalls
       [[ $quiet_flag -gt 0 ]] && quietm="q" #We make sure to pass on eventual quiet mode to the subcalls
       #First pass sets the verbose flag but redirects stderr to /dev/null
-      [[ $verbose_flag -gt 0 ]] && log_cl "[VERB]    Running \"$(dirname "$(basename "$prog_name")") -Y $amboso_start_time -M $makefile_version -S $source_name -E $exec_entrypoint -D $scripts_dir -b$verb$gitm$basem$quietm$silentm$packm$ignore_gitcheck$showtimem $init_vers\" ( $(($i+1)) / $tot_vers )" info >&2
-      "$prog_name" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -E "$exec_entrypoint" -D "$scripts_dir" -b"$verb""$gitm""$basem""$quietm""$silentm""$packm""$ignore_gitcheck""$showtimem" "$init_vers" 2>/dev/null
+      [[ $verbose_flag -gt 0 ]] && log_cl "[VERB]    Running \"$(dirname "$(basename "$prog_name")") -Y $amboso_start_time -M $makefile_version -S $source_name -E $exec_entrypoint -D $scripts_dir -b$verb$gitm$basem$quietm$silentm$packm$ignore_gitcheck$showtimem$plainm $init_vers\" ( $(($i+1)) / $tot_vers )" info >&2
+      "$prog_name" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -E "$exec_entrypoint" -D "$scripts_dir" -b"$verb""$gitm""$basem""$quietm""$silentm""$packm""$ignore_gitcheck""$showtimem""$plainm" "$init_vers" 2>/dev/null
       if [[ $? -eq 0 ]] ; then {
         [[ $verbose_flag -gt 0 ]] && log_cl "[INIT]    $init_vers binary ready." info >&2
         count_bins=$(($count_bins +1))
@@ -1926,7 +1928,7 @@ amboso_parse_args() {
         #we could just pass -v to the first call if we have it on
         if [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]]; then {
           log_cl "[INIT]    Checking errors, running $(basename "$prog_name") -bV$packm$ignore_gitcheck $init_vers" info >&2
-      ("$prog_name" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -D "$scripts_dir" -E "$exec_entrypoint" -V 2 -b"$gitm""$basem""$packm""$ignore_gitcheck""$showtimem" "$init_vers") >&2
+      ("$prog_name" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -D "$scripts_dir" -E "$exec_entrypoint" -V 2 -b"$gitm""$basem""$packm""$ignore_gitcheck""$showtimem""$plainm" "$init_vers") >&2
         }
         fi
       }
@@ -1982,6 +1984,8 @@ amboso_parse_args() {
     verbm=0
     buildm=""
     showtimem=""
+    plainm=""
+    [[ $allow_color_flag -le 0 ]] && plainm="P"
     [[ $show_time_flag -gt 0 ]] && showtimem="w"
     [[ $quiet_flag -gt 0 ]] && quietm="q"
     [[ $verbose_flag -gt 0 ]] && verbm="$verbose_flag"
@@ -1992,9 +1996,9 @@ amboso_parse_args() {
     tot_failures=0
     start_t_tests=$(date +%s.%N)
     for i in $(seq 0 $(($tot_tests-1))); do {
-      [[ $quiet_flag -eq 0 ]] && log_cl "[TEST-MACRO]    Running:  \"$prog_name -Y $amboso_start_time -V $verbm -T$quietm$buildm$showtimem -K $kazoj_dir -D $scripts_dir ${supported_tests[$i]}\"" info >&2
+      [[ $quiet_flag -eq 0 ]] && log_cl "[TEST-MACRO]    Running:  \"$prog_name -Y $amboso_start_time -V $verbm -T$quietm$buildm$showtimem$plainm -K $kazoj_dir -D $scripts_dir ${supported_tests[$i]}\"" info >&2
       start_t_curr_test=$(date +%s.%N)
-      "$prog_name" -Y "$amboso_start_time" -V "$verbm" -T"$quietm$buildm""$showtimem" -K "$kazoj_dir" -D "$scripts_dir" "${supported_tests[$i]}"
+      "$prog_name" -Y "$amboso_start_time" -V "$verbm" -T"$quietm$buildm""$showtimem""$plainm" -K "$kazoj_dir" -D "$scripts_dir" "${supported_tests[$i]}"
       retcod="$?"
       if [[ $retcod -eq 0 ]] ; then {
         tot_successes=$(($tot_successes+1))
@@ -2216,12 +2220,14 @@ amboso_parse_args() {
         verb=0
         quietm=""
         showtimem=""
+        plainm=""
+        [[ $allow_color_flag -le 0 ]] && plainm="P"
         [[ $show_time_flag -gt 0 ]] && showtimem="w"
         [[ $quiet_flag -gt 0 ]] && quietm="q" #We make sure to pass on eventual quiet flag mode to the subcalls
         [[ $verbose_flag -gt 0 ]] && verb="$verbose_flag" && printf "\n[TEST]    Recording ALL: ( $(($i+1)) / $tot_tests ) ( $TEST )\n" >&2
-        log_cl "[TEST]    Running:    \"$prog_name -K $kazoj_dir -D $scripts_dir -V $verb -bT$quietm$showtimem $TEST 2>/dev/null \"\e[0m\n" debug
+        log_cl "[TEST]    Running:    \"$prog_name -K $kazoj_dir -D $scripts_dir -V $verb -bT$quietm$showtimem$plainm $TEST 2>/dev/null \"\e[0m\n" debug
         start_t=$(date +%s.%N)
-        ( "$prog_name" -Y "$amboso_start_time" -K "$kazoj_dir" -D "$scripts_dir" -V "$verb" -b"$quietm""$showtimem"T "$TEST" 2>/dev/null ; exit "$?")
+        ( "$prog_name" -Y "$amboso_start_time" -K "$kazoj_dir" -D "$scripts_dir" -V "$verb" -b"$quietm""$showtimem""$plainm"T "$TEST" 2>/dev/null ; exit "$?")
         record_res="$?"
         if [[ $record_res -eq 69 ]]; then {
           log_cl "[PANIC]    Unsupported: a test call returned 69. Will do the same.\n" error &&
@@ -2776,6 +2782,8 @@ amboso_parse_args() {
       packm=""
       ignore_gitcheck=""
       showtimem=""
+      plainm=""
+      [[ $allow_color_flag -le 0 ]] && plainm="P"
       [[ $show_time_flag -gt 0 ]] && showtimem="w"
       [[ $ignore_git_check_flag -gt 0 ]] && ignore_gitcheck="X"
       [[ $pack_flag -gt 0 ]] && packm="z"
@@ -2785,10 +2793,10 @@ amboso_parse_args() {
       [[ $git_mode_flag -gt 0 ]] && gitm="g" #We make sure to pass on eventual git mode to the subcalls
       [[ $quiet_flag -gt 0 ]] && quietm="q" #We make sure to pass on eventual quiet flag mode to the subcalls
       if [[ $quiet_flag -eq 0 ]] ; then {
-        log_cl "[PURGE]    Running \"$(basename "$prog_name") -Y $amboso_start_time-M $makefile_version -S $source_name -E $exec_entrypoint -D $scripts_dir -d$verb$gitm$basem$quietm$silentm$packm$ignore_gitcheck$showtimem $purge_vers 2>/dev/null\"" debug
+        log_cl "[PURGE]    Running \"$(basename "$prog_name") -Y $amboso_start_time-M $makefile_version -S $source_name -E $exec_entrypoint -D $scripts_dir -d$verb$gitm$basem$quietm$silentm$packm$ignore_gitcheck$showtimem$plainm $purge_vers 2>/dev/null\"" debug
       }
       fi
-      ( $prog_name -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -E "$exec_entrypoint" -D "$scripts_dir" -d"$verb""$gitm""$basem""$quietm""$silentm""$packm""$ignore_gitcheck""$showtimem" "$purge_vers" ) 2>/dev/null
+      ( $prog_name -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -E "$exec_entrypoint" -D "$scripts_dir" -d"$verb""$gitm""$basem""$quietm""$silentm""$packm""$ignore_gitcheck""$showtimem""$plainm" "$purge_vers" ) 2>/dev/null
       clean_res="$?"
       #To be sure delete OP is gonna be the returning op here, we assume pack just never makes the script return, so it will always go to delete OP safely.
 
@@ -2808,7 +2816,7 @@ amboso_parse_args() {
         if [[ $verbose_flag -gt 0 ]]; then {
           printf "[PURGE]    Verbose flag was asserted as ($verbose_flag).\n" >&2
           log_cl "[PURGE]    Checking errors, running $(basename "$prog_name") -V 2 -d $purge_vers" debug >&2
-          ("$prog_name" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -D "$scripts_dir" -E "$exec_entrypoint" -V 2 -d"$gitm""$basem""$ignore_gitcheck""$showtimem" "$purge_vers") #>&2
+          ("$prog_name" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -D "$scripts_dir" -E "$exec_entrypoint" -V 2 -d"$gitm""$basem""$ignore_gitcheck""$showtimem""$plainm" "$purge_vers") #>&2
         }
         fi
       }
