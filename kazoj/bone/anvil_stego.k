@@ -1,4 +1,4 @@
 #!/bin/bash
 #
 
-./amboso -qx ./stego-examples/lock.stego
+./amboso -Pqx ./stego-examples/lock.stego

@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./amboso -qtibprdgB 0.1.0
+./amboso -PqtibprdgB 0.1.0

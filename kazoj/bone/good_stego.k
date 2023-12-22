@@ -1,4 +1,4 @@
 #!/bin/bash
 #
 
-./amboso -qlx ./stego-examples/good.stego
+./amboso -Pqlx ./stego-examples/good.stego

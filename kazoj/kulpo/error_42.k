@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./amboso -qTibprdgB manyflags_T
+./amboso -PqTibprdgB manyflags_T

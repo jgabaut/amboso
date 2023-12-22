@@ -4,7 +4,7 @@ function run_args_gt {
   args="$1"
   target="$2"
   tstart=`date +%s.%N`
-  ./amboso -B$args >/dev/null 2>/dev/null
+  ./amboso -BP$args >/dev/null 2>/dev/null
   run_exitcode="$?"
   tend=`date +%s.%N`
   runtime=$( echo "$tend - $tstart" | bc -l )
