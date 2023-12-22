@@ -2758,6 +2758,7 @@ amboso_main() {
     return "$res"
   } else { # Try doing make
     (amboso_parse_args "")
+    unset AMBOSO_LVL_REC
     return "$?"
 
     # Legacy: REPL
