@@ -1241,8 +1241,8 @@ amboso_parse_args() {
   AMBOSO_LVL_REC=$(($AMBOSO_LVL_REC+1))
   # check recursion
   if [[ "${AMBOSO_LVL_REC}" -le "3" ]]; then
-    PARENT_COMMAND=$(ps -o comm= $PPID)
-    [[ $PARENT_COMMAND = "$prog_name" ]] && log_cl "Unexpected result while checking amboso recursion level." error && exit 1
+    PARENT_COMMAND="$(ps -o comm= $PPID)"
+    [[ "$PARENT_COMMAND" = "$prog_name" ]] && log_cl "Unexpected result while checking amboso recursion level." error && exit 1
   else
     log_cl "[AMBOSO]    Exceeded depth for recursion ( nested ${AMBOSO_LVL_REC} times).\n" error
     echo_timer "$amboso_start_time"  "Excessive recursion" "1"
@@ -1534,7 +1534,7 @@ amboso_parse_args() {
   fi
 
   [[ $verbose_flag -gt 1 ]] && log_cl "[PREP]    Done getopts." debug >&2
-  [[ $verbose_flag -gt 0 && ! $prog_name = "anvil" ]] && log_cl "[AMBOZO]    Please, symlink me to \"anvil\".\n" debug >&2
+  [[ $verbose_flag -gt 0 && ! "$prog_name" = "anvil" ]] && log_cl "[AMBOZO]    Please, symlink me to \"anvil\".\n" debug >&2
 
   # Load functions from amboso_fn.sh
   #source_amboso_api
