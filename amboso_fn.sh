@@ -57,7 +57,7 @@ function echo_invil_notice {
   printf "\033[1;35m[INFO]    You can find the new version at \033[1;35mhttps://github.com/jgabaut/invil\033[1;35m.\033[0m\n"
 }
 
-function try_make {
+function try_doing_make {
   if [[ -f "./Makefile" ]] ; then {
     printf "\033[1;33m[INFO]\033[0m    Found Makefile.\n"
     make
@@ -67,6 +67,7 @@ function try_make {
         return "$make_res"
     }
     fi
+    return "$make_res"
   } elif [[ -f "./configure.ac" && -f "./Makefile.am" ]] ; then {
     printf "\033[1;33m[INFO]\033[0m    Found:\n\n    configure.ac\n\n    Makefile.am\n"
     autoreconf
@@ -80,6 +81,9 @@ function try_make {
         return "$make_res"
     }
     fi
+    return "$make_res"
+  } else {
+    printf "\033[1;33m[WARN]\033[0m    Can't find a Makefile or a configure.ac, quitting.\n"
     return 1
   }
   fi
@@ -1939,7 +1943,7 @@ amboso_parse_args() {
   #If we don't have init or purge flag, we bail on a missing version argument
   if [[ $tot_left_args -lt 1 && $purge_flag -eq 0 && $init_flag -eq 0 && $test_mode_flag -eq 0 ]]; then {
     app "$(echo_node silence_check missing_query)"
-    try_make
+    try_doing_make
     make_res="$?"
     app "$(echo_node missing_query end_node)"
     end_digraph
@@ -2746,10 +2750,11 @@ amboso_main() {
     res="$?"
     unset AMBOSO_LVL_REC
     return "$res"
-  } else { # Repl
-    try_make
+  } else { # Try doing make
+    try_doing_make
     return "$?"
 
+    # Legacy: REPL
     #TODO: move repl
     #
     #while read  -re -p "[AMBOSO-MAIN]$ " line ;
