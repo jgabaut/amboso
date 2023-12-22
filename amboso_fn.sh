@@ -1299,7 +1299,6 @@ amboso_parse_args() {
     awk_check="$(awk -W version 2>/dev/null | grep mawk)"
     if [[ ! -z "$awk_check" ]] ; then {
         printf "\033[1;33m[WARN]    awk seems to be mawk. The script may fail unexpectedly. See issue: https://github.com/jgabaut/amboso/issues/58\033[0m\n"
-        return 1
     }
     fi
   }
