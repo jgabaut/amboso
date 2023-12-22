@@ -171,11 +171,18 @@ function log_cl {
             ;;
     esac
 
+    if [[ "$msg" =~ ^\[ ]] ; then {
+        lvl_tag=""
+    }
+    fi
+
     #printf "thick: {$thickness}\nclr: {$begin_color}\nlvl_tag: {$lvl_tag}\nmsg: {$msg}\n\n"
     if [[ "$begin_color" -eq 0 && -z "$lvl_tag" ]] ; then {
         printf "$msg\n"
-    } elif [[ "$begin_color" -eq 0 ]] ; then {
+    } elif [[ "$begin_color" -eq 0 && ! -z "$lvl_tag" ]] ; then {
         printf "[$lvl_tag]    $msg\n"
+    } elif [[ -z "$lvl_tag" ]] ; then {
+        printf "\033[$thickness;3${begin_color}m$msg\033[0m\n"
     } else {
         printf "\033[$thickness;3${begin_color}m[$lvl_tag]    $msg\033[0m\n"
     }
