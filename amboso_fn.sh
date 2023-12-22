@@ -52,6 +52,7 @@ trace () {
 }
 
 function log_cl {
+    has_color="${AMBOSO_COLOR:-0}"
     tk_bold="bold"
     tk_thin="thin"
     clr_default="0"
@@ -176,6 +177,11 @@ function log_cl {
     }
     fi
 
+    if [[ "$has_color" -le 0 ]] ; then {
+        begin_color=0
+    }
+    fi
+
     #printf "thick: {$thickness}\nclr: {$begin_color}\nlvl_tag: {$lvl_tag}\nmsg: {$msg}\n\n"
     if [[ "$begin_color" -eq 0 && -z "$lvl_tag" ]] ; then {
         printf "$msg\n"
@@ -253,6 +259,7 @@ function echo_active_flags {
     done
   }
   fi
+  [[ $allow_color_flag -lt 1 ]] && printf "P"
   [[ $gen_C_headers_flag -gt 0 ]] && printf "G"
   [[ $be_stego_parser_flag -gt 0 ]] && printf "x"
   [[ $show_time_flag -gt 0 ]] && printf "w"
@@ -718,6 +725,7 @@ function amboso_help {
     -X    experimental    Ignore the result of git_mode_check, which would stop git mode runs early when git status is not clean.
     -Y [...] START_TIME    Set start time of the program.
     -W     Warranty    Prints warranty information, as per GPL-3.0 license.
+    -P     plain    Turn off color output.
 
   [...]    TAG_QUERY    Ask a tag for current mode
 
@@ -726,7 +734,7 @@ function amboso_help {
 }
 
 function amboso_usage {
-  printf "Usage:  $(basename "$prog_name") [(-D|-K|-M|-S|-E|-G|-C|-x|-V|-Y) ...ARGS] [-TBtg] [-bripd] [-hHvlLqcwXW] [TAG_QUERY]\n"
+  printf "Usage:  $(basename "$prog_name") [(-D|-K|-M|-S|-E|-G|-C|-x|-V|-Y) ...ARGS] [-TBtg] [-bripd] [-hHvlLqcwXWP] [TAG_QUERY]\n"
   printf "    Query for a build version ( or stego files parser, with -x).\n"
 }
 
@@ -1326,9 +1334,13 @@ amboso_parse_args() {
   queried_stego_filepath=""
   pass_autoconf_arg_flag=0
   autoconf_arg_file=""
+  allow_color_flag=1
 
-  while getopts "A:M:S:E:D:K:G:Y:x:V:C:wBgbpHhrivdlLtTqsczUXW" opt; do
+  while getopts "A:M:S:E:D:K:G:Y:x:V:C:wBgbpHhrivdlLtTqsczUXWP" opt; do
     case $opt in
+      P )
+        allow_color_flag=0
+        ;;
       C )
         pass_autoconf_arg_flag=1
         autoconf_arg_file="$OPTARG"
@@ -1482,7 +1494,8 @@ amboso_parse_args() {
 
   CC="${CC:-gcc}"
   CFLAGS="${CFLAGS:-}"
-
+  AMBOSO_COLOR="$allow_color_flag"
+  export AMBOSO_COLOR="${AMBOSO_COLOR:-0}"
   if [[ $quiet_flag -eq 0 && "${AMBOSO_LVL_REC}" -lt 2 ]]; then {
     echo_amboso_splash "$amboso_currvers" "$(basename "$prog_name")"
     awk_check="$(awk -W version 2>/dev/null | grep mawk)"
@@ -2856,24 +2869,28 @@ amboso_main() {
       printf "COMMAND: {$cmd}\n"
       if [[ $cmd = "quit" ]] ; then {
         unset AMBOSO_LVL_REC
+        unset AMBOSO_COLOR
         exit 0
       }
       fi
       if [[ $cmd = "version" ]] ; then {
         (amboso_parse_args "-v")
         unset AMBOSO_LVL_REC
+        unset AMBOSO_COLOR
         return
       }
       fi
       if [[ $cmd = "build" ]] ; then {
         (amboso_parse_args "-Xb" "latest")
         unset AMBOSO_LVL_REC
+        unset AMBOSO_COLOR
         return
       }
       fi
       if [[ $cmd = "init" ]] ; then {
           (amboso_init_proj "$2")
         unset AMBOSO_LVL_REC
+        unset AMBOSO_COLOR
         return
       }
       fi
@@ -2887,6 +2904,7 @@ amboso_main() {
         log_cl "[AMBOSO-MAIN]    Amboso help (-h):\n" info
         (amboso_parse_args "-Xh")
         unset AMBOSO_LVL_REC
+        unset AMBOSO_COLOR
         return
       }
       fi
@@ -2895,10 +2913,12 @@ amboso_main() {
     (amboso_parse_args "$@")
     res="$?"
     unset AMBOSO_LVL_REC
+    unset AMBOSO_COLOR
     return "$res"
   } else { # Try doing make
     (amboso_parse_args "$@")
     unset AMBOSO_LVL_REC
+    unset AMBOSO_COLOR
     return "$?"
 
     # Legacy: REPL
