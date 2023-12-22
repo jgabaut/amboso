@@ -41,54 +41,54 @@ source_amboso_api() {
   if [ "$(basename "$(pwd)")" = "amboso" ] ; then {
     amboso_fn_path="$(realpath "$(pwd)")/amboso_fn.sh"
     if [ -f "$amboso_fn_path" ] ; then {
-      [ "$verbose_flag" -gt 1 ] && printf "\033[0;35m[PREP]    Running inside amboso dir. Sourcing: \"%s\".\e[0m\n" "$amboso_fn_path">&2
+      [ "$verbose_flag" -gt 1 ] && printf "[PREP]    Running inside amboso dir. Sourcing: \"%s\".\n" "$amboso_fn_path">&2
       # shellcheck source=./amboso_fn.sh
       . "${amboso_fn_path}";
       source_res="$?"
       if [ "$source_res" -ne 0 ] ; then {
-        printf "\033[1;31m[PREP]    Failed loading amboso_fn.\n\n    Using file: \"%s\".\e[0m\n" "$amboso_fn_path" >&2
+        printf "[PREP]    Failed loading amboso_fn.\n\n    Using file: \"%s\".\n" "$amboso_fn_path" >&2
         exit 3
       }
       fi
     } else {
-      printf "\033[1;31m[ERROR]    Could not load amboso_fn, check your symlinks.\e[0m\n"
+      printf "[ERROR]    Could not load amboso_fn, check your symlinks.\e[0m\n"
       exit 2
     }
     fi
   } else {
     amboso_fn_path="$(realpath "$(pwd)")/amboso/amboso_fn.sh"
     found_amboso_dir=0
-    [ "$verbose_flag" -gt 1 ] && printf "\033[0;33m[PREP]    Assuming we are running in super-repo. Sourcing: \"%s\".\e[0m\n" "$amboso_fn_path" >&2
+    [ "$verbose_flag" -gt 1 ] && printf "[PREP]    Assuming we are running in super-repo. Sourcing: \"%s\".\n" "$amboso_fn_path" >&2
     if [ -d "$(realpath "$(pwd)")"/amboso ]; then {
         found_amboso_dir=1
     }
     fi
-    [ "$verbose_flag" -gt 1 ] && [ "$found_amboso_dir" -gt 0 ] && printf "\033[0;32m[PREP]    Found amboso dir.\e[0m\n" >&2
+    [ "$verbose_flag" -gt 1 ] && [ "$found_amboso_dir" -gt 0 ] && printf "[PREP]    Found amboso dir.\n" >&2
     if [ -f "$amboso_fn_path" ] ; then {
-      [ "$verbose_flag" -gt 1 ] && printf "\033[0;35m[PREP]    Valid file at: \"%s\".\e[0m\n" "$amboso_fn_path" >&2
+      [ "$verbose_flag" -gt 1 ] && printf "[PREP]    Valid file at: \"%s\".\n" "$amboso_fn_path" >&2
       # shellcheck source=./amboso_fn.sh
       . "${amboso_fn_path}";
       source_res="$?"
-      [ "$source_res" -ne 0 ] && printf "\033[1;31m[PREP]    Failed loading amboso_fn.\n\n    Using file: \"%s\".\e[0m\n" "$amboso_fn_path" >&2
+      [ "$source_res" -ne 0 ] && printf "[PREP]    Failed loading amboso_fn.\n\n    Using file: \"%s\".\n" "$amboso_fn_path" >&2
     } else {
-      [ "$quiet_flag" -eq 0 ] && printf "\033[0;31m[WARN]    \"%s\" was not a valid file. Not in valid super-repo.\e[0m\n" "$amboso_fn_path" >&2
+      [ "$quiet_flag" -eq 0 ] && printf "[WARN]    \"%s\" was not a valid file. Not in valid super-repo.\n" "$amboso_fn_path" >&2
       try_default=1
     }
     fi
     if [ "$try_default" -eq 1 ] && [ -f "/usr/local/bin/amboso_fn.sh" ] ; then { #We only enter here if we failed sourcing
       #We need one more error message to show me are missing functions because of an amboso directory with no file.
       if [ "$found_amboso_dir" -gt 0 ] ; then {
-        printf "\033[1;31m[WARN]   Deprecated amboso dir (< 1.4.3) found, as it doesn't provide a function api marker.\e[0m\n\n" >&2
+        printf "[WARN]   Deprecated amboso dir (< 1.4.3) found, as it doesn't provide a function api marker.\n" >&2
         exit 3
       }
       fi
       amboso_fn_path="/usr/local/bin/amboso_fn.sh"
-      [ "$quiet_flag" -eq 0 ] && printf "\033[0;35m[WARN]    Fallback to default path for amboso_fn. Sourcing: \"%s\".\e[0m\n" "$amboso_fn_path" >&2
+      [ "$quiet_flag" -eq 0 ] && printf "[WARN]    Fallback to default path for amboso_fn. Sourcing: \"%s\".\n" "$amboso_fn_path" >&2
       # shellcheck source=/usr/local/bin/amboso_fn.sh
       . "$amboso_fn_path";
       source_res="$?"
       if [ "$source_res" -ne 0 ] ; then {
-        printf "\033[1;31m[PREP]    Failed loading amboso_fn. Quitting.\n\n    Using file: \"%s\".\e[0m\n" "$amboso_fn_path" >&2
+        printf "[PREP]    Failed loading amboso_fn. Quitting.\n\n    Using file: \"%s\".\n" "$amboso_fn_path" >&2
         exit 3
       }
       fi
@@ -98,35 +98,35 @@ source_amboso_api() {
   fi
 
   if [ "$source_res" -ne 0 ] ; then {
-    printf "\033[1;31m[PANIC]    Failed sourcing amboso_fn. Expected path: \"%s\".\e[0m\n" "$amboso_fn_path"
+    printf "[PANIC]    Failed sourcing amboso_fn. Expected path: \"%s\".\n" "$amboso_fn_path"
     exit 2
   }
   fi
-  [ "$verbose_flag" -gt 1 ] && printf "\033[0;32m[PREP]    Done loading functions.\e[0m\n" >&2
-  [ "$verbose_flag" -gt 1 ] && printf "\033[0;37m[PREP]    \"\$AMBOSO_API_LVL\" is: (\033[0;34m %s \033[0;37m, expected { \033[1;33m%s\033[0;37m } ).\e[0m\n" "$AMBOSO_API_LVL" "$expected_AMBOSO_API_LVL" >&2
+  [ "$verbose_flag" -gt 1 ] && printf "[PREP]    Done loading functions.\n" >&2
+  [ "$verbose_flag" -gt 1 ] && printf "[PREP]    \"\$AMBOSO_API_LVL\" is: ( %s , expected { %s } ).\n" "$AMBOSO_API_LVL" "$expected_AMBOSO_API_LVL" >&2
   [ "$tell_uname_flag" -eq 1 ] && print_sysinfo
   if expr "'$expected_AMBOSO_API_LVL" \> "'$AMBOSO_API_LVL" >/dev/null ; then {
-    printf "\033[1;31m[PANIC]    AMBOSO_API_LVL not supported. Needed { \033[1;35m%s\033[1;31m } , { \033[1;33m%s\033[1;31m } is too low.\n\n    Maybe check your \"amboso_fn.sh\" file.\n\e[0m\n" "$expected_AMBOSO_API_LVL" "$AMBOSO_API_LVL"
+    printf "[PANIC]    AMBOSO_API_LVL not supported. Needed { %s } , { %s } is too low.\n\n    Maybe check your \"amboso_fn.sh\" file.\n\n" "$expected_AMBOSO_API_LVL" "$AMBOSO_API_LVL"
     if [[ "$AMBOSO_API_LVL" < "1.4.3" ]] ; then {
-       printf "\033[1;33m[WARN]\033[0m    amboso_fn.sh does not contain AMBOSO_API_LVL.\n"
+       printf "[WARN]    amboso_fn.sh does not contain AMBOSO_API_LVL.\n"
     } elif [[ "$AMBOSO_API_LVL" > "1.4.2" && "$AMBOSO_API_LVL" < "1.6.6" ]] ; then {
-       printf "\033[1;33m[WARN]\033[0m    Unstable amboso version detected.\n"
+       printf "[WARN]    Unstable amboso version detected.\n"
     } elif [[ "$AMBOSO_API_LVL" > "1.6.5" && "$AMBOSO_API_LVL" < "1.7.4" ]] ; then {
-       printf "\033[1;33m[WARN]\033[0m    Legacy stego.lock format is not supported.\n"
+       printf "[WARN]    Legacy stego.lock format is not supported.\n"
     } elif [[ "$AMBOSO_API_LVL" > "1.7.4" && "$AMBOSO_API_LVL" < "1.9.6" ]] ; then {
-       printf "\033[1;33m[WARN]\033[0m    Incompatible -C flag, test mode\n"
+       printf "[WARN]    Incompatible -C flag, test mode\n"
     } elif [[ "$AMBOSO_API_LVL" < "2.x.x" ]] ;  then {
-       printf "\033[1;33m[WARN]\033[0m    Deprecated amboso_fn.sh file.\n"
+       printf "[WARN]    Deprecated amboso_fn.sh file.\n"
     }
     fi
-    printf "\033[1;31m[PANIC]    Could not load functions. Quitting.\e[0m\n"
+    printf "[PANIC]    Could not load functions. Quitting.\n"
     exit 2
   } elif expr "'$AMBOSO_API_LVL" \> "'$expected_AMBOSO_API_LVL" >/dev/null ; then {
-    [ "$verbose_flag" -gt 0 ] && printf "\033[0;31m[WARN]    AMBOSO_API_LVL is greater than expected. Needed { \033[1;35m%s\033[0;31m } , { \033[1;34m%s\033[0;31m } is higher.\e[0m\n" "$expected_AMBOSO_API_LVL" "$AMBOSO_API_LVL" >&2
-    [ "$verbose_flag" -gt 0 ] && printf "\n\033[1;31m[WARN]    Continuing run with unexpected AMBOSO_API_LVL: Needed { \033[1;35m%s\033[1;31m } , { \033[1;34m%s\033[1;31m } is higher.\e[0m\n" "$expected_AMBOSO_API_LVL" "$AMBOSO_API_LVL"
+    [ "$verbose_flag" -gt 0 ] && printf "[WARN]    AMBOSO_API_LVL is greater than expected. Needed { %s } , { %s } is higher.\n" "$expected_AMBOSO_API_LVL" "$AMBOSO_API_LVL" >&2
+    [ "$verbose_flag" -gt 0 ] && printf "\n[WARN]    Continuing run with unexpected AMBOSO_API_LVL: Needed { %s } , { %s } is higher.\n" "$expected_AMBOSO_API_LVL" "$AMBOSO_API_LVL"
     #exit 2
   } elif [ "$AMBOSO_API_LVL" = "$expected_AMBOSO_API_LVL" ] ; then {
-    [ "$verbose_flag" -gt 0 ] && printf "\033[0;32m[PREP]   Running with \"\$AMBOSO_API_LVL\" [ \033[1;35m%s\033[0;32m ]; min is { \033[1;36m%s\033[0;32m }.\e[0m\n" "$AMBOSO_API_LVL" "$expected_AMBOSO_API_LVL" >&2
+    [ "$verbose_flag" -gt 0 ] && printf "[PREP]   Running with \"\$AMBOSO_API_LVL\" [ %s ]; min is { %s }.\e[0m\n" "$AMBOSO_API_LVL" "$expected_AMBOSO_API_LVL" >&2
   }
   fi
 }
