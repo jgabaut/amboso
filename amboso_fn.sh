@@ -51,6 +51,137 @@ trace () {
   fi
 }
 
+function log_cl {
+    tk_bold="bold"
+    tk_thin="thin"
+    clr_default="0"
+    clr_red="1"
+    clr_green="2"
+    clr_yellow="3"
+    clr_blue="4"
+    clr_magenta="5"
+    clr_cyan="6"
+    clr_white="7"
+    colorname_0="default"
+    colorname_1="red"
+    colorname_2="green"
+    colorname_3="yellow"
+    colorname_4="blue"
+    colorname_5="magenta"
+    colorname_6="cyan"
+    colorname_7="white"
+
+    lvl_4="debug"
+    lvl_3="info"
+    lvl_2="warn"
+    lvl_1="error"
+
+    lvl_4_tag="DEBUG"
+    lvl_3_tag="INFO"
+    lvl_2_tag="WARN"
+    lvl_1_tag="ERROR"
+
+
+    msg="$1"
+    lvl="$2"
+    color="$3"
+    thick="$4"
+    [[ -z "$thick" ]] && thick="thin"
+
+    verb_lvl=3
+    lvl_tag=""
+    begin_color=0
+    thickness=0
+
+    case $lvl in
+        "")
+            :
+            ;;
+        "$lvl_4")
+            verb_lvl=4
+            lvl_tag="$lvl_4_tag"
+            begin_color="$clr_magenta"
+            ;;
+        "$lvl_3")
+            verb_lvl=3
+            lvl_tag="$lvl_3_tag"
+            begin_color="$clr_green"
+            ;;
+        "$lvl_2")
+            verb_lvl=2
+            lvl_tag="$lvl_2_tag"
+            begin_color="$clr_yellow"
+            ;;
+        "$lvl_1")
+            verb_lvl=1
+            lvl_tag="$lvl_1_tag"
+            begin_color="$clr_red"
+            ;;
+        *)
+            printf "${FUNCNAME}(): unexpected lvl => {$lvl}\n"
+            exit 1
+            ;;
+    esac
+    case $thick in
+        "")
+            :
+            ;;
+        "$tk_bold")
+            thickness=1
+            ;;
+        "$tk_thin")
+            :
+            ;;
+        *)
+            printf "${FUNCNAME}(): unexpected thickness => {$thick}\n"
+            exit 1
+            ;;
+    esac
+    case $color in
+        "")
+            :
+            ;;
+        "$colorname_0")
+            begin_color="$clr_default"
+            ;;
+        "$colorname_1")
+            begin_color="$clr_red"
+            ;;
+        "$colorname_2")
+            begin_color="$clr_green"
+            ;;
+        "$colorname_3")
+            begin_color="$clr_yellow"
+            ;;
+        "$colorname_4")
+            begin_color="$clr_blue"
+            ;;
+        "$colorname_5")
+            begin_color="$clr_magenta"
+            ;;
+        "$colorname_6")
+            begin_color="$clr_cyan"
+            ;;
+        "$colorname_7")
+            begin_color="$clr_white"
+            ;;
+        *)
+            printf "${FUNCNAME}(): unexpected color => {$color}\n"
+            exit 1
+            ;;
+    esac
+
+    #printf "thick: {$thickness}\nclr: {$begin_color}\nlvl_tag: {$lvl_tag}\nmsg: {$msg}\n\n"
+    if [[ "$begin_color" -eq 0 && -z "$lvl_tag" ]] ; then {
+        printf "$msg\n"
+    } elif [[ "$begin_color" -eq 0 ]] ; then {
+        printf "[$lvl_tag]    $msg\n"
+    } else {
+        printf "\033[$thickness;3${begin_color}m[$lvl_tag]    $msg\033[0m\n"
+    }
+    fi
+}
+
 function echo_amboso_splash {
     amboso_version="$1"
     prog_name="$2"
@@ -58,24 +189,24 @@ function echo_amboso_splash {
 }
 
 function echo_invil_notice {
-  printf "\033[1;35m[INFO]    The bash implementation of amboso is being ported to Rust.\033[0m\n"
-  printf "\033[1;34m[INFO]    amboso v2.x is going to \033[1;35mtry\033[1;34m to maintain compatibility with \033[1;36minvil\033[1;34m, the new reference implementation.\033[0m\n"
-  printf "\033[1;35m[INFO]    You can find the new version at \033[1;35mhttps://github.com/jgabaut/invil\033[1;35m.\033[0m\n"
+  log_cl "The bash implementation of amboso is being ported to Rust." info
+  log_cl "amboso v2.x is going to try to maintain compatibility with \"invil\", the new reference implementation, but it may fail to do so proptly." warn
+  log_cl "You can find the new version at https://github.com/jgabaut/invil" info
 }
 
 function try_doing_make {
   if [[ -f "./Makefile" ]] ; then {
-    printf "\033[1;33m[INFO]\033[0m    Found Makefile.\n"
+    log_cl "Found Makefile." info
     make
     make_res="$?"
     if [[ "$make_res" -ne 0 ]] ; then {
-        printf "\033[1;33m[INFO]\033[0m    \"make\" failed.\n"
+        log_cl "\"make\" failed." info
         return "$make_res"
     }
     fi
     return "$make_res"
   } elif [[ -f "./configure.ac" && -f "./Makefile.am" ]] ; then {
-    printf "\033[1;33m[INFO]\033[0m    Found:\n\n    configure.ac\n\n    Makefile.am\n"
+    log_cl "Found:\n\n    configure.ac\n\n    Makefile.am" info
     autoreconf
     automake --add-missing
     autoreconf
@@ -83,13 +214,13 @@ function try_doing_make {
     make
     make_res="$?"
     if [[ "$make_res" -ne 0 ]] ; then {
-        printf "\033[1;33m[INFO]\033[0m    \"automake\" failed.\n"
+        log_cl "\"automake\" failed." info
         return "$make_res"
     }
     fi
     return "$make_res"
   } else {
-    printf "\033[1;33m[WARN]\033[0m    Can't find a Makefile or a configure.ac, quitting.\n"
+    log_cl "Can't find a Makefile or a configure.ac, quitting." warn
     return 1
   }
   fi
@@ -170,7 +301,7 @@ function echo_timer {
     display_zero=""
   }
   fi
-  printf "\033[1;36m[TIME]\e[0m    [ \033[1;3${color}m\"$msg\"\e[0m ] Took [ \033[1;33m$display_zero$runtime\e[0m ] seconds.\n"
+  log_cl "[TIME]    [ \"$msg\" ] Took [ $display_zero$runtime ] seconds." info
   return
 }
 
@@ -207,14 +338,14 @@ function check_tags {
     if [[ " ${repo_tags[*]} " =~ " $tag " ]]; then {
       latest_version="$tag"
       if [[ $verbose_flag -gt 0 ]] ; then {
-        shown_tag="\033[1;32m$tag\e[0m"
-        printf "[AMBOSO]  Supported Tag $shown_tag exists in the repo.\n" >&2
+        shown_tag="$tag"
+        log_cl "[AMBOSO]  Supported Tag $shown_tag exists in the repo." warn >&2
       }
       fi
 	} else {
       if [[ $verbose_flag -gt 0 ]] ; then {
-        shown_tag="\033[1;31m$tag\e[0m"
-        printf "[AMBOSO]  Supported Tag $shown_tag is missing in the repo.\n" >&2
+        shown_tag="$tag"
+        log_cl "[AMBOSO]  Supported Tag $shown_tag is missing in the repo." warn >&2
 	  }
 	  fi
     }
@@ -227,45 +358,45 @@ function echo_tag_info {
 	tag_date=$(git show -q --clear-decorations "$tag" 2>/dev/null | grep Date | cut -f2 -d':')
 	tag_author=$(git show -q --clear-decorations "$tag" 2>/dev/null | grep Author | cut -f2 -d':' | cut -f2 -d' ')
 	tag_txt=$(git show -q --clear-decorations "$tag" 2>/dev/null | tail -n2 | grep -v '^$')
-	printf "\033[1;33m[AMBOSO]    Tag text was:  \033[1;34m[$tag_txt    ]\e[0m\n"
-	printf "\033[1;33m[AMBOSO]    Tag author was:  \033[1;34m[$tag_author ]\e[0m\n"
-	printf "\033[1;33m[AMBOSO]    Tag date was:  \033[1;34m[$tag_date   ]\e[0m\n"
+	log_cl "[AMBOSO]    Tag text was:  [$tag_txt]" info
+	log_cl "[AMBOSO]    Tag author was:  [$tag_author ]" info
+	log_cl "[AMBOSO]    Tag date was:  [$tag_date   ]" info
 }
 
 function amboso_init_proj {
     target_dir="$1"
     if [[ ! -d "$target_dir" ]] ; then {
-        printf "\033[1;31m[ERROR]\033[0m    Invalid dir: {$target_dir}.\n"
+        log_cl "Invalid dir: {$target_dir}." error
         if [[ ! -e "$target_dir" ]] ; then {
-            printf "\033[1;33m[WARN]\033[0m    Trying to mkdir: {$target_dir}.\n"
+            log_cl "Trying to mkdir: {$target_dir}." warn
             mkdir "$target_dir"
             mkdir_res="$?"
             if [[ "$mkdir_res" -eq 0 ]] ; then {
-                printf "\033[1;32m[INFO]\033[0m    Created dir: {$target_dir}.\n"
+                log_cl "Created dir: {$target_dir}." info
             } else {
-                printf "\033[1;31m[ERROR]\033[0m    Failed mkdir for: {$target_dir}.\n"
+                log_cl "Failed mkdir for: {$target_dir}." error
                 return 1
             }
             fi
         } else {
-            printf "\033[1;31m[ERROR]\033[0m    {$target_dir} already exists and it is not a directory.\n"
+            log_cl "{$target_dir} already exists and it is not a directory." error
             return 1
         }
         fi
     }
     fi
     is_git_repo=0
-    ( cd "$target_dir" || { printf "\033[1;31m[CRITICAL]\033[0m    cd failed for {$target_dir}.\n"; return 1 ; } ;
+    ( cd "$target_dir" || { log_cl "[CRITICAL]    cd failed for {$target_dir}." error ; return 1 ; } ;
       #Check if target dir is a repo
       git rev-parse --is-inside-work-tree 2>/dev/null 1>&2
     )
     is_git_repo="$?"
     if [[ $is_git_repo -eq 0 ]] ; then {
-       printf "\n\033[1;31m[ERROR]    {$target_dir} is a git repo. Quitting..\e[0m\n\n"
+       log_cl "{$target_dir} is a git repo. Quitting.." error
        return 1
     }
     fi
-    printf "\033[1;35m[PREP]\033[0m    New amboso project in {\033[1;33m$target_dir\033[0m}\n"
+    log_cl "[PREP]    New amboso project in {$target_dir}" info
 
     mkdir -p "$target_dir"/src
     mkdir -p "$target_dir"/bin
@@ -284,18 +415,18 @@ function amboso_init_proj {
 
     printf "AUTOMAKE_OPTIONS = foreign\nCFLAGS = @CFLAGS@\nSHELL := /bin/bash\n.ONESHELL:\nMACHINE := \$\$(uname -m)\nPACK_NAME = \$(TARGET)-\$(VERSION)-\$(OS)-\$(MACHINE)\nhello_world_SOURCES = src/main.c\nLDADD = \$(HW_LDFLAGS)\nAM_LDFLAGS = -O2\nAM_CFLAGS = \$(HW_CFLAGS) -O2 -Werror -Wpedantic -Wall\nif DEBUG_BUILD\nAM_LDFLAGS += -ggdb -O0\nAM_CFLAGS += \"\"\nelse\nAM_LDFLAGS += -s\nendif\n%%.o: %%.c\n	\$(CCOMP) -c \$(CFLAGS) \$(AM_CFLAGS) $< -o \$@\n\$(TARGET): \$(hello_world_SOURCES:.c=.o)\n	@echo -e \"    AM_CFLAGS: [ \$(AM_CFLAGS) ]\"\n	@echo -e \"    LDADD: [ \$(LDADD) ]\"\n	\$(CCOMP) \$(CFLAGS) \$(AM_CFLAGS) \$(hello_world_SOURCES:.c=.o) -o \$@ \$(LDADD) \$(AM_LDFLAGS)\nclean:\n	@echo -en \"Cleaning build artifacts:  \"\n	-rm \$(TARGET)\n	-rm src/*.o\n	-rm static/*.o\n	@echo -e \"Done.\"\ncleanob:\n	@echo -en \"Cleaning object build artifacts:  \"\n	-rm src/*.o\n	-rm static/*.o\n	@echo -e \"Done.\"\nanviltest:\n	@echo -en \\\"Running anvil tests.\"\n	./anvil -tX\n	@echo -e \"Done.\"\nall: \$(TARGET)\nrebuild: clean all\n.DEFAULT_GOAL := all\n" > "$target_dir"/Makefile.am
 
-    printf "\033[1;34m[INFO]\033[0m    Creating new repo in {\033[1;35m$target_dir\033[0m}\n"
+    log_cl "Creating new repo in {$target_dir}" info
 
-    ( cd "$target_dir" || { printf "\033[1;31m[CRITICAL]\033[0m    cd failed for {$target_dir}.\n"; return 1 ; } ;
+    ( cd "$target_dir" || { log_cl "[CRITICAL]    cd failed for {$target_dir}." error ; return 1 ; } ;
       git init
-      [[ $quiet_flag -eq 0 ]] && printf "\033[1;32m[INFO]\033[0m    Initialised git repo\n"
+      [[ $quiet_flag -eq 0 ]] && log_cl "Initialised git repo" info
       git submodule add --depth 1 "git@github.com:jgabaut/amboso.git"
-      [[ $quiet_flag -eq 0 ]] && printf "\033[1;32m[INFO]\033[0m    Added amboso submodule\n"
+      [[ $quiet_flag -eq 0 ]] && log_cl "Added amboso submodule" info
       ln -s "amboso/amboso" "anvil"
-      [[ $quiet_flag -eq 0 ]] && printf "\033[1;32m[INFO]\033[0m    Symlinked \"\033[1;34mamboso/amboso\033[0m\" to \"\033[1;35m./anvil\033[0m\"\n"
+      [[ $quiet_flag -eq 0 ]] && log_cl "Symlinked \"mamboso/amboso\" to \"./anvil\"" info
     )
-    [[ $? -eq 0 ]] || { printf "\033[1;31m[ERROR]\033[0m    git prep failed for {$target_dir}.\n"; return 1 ; } ;
-    [[ $quiet_flag -eq 0 ]] && printf "\033[1;35m[INFO]\033[0m    Done init for {\033[1;36m$target_dir\033[0m\n"
+    [[ $? -eq 0 ]] || { log_cl "git prep failed for {$target_dir}." error ; return 1 ; } ;
+    [[ $quiet_flag -eq 0 ]] && log_cl "Done init for {$target_dir}" info
 }
 
 function gen_C_headers {
@@ -307,10 +438,10 @@ function gen_C_headers {
 	tag_date=$(git show -q --clear-decorations "$tag" 2>/dev/null | grep Date | cut -f2 -d':')
 	tag_author=$(git show -q --clear-decorations "$tag" 2>/dev/null | grep Author | cut -f2 -d':' | cut -f2 -d' ')
 	tag_txt=$(git show -q --clear-decorations "$tag" 2>/dev/null | head -n1 | grep -v '^$')
-	printf "\033[1;35m[AMBOSO]    Gen C header for ($execname), v($tag) to dir ($target_dir)\e[0m\n"
-	printf "\033[1;35m[AMBOSO]    Reset file ($target_dir/$headername)\n"
+	log_cl "[AMBOSO]    Gen C header for ($execname), v($tag) to dir ($target_dir)" info
+	log_cl "[AMBOSO]    Reset file ($target_dir/$headername)" info
 	printf "" > "$target_dir/$headername"
-	printf "\033[1;35m[AMBOSO]    Reset file ($target_dir/$c_headername)\n"
+	log_cl "[AMBOSO]    Reset file ($target_dir/$c_headername)" info
 	printf "" > "$target_dir/$c_headername"
     printf "//Generated by amboso v$AMBOSO_API_LVL\n" >> "$target_dir/$headername"
     printf "//Repo at https://github.com/jgabaut/amboso\n\n" >> "$target_dir/$headername"
@@ -348,22 +479,22 @@ function set_supported_tests {
   #tests loop
   cases_path="$kazoj_dir/$cases_dir"
   if [[ ! -d $cases_path ]]; then {
-    printf "\033[0;33m[DEBUG]\e[0m    \"$cases_path\" was not a valid directory.\n\n"
+    log_cl "\"$cases_path\" was not a valid directory.\n" debug
     return 1
   }
   fi
   errorcases_path="$kazoj_dir/$errors_dir"
   if [[ ! -d $errorcases_path ]]; then {
-    printf "\033[0;33m[DEBUG]\e[0m    \"$errorcases_path\" was not a valid directory.\n\n"
+    log_cl "\"$errorcases_path\" was not a valid directory.\n" debug
     return 1
   }
   fi
   for FILE in "$cases_path"/* ; do {
-    [[ -e "$FILE" ]] || { printf "\033[1;33m[WARN]\033[0m {$FILE} did not exist.\n" ; continue ;}
+    [[ -e "$FILE" ]] || { log_cl "{$FILE} did not exist." warn ; continue ;}
       test_fp="$cases_path/$(basename "$FILE")"
       extens=$(printf "$(realpath "$(basename "$FILE")")\n" | awk -F"." '{print $2}')
       if [[ "$extens" != "k" ]] ; then {
-      [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && printf "\033[1;33m[WARN]\033[0m    {$test_fp} does not have .k extension.\n"
+      [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && log_cl "{$test_fp} does not have .k extension." warn
         skipped=$((skipped+1))
         continue
       }
@@ -371,13 +502,13 @@ function set_supported_tests {
       double_extens=$(printf "$(realpath "$(basename "$FILE")")\n" | awk -F"." '{print $3}')
     if [[ "$double_extens" = "stderr" || "$double_extens" = "stdout" ]] ; then {
       skipped=$((skipped+1))
-      [[ $verbose_flag -gt 1 && $quiet_flag -eq 0 ]] && printf "\033[0;37m[PREP-TEST]    Skip record $FILE (at $(dirname "$test_fp")).\e[0m\n" >&2
+      [[ $verbose_flag -gt 1 && $quiet_flag -eq 0 ]] && log_cl "[PREP-TEST]    Skip record $FILE (at $(dirname "$test_fp"))." debug >&2
       continue
     }
     fi
     if ! [[ -f $test_fp && -x $test_fp ]] ; then {
       skipped=$((skipped+1))
-      [[ $verbose_flag -gt 1 && $quiet_flag -eq 0 ]] && printf "\033[0;36m[PREP-TEST]    Skip test \"$FILE\" (at $(dirname "$test_fp")), not an executable.\e[0m\n" >&2
+      [[ $verbose_flag -gt 1 && $quiet_flag -eq 0 ]] && log_cl "[PREP-TEST]    Skip test \"$FILE\" (at $(dirname "$test_fp")), not an executable." debug >&2
       continue
     }
     fi
@@ -387,11 +518,11 @@ function set_supported_tests {
   done
   #errors loop
   for FILE in "$errorcases_path"/* ; do {
-    [[ -e "$FILE" ]] || { printf "\033[1;33m[WARN]\033[0m    {$FILE} did not exist.\n" ; continue ;}
+    [[ -e "$FILE" ]] || { log_cl "{$FILE} did not exist." warn ; continue ;}
     test_fp="$errorcases_path/$(basename "$FILE")"
     extens=$(printf "$(realpath "$(basename "$FILE")")\n" | awk -F"." '{print $2}')
     if [[ "$extens" != "k" ]] ; then {
-      [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && printf "\033[1;33m[WARN]\033[0m    {$test_fp} does not have .k extension.\n"
+      [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && log_cl "{$test_fp} does not have .k extension." warn
       skipped=$((skipped+1))
       continue
     }
@@ -399,13 +530,13 @@ function set_supported_tests {
     double_extens=$(printf "$(realpath "$(basename "$FILE")")\n" | awk -F"." '{print $3}')
     if [[ "$double_extens" = "stderr" || "$double_extens" = "stdout" ]] ; then {
       skipped=$((skipped+1))
-      [[ $verbose_flag -gt 1 && $quiet_flag -eq 0 ]] && printf "\033[0;37m[PREP-TEST]    Skip record $FILE (at $(dirname "$test_fp")).\e[0m\n" >&2
+      [[ $verbose_flag -gt 1 && $quiet_flag -eq 0 ]] && log_cl "[PREP-TEST]    Skip record $FILE (at $(dirname "$test_fp"))." debug >&2
       continue
     }
     fi
     if ! [[ -f $test_fp && -x $test_fp ]] ; then {
       skipped=$((skipped+1))
-      [[ $verbose_flag -gt 1 && $quiet_flag -eq 0 ]] && printf "\033[0;36m[PREP-TEST]    Skip errtest \"$FILE\" (at $(basename "$test_fp")), not an executable.\e[0m\n" >&2
+      [[ $verbose_flag -gt 1 && $quiet_flag -eq 0 ]] && log_cl "[PREP-TEST]    Skip errtest \"$FILE\" (at $(basename "$test_fp")), not an executable." debug >&2
       continue
     }
     fi
@@ -431,26 +562,26 @@ function echo_tests_info {
   set_supported_tests "$kazoj_dir" 2>/dev/null
   echoed_cases_dir="${tests_info[0]}"
   echoed_errors_dir="${tests_info[1]}"
-  printf "\033[1;33m[DEBUG]    Tests dir is: ( $kazoj_dir ).\e[0m\n" >&2
-  printf "\033[1;33m[DEBUG]    Cases dir is: ( $echoed_cases_dir ).\e[0m\n" >&2
-  printf "\033[1;33m[DEBUG]      ( $count_tests_names ) cases ready.\e[0m\n" >&2
+  log_cl "Tests dir is: ( $kazoj_dir )." debug >&2
+  log_cl "Cases dir is: ( $echoed_cases_dir )." debug >&2
+  log_cl "( $count_tests_names ) cases ready." debug >&2
   if [[ $big_list_flag -gt 0 ]] ; then {
     for i in $(seq 0 $(($count_tests_names-1))) ; do {
-      printf "\033[1;33m[DEBUG]      ( ${read_tests_files[$i]} ).\e[0m\n" >&2
+      log_cl "( ${read_tests_files[$i]} )." debug >&2
     }
     done
   }
   fi
-  printf "\033[1;33m[DEBUG]    Errors dir is: ( $echoed_errors_dir ).\e[0m\n" >&2
-  printf "\033[1;33m[DEBUG]      ( $count_errortests_names ) error cases ready.\e[0m\n" >&2
+  log_cl "Errors dir is: ( $echoed_errors_dir )." debug >&2
+  log_cl "( $count_errortests_names ) error cases ready." debug >&2
   if [[ $big_list_flag -gt 0 ]] ; then {
     for i in $(seq 0 $(($count_errortests_names-1))) ; do {
-      printf "\033[1;33m[DEBUG]      ( ${read_errortests_files[$i]} ).\e[0m\n" >&2
+      log_cl "( ${read_errortests_files[$i]} )." debug >&2
     }
     done
   }
   fi
-  printf "\033[1;33m[DEBUG]    ( $tot_tests ) total tests ready.\e[0m\n" >&2
+  log_cl "( $tot_tests ) total tests ready." debug >&2
   #echo "$count_tests_infos"
   #echo "test info array contents are: ( ${tests_info[@]} )" >&2
 }
@@ -458,21 +589,21 @@ function echo_tests_info {
 function echo_othermode_tags {
   #Print remaining read versions not available in current mode
   if [[ $base_mode_flag -gt 0 ]] ; then {
-    mode_txt="\033[1;34mgit\e[0m"
+    mode_txt="git"
     printf "  ( $count_git_versions ) supported tags when running in ( $mode_txt ) mode.\n"
     printf "  Run again in ( $mode_txt ) mode to use them.\n"
     for i in $(seq 0 $(($count_git_versions-1))); do {
       (( $i % 4 == 0)) && [[ $i -ne 0 ]] && printf "\n"
-      printf "    \033[0;33m${read_git_tags[i]}\e[0m"
+      printf "    ${read_git_tags[i]}"
     }
     done
   } else {
-    mode_txt="\033[1;31mbase\e[0m"
+    mode_txt="base"
     printf "  ( $count_base_versions ) supported tags when running in ( $mode_txt ) mode.\n"
     printf "  Run again in ( $mode_txt ) mode to use them.\n"
     for i in $(seq 0 $(($count_base_versions-1))); do {
       (( $i % 4 == 0)) && [[ $i -ne 0 ]] && printf "\n"
-      printf "    \033[0;33m${read_base_tags[i]}\e[0m"
+      log_cl "    ${read_base_tags[i]}" info blue
     }
     done
   }
@@ -481,12 +612,12 @@ function echo_othermode_tags {
 }
 
 function echo_supported_tags {
-  mode_txt="\033[1;34mgit\e[0m"
-  [[ $base_mode_flag -gt 0 ]] && mode_txt="\033[1;31mbase\e[0m"
+  mode_txt="git"
+  [[ $base_mode_flag -gt 0 ]] && mode_txt="base"
   printf "  ( $tot_vers ) supported tags for current mode ( $mode_txt ).\n"
   for i in $(seq 0 $(($tot_vers-1))); do { #Print currently supported versions (only ones conforming to mode)
     (( $i % 4 == 0)) && [[ $i -ne 0 ]] && printf "\n"
-    printf "    \033[1;32m${supported_versions[i]}\e[0m"
+    log_cl "    ${supported_versions[i]}" info blue
   }
   done
   printf "\n"
@@ -497,8 +628,8 @@ function git_mode_check {
   #Check if we're inside a repo
   git rev-parse --is-inside-work-tree 2>/dev/null 1>&2
   is_git_repo="$?"
-  [[ $is_git_repo -gt 0 ]] && printf "\n\033[1;31m[ERROR]    Not running in a git repo. Try running with -B to use base mode.\e[0m\n\n" && exit 1
-  [[ $verbose_flag -gt 0 ]] && printf "\033[1;34m[MODE]    Running in git mode.\e[0m\n" >&2
+  [[ $is_git_repo -gt 0 ]] && log_cl "Not running in a git repo. Try running with -B to use base mode.\n" error && exit 1
+  [[ $verbose_flag -gt 0 ]] && log_cl "[MODE]    Running in git mode." info >&2
   #Check if status is clean
   if output=$(git status --untracked-files=no --porcelain) && [ -z "$output" ]; then
 	  return 0
@@ -623,10 +754,10 @@ function record_test {
   #echo "r: $res" >> "$tmp_stdout"
   escape_colorcodes_tee "$tmp_stdout" "$tfp.stdout"
   escape_colorcodes_tee "$tmp_stderr" "$tfp.stderr"
-  rm -f "$tmp_stdout" || printf "\033[1;31m[ERROR]    Failed removing tmpfile ($tmp_stdout). Why?\n\n"
-  [[ $verbose_flag -gt 0 ]] && printf "\033[0;32m[TEST]    Removed tempfile \"$tmp_stdout\".\e[0m\n" >&2
-  rm -f "$tmp_stderr" || printf "\033[1;31m[ERROR]    Failed removing tmpfile ($tmp_stderr). Why?\n\n"
-  [[ $verbose_flag -gt 0 ]] && printf "\033[0;32m[TEST]    Removed tempfile \"$tmp_stderr\".\e[0m\n" >&2
+  rm -f "$tmp_stdout" || log_cl "Failed removing tmpfile ($tmp_stdout). Why?\n" error
+  [[ $verbose_flag -gt 0 ]] && log_cl "[TEST]    Removed tempfile \"$tmp_stdout\"." info >&2
+  rm -f "$tmp_stderr" || log_cl "Failed removing tmpfile ($tmp_stderr). Why?\n" error
+  [[ $verbose_flag -gt 0 ]] && log_cl "[TEST]    Removed tempfile \"$tmp_stderr\"." info >&2
 }
 
 function run_test {
@@ -649,9 +780,9 @@ function delete_test {
   res="$?"
 
   if [[ $res -eq 0 ]]; then {
-    printf "\033[0;32m[TEST]    Deleted $tfp.\e[0m\n" >&2
+    log_cl "[TEST]    Deleted $tfp." info >&2
   } else {
-    printf "\033[1;31m[TEST]    Failed deleting $tfp. How?\e[0m\n" >&2
+    log_cl "[TEST]    Failed deleting $tfp. How?" error >&2
   }
   fi
 }
@@ -677,14 +808,14 @@ lex_stego_file() {
     ############################################################################
     #
     if [[ ! -f $1 ]] ; then {
-      printf "\033[1;31m[ERROR]    ${FUNCNAME[0]}(): \"$1\" is not a valid file.\033[0m\n."
+      log_cl "${FUNCNAME[0]}(): \"$1\" is not a valid file." error
       exit 8
     }
     fi
     input_file="$1"
     # Check if awk is available
     if ! command -v awk > /dev/null; then
-        printf "\033[1;31m[CRITICAL]    Error: awk is not installed. Please install awk before running this script.\033[0m\n"
+        log_cl "[CRITICAL]    Error: awk is not installed. Please install awk before running this script." error
         exit 9
     fi
 
@@ -706,7 +837,7 @@ lex_stego_file() {
                 current_scope=gensub(/\s*$/, "", "g", a[1])
                 scopes[current_scope]++
             } else {
-                print "\033[1;31m[LINT]\033[0m    Invalid header:    \033[1;31m" $0 "\033[0m" > "/dev/stderr"
+                print "[LINT]    Invalid header:    " $0 "" > "/dev/stderr"
                 error_flag=1
             }
         } else if ($0 ~ /^"?[^"=\[\]_\$\\\/{}]+"? *= *"[^=\[\]\${}]+"$/) {
@@ -722,7 +853,7 @@ lex_stego_file() {
 
             # Check if left side contains disallowed characters
             if (index(variable, " ") > 0 || (index(variable, "#") > 0 && index(variable, "\"") == 0)) {
-                print "\033[1;31m[LINT]\033[0m    Invalid left side (contains spaces or disallowed characters):    \033[1;31m" variable "\033[0m" > "/dev/stderr"
+                print "[LINT]    Invalid left side (contains spaces or disallowed characters):    " variable "" > "/dev/stderr"
                 error_flag=1
                 next
             }
@@ -754,13 +885,13 @@ lex_stego_file() {
                     # This is a comment-only line and we can ignore it
                     next
                 } else {
-                    print "\033[1;31m[LINT]\033[0m    Invalid line:    \033[1;31m" $0 "\033[0m" > "/dev/stderr"
+                    print "[LINT]    Invalid line:    " $0 "" > "/dev/stderr"
                     error_flag=1
                 }
         }
     } END {
         if (error_flag == 1) {
-                print "\033[1;31m[LEX]\033[0m    Errors while lexing." > "/dev/stderr"
+                print "[LEX]    Errors while lexing." > "/dev/stderr"
         } else {
             # Print each scope and its variable-value pairs
             for (scope in scopes) {
@@ -799,7 +930,7 @@ lint_stego_file() {
   #Try lexing input file. If verbose is 1, print the lexed tokens.
   #If lex output is empty, return 1.
   if [[ ! -f $1 ]] ; then {
-    printf "\033[1;31m[ERROR]    ${FUNCNAME[0]}(): \"$1\" is not a valid file.\033[0m\n."
+    log_cl "${FUNCNAME[0]}(): \"$1\" is not a valid file." error
     exit 8
   }
   fi
@@ -810,7 +941,7 @@ lint_stego_file() {
   lex_output="$(lex_stego_file "$input")"
   [[ $verbose -eq 1 ]] && printf "$lex_output\n"
   if [[ -z "$lex_output" ]]; then
-    printf "\033[1;31m[CHECK]\033[0m    Errors occurred during lexing.\n"
+    log_cl "[CHECK]    Errors occurred during lexing." error
     return 1
   fi
   return 0
@@ -821,7 +952,7 @@ try_parsing_stego() {
   # Then, if the lint was successful, tries parsing the lexed tokens.
   # Upon return, arrays "scopes", "variables", "values" are set.
   if [[ ! -f $1 ]] ; then {
-    printf "\033[1;31m[ERROR]    ${FUNCNAME[0]}(): \"$1\" is not a valid file.\033[0m\n."
+    log_cl "${FUNCNAME[0]}(): \"$1\" is not a valid file." error
     exit 8
   }
   fi
@@ -833,7 +964,7 @@ try_parsing_stego() {
     parse_res="$?"
     return "$parse_res"
   } else {
-    printf "\033[1;31m[PARSE]\033[0m    Lint failed.\n"
+    log_cl "[PARSE]    Lint failed." error
     return 1
   }
   fi
@@ -842,7 +973,7 @@ try_parsing_stego() {
 bash_gulp_stego() {
   # Try gulping the "scopes", "variables" and "values" bash arrays from parsing the passed file
   if [[ ! -f $1 ]] ; then {
-    printf "\033[1;31m[ERROR]    ${FUNCNAME[0]}(): \"$1\" is not a valid file.\033[0m\n"
+    log_cl "${FUNCNAME[0]}(): \"$1\" is not a valid file." error
     exit 8
   }
   fi
@@ -853,12 +984,12 @@ bash_gulp_stego() {
   try_parsing_stego "$input" "$verbose"
   parse_res="$?"
   if [[ $parse_res -eq 0 ]]; then {
-    [[ $verbose -eq 1 ]] && printf "\033[1;32m[SUCCESS]    Parsed file \"$filename\"\033[0m\n"
-    [[ $verbose -eq 1 ]] && printf "\033[1;36m[Lexed variables]\033[0m    { ${variables[*]} }\n\n"
-    [[ $verbose -eq 1 ]] && printf "\033[1;35m[Lexed values]\033[0m    { ${values[*]} }\n"
+    [[ $verbose -eq 1 ]] && log_cl "[SUCCESS]    Parsed file \"$filename\"" info
+    [[ $verbose -eq 1 ]] && log_cl "[Lexed variables] { ${variables[*]} }\n" info magenta
+    [[ $verbose -eq 1 ]] && log_cl "[Lexed values]    { ${values[*]} }" info blue
     return 0
   } else {
-    printf "\033[1;31m[ERROR]\033[0m    ${FUNCNAME[0]}(): Failed parsing file { \033[1;34m$1\033[0m }\n"
+    log_cl "${FUNCNAME[0]}(): Failed parsing file { $1 }\n" error
     return 1
   }
   fi
@@ -923,7 +1054,7 @@ set_amboso_stego_info() {
 
   bash_gulp_stego "$stego_file" 0 #&& print_amboso_stego_scopes
   if [[ ! $? -eq 0 ]]; then {
-    printf "\033[1;31m[ERROR]    Failed parsing stego file at \"$stego_file\".\033[0m\n"
+    log_cl "Failed parsing stego file at \"$stego_file\"." error
     exit 7
   }
   fi
@@ -1011,36 +1142,36 @@ set_amboso_stego_info() {
   done
   count_source_infos="${#sources_info[@]}"
   if [[ -z $exec_entrypoint ]] ; then {
-      printf "\033[1;31m[ERROR]    Missing binary name.\033[1;31m\n"
+      log_cl "Missing binary name." error
       exit 1
   }
   fi
   if [[ -z $source_name ]] ; then {
-      printf "\033[1;31m[ERROR]    Missing source name.\033[1;31m\n"
+      log_cl "Missing source name." error
       exit 2
   }
   fi
   if [[ -z $makefile_version ]] ; then {
-      printf "\033[1;31m[ERROR]    Missing first version using make.\033[1;31m\n"
+      log_cl "Missing first version using make." error
       exit 3
   }
   fi
   if [[ -z $use_automake_version ]] ; then {
-      printf "\033[1;31m[ERROR]    Missing first version using automake.\033[1;31m\n"
+      log_cl "Missing first version using automake." error
       exit 4
   }
   fi
   if [[ -z $use_autoconf_version ]] ; then {
-      printf "\033[1;31m[ERROR]    Missing first version using autoconf.\033[1;31m\n"
+      log_cl "Missing first version using autoconf." error
       exit 5
   }
   fi
   if [[ -z $kazoj_dir ]] ; then {
-      printf "\033[1;31m[ERROR]    Missing tests dir.\033[1;31m\n"
+      log_cl "Missing tests dir." error
       exit 6
   }
   fi
-  [[ $verbose -gt 0 ]] && printf "\033[1;34m[INFO]    Read {$count_source_infos} amboso params.\033[0m\n"
+  [[ $verbose -gt 0 ]] && log_cl "Read {$count_source_infos} amboso params." info
 
   count_git_versions="${#read_git_tags[@]}"
   count_base_versions="${#read_base_tags[@]}"
@@ -1050,11 +1181,11 @@ set_amboso_stego_info() {
   for gt in "${read_git_tags[@]}" ; do {
       if [[ ! "$gt" =~ $strict_regex ]] ; then {
         if [[ "$gt" =~ $full_regex ]] ; then {
-            printf "\033[1;33m[WARN]\033[0m    Pre-release and build metadata is not allowed for strict semver.\n"
+            log_cl "Pre-release and build metadata is not allowed for strict semver." warn
         }
         fi
-        printf "\033[1;31m[ERROR]\033[0m    Invalid key: {$gt}\n"
-        exit 1;
+        log_cl "Invalid key: {$gt}" error
+        exit 1
       }
       fi
   }
@@ -1062,11 +1193,11 @@ set_amboso_stego_info() {
   for bt in "${read_base_tags[@]}" ; do {
       if [[ ! "$bt" =~ $strict_regex ]] ; then {
         if [[ "$gt" =~ $full_regex ]] ; then {
-            printf "\033[1;33m[WARN]\033[0m    Pre-release and build metadata is not allowed for strict semver.\n"
+            log_cl "Pre-release and build metadata is not allowed for strict semver." warn
         }
         fi
-        printf "\033[1;31m[ERROR]\033[0m    Invalid key: {$bt}\n"
-        exit 1;
+        log_cl "Invalid key: {$bt}" error
+        exit 1
       }
       fi
   }
@@ -1094,14 +1225,14 @@ set_amboso_stego_info() {
   tot_vers="${#supported_versions[@]}"
   latest_idx=0
   if [[ "$tot_vers" -eq 0 ]] ; then {
-    printf "\033[1;33m[WARN]\033[0m    Empty supported versions map.\n"
+    log_cl "Empty supported versions map." warn
     latest_idx=0
   } else {
     latest_idx="$(( $tot_vers - 1))"
   }
   fi
   latest_version="${supported_versions[latest_idx]}"
-  [[ $verbose -gt 0 ]] && printf "\033[1;34m[INFO]    Read {$tot_vers} tags.\033[0m\n"
+  [[ $verbose -gt 0 ]] && log_cl "Read {$tot_vers} tags." info
   return 0
 }
 
@@ -1112,9 +1243,9 @@ amboso_parse_args() {
   # check recursion
   if [[ "${AMBOSO_LVL_REC}" -le "3" ]]; then
     PARENT_COMMAND=$(ps -o comm= $PPID)
-    [[ $PARENT_COMMAND = "$prog_name" ]] && printf "Unexpected result while checking amboso recursion level.\n" && exit 1
+    [[ $PARENT_COMMAND = "$prog_name" ]] && log_cl "Unexpected result while checking amboso recursion level." error && exit 1
   else
-    printf "\n[AMBOSO]    Exceeded depth for recursion ( nested ${AMBOSO_LVL_REC} times).\n\n"
+    log_cl "[AMBOSO]    Exceeded depth for recursion ( nested ${AMBOSO_LVL_REC} times).\n" error
     echo_timer "$amboso_start_time"  "Excessive recursion" "1"
     exit 69
   fi
@@ -1194,7 +1325,7 @@ amboso_parse_args() {
       C )
         pass_autoconf_arg_flag=1
         autoconf_arg_file="$OPTARG"
-        [[ -f "$autoconf_arg_file" ]] || { printf "\033[1;31m[ERROR]\033[0m    Invalid file for configure argument: {\033[1;33m%s\033[0m}\n" "$autoconf_arg_file" ; exit 1 ; } ;
+        [[ -f "$autoconf_arg_file" ]] || { log_cl "Invalid file for configure argument: {$autoconf_arg_file}" error ; exit 1 ; } ;
         ;;
       x )
         be_stego_parser_flag=1
@@ -1210,7 +1341,7 @@ amboso_parse_args() {
         gen_C_headers_flag=1
         gen_C_headers_destdir="$OPTARG"
         if [[ ! -d $gen_C_headers_destdir ]] ; then {
-            printf "\033[1;33m[WARN]    ($gen_C_headers_destdir) was not a valid directory.\e[0m\n"
+            log_cl "($gen_C_headers_destdir) was not a valid directory." warn
             gen_C_headers_set=1 #TODO: this reads horribly. It's a patch to allow the called function to still be called, since now it will try to make the directory
         } else {
                 gen_C_headers_set=1
@@ -1291,7 +1422,7 @@ amboso_parse_args() {
         requested_lvl="$OPTARG"
         verbose_lvl_re='^[0-9]$'
         if ! [[ "$requested_lvl" =~ $verbose_lvl_re ]]; then {
-            printf "\033[1;31m[ERROR]\033[0m    Invalid verbose lvl: {%s}\n" "$requested_lvl"
+            log_cl "Invalid verbose lvl: {$requested_lvl}" error
             return 1
         } else {
         verbose_flag="$( printf "$requested_lvl\n" | awk -F" " '{print $1}')"
@@ -1320,11 +1451,11 @@ amboso_parse_args() {
         init_flag=1
         ;;
       \? )
-        printf "Invalid option: -$OPTARG. Run with -h for help.\n" >&2
+        log_cl "Invalid option: -$OPTARG. Run with -h for help." error >&2
         exit 1
         ;;
       : )
-        printf "Option -$OPTARG requires an argument. Run with -h for help.\n" >&2
+        log_cl "Option -$OPTARG requires an argument. Run with -h for help." error >&2
         exit 1
         ;;
     esac
@@ -1349,7 +1480,7 @@ amboso_parse_args() {
     echo_amboso_splash "$amboso_currvers" "$(basename "$prog_name")"
     awk_check="$(awk -W version 2>/dev/null | grep mawk)"
     if [[ ! -z "$awk_check" ]] ; then {
-        printf "\033[1;33m[WARN]    awk seems to be mawk. The script may fail unexpectedly. See issue: https://github.com/jgabaut/amboso/issues/58\033[0m\n"
+        log_cl "awk seems to be mawk. The script may fail unexpectedly. See issue: https://github.com/jgabaut/amboso/issues/58" warn
     }
     fi
     echo_invil_notice
@@ -1369,8 +1500,8 @@ amboso_parse_args() {
 
   if [[ "${AMBOSO_LVL_REC}" -eq "1" ]]; then {
     if [[ "${BASH_VERSINFO:-0}" -lt "4" ]] ; then {
-        printf "\033[1;31m[WARN]    Bash version: {$BASH_VERSION} is less than 4\033[0m\n\n"
-        printf "\033[1;31m[WARN]    amboso may not work as expected. See issue: https://github.com/jgabaut/amboso/issues/21\033[0m\n\n"
+        log_cl "Bash version: {$BASH_VERSION} is less than 4\n" warn
+        log_cl "amboso may not work as expected. See issue: https://github.com/jgabaut/amboso/issues/21\n" warn
     }
     fi
   }
@@ -1389,13 +1520,13 @@ amboso_parse_args() {
   }
   fi
 
-  [[ $verbose_flag -gt 1 ]] && printf "\033[0;32m[PREP]    Done getopts.\e[0m\n" >&2
-  [[ $verbose_flag -gt 0 && ! $prog_name = "anvil" ]] && printf "\033[1;36m[AMBOZO]\e[0m    Please, symlink me to \"anvil\".\n\n" >&2
+  [[ $verbose_flag -gt 1 ]] && log_cl "[PREP]    Done getopts." debug >&2
+  [[ $verbose_flag -gt 0 && ! $prog_name = "anvil" ]] && log_cl "[AMBOZO]    Please, symlink me to \"anvil\".\n" debug >&2
 
   # Load functions from amboso_fn.sh
   #source_amboso_api
 
-  [[ $verbose_flag -gt 1 ]] && printf "\033[0;32m[PREP]    Printing active flags:\e[0m\n" >&2 && echo_active_flags >&2
+  [[ $verbose_flag -gt 1 ]] && log_cl "[PREP]    Printing active flags:" debug >&2 && echo_active_flags >&2
   trace_flag=0
   trace_line="421"
   # Check env var to enable backtrace
@@ -1403,25 +1534,25 @@ amboso_parse_args() {
   if [[ ${AMBOSO_TRACING} -gt 0 ]]; then {
     trace_line=0
     trace_flag=1;
-    printf "\033[0;37m[TRACE]    Tracing started.\e[0m\n" >&2
+    log_cl "[TRACE]    Tracing started." debug >&2
     trap backtrace DEBUG ERR
   } else {
     : #echo "{No trace}" >&2
   }
   fi
 
-  [[ $verbose_flag -gt 1 ]] && printf "\033[0;37m[PREP]    Parent command is: ( $PARENT_COMMAND ).\e[0m\n" >&2
+  [[ $verbose_flag -gt 1 ]] && log_cl "[PREP]    Parent command is: ( $PARENT_COMMAND )." debug >&2
 
 
   #Won't print call info for top level calls
   if [[ ${AMBOSO_LVL_REC} -gt 1 ]] ; then {
   #and 1+ nested test calls ( with -T, from -t calling -T)
-    [[ $quiet_flag -eq 0 && $verbose_flag -gt 0 ]] && printf "\033[1;34m[AMBOSO]    Amboso depth: ( $((${AMBOSO_LVL_REC}-1)) )\e[0m\n"
+    [[ $quiet_flag -eq 0 && $verbose_flag -gt 0 ]] && log_cl "[AMBOSO]    Amboso depth: ( $((${AMBOSO_LVL_REC}-1)) )" debug
     if [[ $AMBOSO_LVL_REC -lt 2 ]] ; then {
       printf "\n\n        args: (\"$*\")\n" >&2
       echo_active_flags >&2
     } elif [[ $AMBOSO_LVL_REC -gt 2 ]] ; then {
-      [[ $test_info_was_set -eq 1 ]] && printf "[AMBOSO]    Deep recursion (>1), are you calling \"$prog_name\" in a test? ;)\n" >&2
+      [[ $test_info_was_set -eq 1 ]] && log_cl "[AMBOSO]    Deep recursion (>1), are you calling \"$prog_name\" in a test? ;)" debug >&2
       #[[ $small_test_mode_flag -gt 0 ]] && echo "[ERROR]    Can't proceed and macro -t for -T on all tags." && exit 69
       #[[ $test_mode_flag -gt 0 ]] && echo "[ERROR]    Can't proceed with test mode." && exit 69
     }
@@ -1436,7 +1567,7 @@ amboso_parse_args() {
   if [[ $be_stego_parser_flag -eq 1 ]] ; then {
       filepath="$queried_stego_filepath"
 
-      [[ -f "$filepath" ]] || { printf "\033[1;31m[ERROR]\033[0m    \"$filepath\" was not a valid file.\n" ; exit 1 ; }
+      [[ -f "$filepath" ]] || { log_cl "\"$filepath\" was not a valid file." error ; exit 1 ; }
 
       if [[ $big_list_flag -eq 1 ]] ; then {
           lex_stego_file "$filepath"
@@ -1445,10 +1576,10 @@ amboso_parse_args() {
           lint_stego_file "$filepath" 0 # We call with verbose ($2) 0, and won't get the lexed tokens printed.
           lint_res="$?"
           if [[ $lint_res -eq 0 ]]; then {
-            printf "\033[1;36m[LINT]\033[0m    { Success on: \"$filepath\" }\n"
+            log_cl "[LINT]    { Success on: \"$filepath\" }" info
             exit 0
           } else {
-            printf "\033[1;31m[LINT]\033[0m    { Failure on: \"$filepath\" }\n"
+            log_cl "[LINT]    { Failure on: \"$filepath\" }" error
             exit 1
           }
           fi
@@ -1463,7 +1594,7 @@ amboso_parse_args() {
   }
   fi
 
-  [[ "$verbose_flag" -gt 1 ]] && printf "\033[1;35m[AMBOSO]    Current version: $amboso_currvers\e[0m\n\n"
+  [[ "$verbose_flag" -gt 1 ]] && log_cl "[AMBOSO]    Current version: $amboso_currvers\n" info
 
   [[ $quiet_flag -eq 0 && $verbose_flag -gt 0 ]] && for read_arg in "$@"; do { printf "[ARG]    \"$read_arg\"\n" ; } ; done
 
@@ -1471,7 +1602,7 @@ amboso_parse_args() {
 
   #We check if we have to silence all subsequent output
   if [[ ( $test_mode_flag -eq 0 && $small_test_mode_flag -eq 0 ) && $silent_flag -gt 0 ]] ; then {
-    printf "\033[1;33m[MODE]\e[0m    Running in silent mode, will now suppress all output.\n\n"
+    log_cl "[MODE]    Running in silent mode, will now suppress all output.\n" info
     echo_timer "$amboso_start_time"  "Silent run, turning off outputs" "2"
     exec 3>&1 &>/dev/null
     printf "This output is going to dev null\n"
@@ -1484,7 +1615,7 @@ amboso_parse_args() {
   if [[ $test_mode_flag -gt 0 ]] ; then {
     git_mode_flag=0
     base_mode_flag=0
-    printf "\033[1;33m[MODE]    Running in test mode.\e[0m\n" >&2
+    log_cl "[MODE]    Running in test mode." info >&2
   }
   fi
 
@@ -1494,7 +1625,7 @@ amboso_parse_args() {
   #Default mode with no flags should be git mode
   if [[ $base_mode_flag -gt 0 ]] ; then {
     git_mode_flag=0
-    printf "\033[1;31m[MODE]    Running in base mode, expecting full source builds.\e[0m\n" >&2
+    log_cl "[MODE]    Running in base mode, expecting full source builds." debug >&2
   }
   fi
   if [[ $git_mode_flag -gt 0 && $be_stego_parser_flag -eq 0 ]] ; then {
@@ -1502,51 +1633,51 @@ amboso_parse_args() {
     git_mode_check
     git_mode_check_res="$?"
     if [[ $git_mode_check_res -eq 0 ]]; then {
-      [[ $verbose_flag -gt 0 ]] && printf "\033[1;33m[GIT]    Status was clean.\e[0m\n" >&2
+      [[ $verbose_flag -gt 0 ]] && log_cl "[GIT]    Status was clean." debug >&2
     } else {
-      [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && printf "\033[1;31m[GIT]    Status was not clean!\e[0m\n" >&2
+      [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && log_cl "[GIT]    Status was not clean!" error >&2
           if [[ $ignore_git_check_flag -eq 0 ]]; then {
-        [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && printf "\033[1;31m[AMBOSO]    Aborting.\e[0m\n" >&2
+        [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && log_cl "[AMBOSO]    Quitting." error >&2
             echo_timer "$amboso_start_time"  "Dirty git status" "1"
         return 1
       }
       fi
-      [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && printf "\033[1;35m[AMBOZO]    We ignore this and will waste time.\e[0m\n" >&2
+      [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && log_cl "[AMBOZO]    We ignore this and will waste time." info magenta >&2
     }
     fi
   }
   fi
 
   #We always notify of missing -D argument
-  [[ ! $dir_flag -gt 0 ]] && milestones_dir="./bin/" && printf "\033[1;33m[DEBUG]    No -D flag, using ( $milestones_dir ) for target dir. Run with -V <lvl> to see more.\e[0m\n" >&2 #&& usage && exit 1
+  [[ ! $dir_flag -gt 0 ]] && milestones_dir="./bin/" && log_cl "No -D flag, using ( $milestones_dir ) for target dir. Run with -V <lvl> to see more." debug >&2 #&& usage && exit 1
 
 
   #We always notify of missing -K argument, if in test mode
   if [[ $test_mode_flag -gt 0 && ! $testdir_flag -gt 0 ]] ; then {
     set_amboso_stego_info "$milestones_dir/stego.lock" "$verbose_flag"
     res="$?"
-    [[ $res -eq 0 ]] || printf "\033[0;33m[WARN]\e[0m    Problems when doing set_amboso_stego_info($kazoj_dir).\n\n"
+    [[ $res -eq 0 ]] || log_cl "Problems when doing set_amboso_stego_info($kazoj_dir).\n" warn
     set_supported_tests "$kazoj_dir"
     res="$?"
-    [[ $res -eq 0 ]] || printf "\033[0;33m[WARN]\e[0m    Problems when doing set_supported_tests($kazoj_dir).\n\n"
+    [[ $res -eq 0 ]] || log_cl "Problems when doing set_supported_tests($kazoj_dir).\n" warn
     kazoj_dir="$(pwd)/kazoj/"
-    [[ $quiet_flag -eq 0 ]] && printf "\033[1;33m[DEBUG]    No -K flag, using ( $kazoj_dir ) for target dir. Run with -V <lvl> to see more.\e[0m\n" >&2 #&& usage && exit 1
+    [[ $quiet_flag -eq 0 ]] && log_cl "No -K flag, using ( $kazoj_dir ) for target dir. Run with -V <lvl> to see more." debug >&2 #&& usage && exit 1
   }
   fi
   if [[ $test_mode_flag -gt 0 && $test_info_was_set -gt 0 ]] ; then {
     if [[ $AMBOSO_LVL_REC -lt 3 ]] ; then {
       app "$(echo_node silence_check test_mode)"
       app "$(echo_node test_mode recursion_lt_3)"
-      printf "\033[1;32m[DEBUG]    bone dir: ( $cases_dir )\e[0m\n" >&2
-      printf "\033[1;32m           kulpo dir: ( $errors_dir )\e[0m\n" >&2 #&& usage && exit 1
+      log_cl "bone dir: ( $cases_dir )" debug >&2
+      log_cl "       kulpo dir: ( $errors_dir )" debug >&2 #&& usage && exit 1
     } else {
       app "$(echo_node silence_check test_mode)"
       app "$(echo_node test_mode recursion_ge_3)"
       app "$(echo_node recursion_ge_3 end_node)"
       end_digraph
-      [[ ! -z $cases_dir ]] && printf "\033[1;32m[DEBUG]    bone dir: ( $cases_dir )\e[0m\n" >&2
-      [[ ! -z $errors_dir ]] && printf "\033[1;32m           kulpo dir: ( $errors_dir )\e[0m\n" >&2 #&& usage && exit 1
-      printf "\n\033[1;31m[PANIC]    Running  as \"$prog_name\" in test mode is not supported. Quitting with 69.\e[0m\n\n" #&& usage && exit 1
+      [[ ! -z $cases_dir ]] && log_cl "bone dir: ( $cases_dir )" debug >&2
+      [[ ! -z $errors_dir ]] && log_cl "       kulpo dir: ( $errors_dir )" debug >&2 #&& usage && exit 1
+      log_cl "\n[PANIC]    Running  as \"$prog_name\" in test mode is not supported. Quitting with 69.\n" error #&& usage && exit 1
       echo_timer "$amboso_start_time"  "Test calling \"$(basename "$prog_name")\" in test mode to run a test with..." "1"
       exit 69
       #We return 69 and will check for this somewhere
@@ -1557,17 +1688,17 @@ amboso_parse_args() {
       app "$(echo_node test_mode no_test_info)"
     if [[ $AMBOSO_LVL_REC -lt 3 ]] ; then {
       app "$(echo_node no_test_info recursion_lt_3)"
-      printf "\033[1;33m[DEBUG]    bone dir (NO -K passed to this call): ( $cases_dir )\e[0m\n" >&2
-      printf "\033[1;33m           kulpo dir (NO -K passed to this amboso call): ( $errors_dir )\e[0m\n" >&2 #&& usage && exit 1
+      log_cl "bone dir (NO -K passed to this call): ( $cases_dir )" debug >&2
+      log_cl "       kulpo dir (NO -K passed to this amboso call): ( $errors_dir )" debug >&2 #&& usage && exit 1
     } else {
       app "$(echo_node no_test_info recursion_ge_3)"
       app "$(echo_node recursion_ge_3 end_node)"
       end_digraph
       #Deep case: we're running a test, calling a program that calls amboso in test mode.
-      printf "\033[1;33m[DEBUG]    bone dir (NO -K passed to this call): ( $cases_dir )\e[0m\n" >&2
-      printf "\033[1;33m           kulpo dir (NO -K passed to this amboso call): ( $errors_dir )\e[0m\n" >&2 #&& usage && exit 1
+      log_cl "bone dir (NO -K passed to this call): ( $cases_dir )" debug >&2
+      log_cl "       kulpo dir (NO -K passed to this amboso call): ( $errors_dir )" debug >&2 #&& usage && exit 1
 
-      printf "\n\033[1;31m[PANIC]    Running  \"$(basename "$prog_name")\" using test mode in a program that will be called by test mode is not supported.\e[0m\n\n" >&2 #&& usage && exit 1
+      log_cl "\n[PANIC]    Running  \"$(basename "$prog_name")\" using test mode in a program that will be called by test mode is not supported.\n" error >&2 #&& usage && exit 1
       echo_timer "$amboso_start_time"  "Test calling \"$(basename "$prog_name")\" in test mode to run a test with..." "1"
       exit 1
     }
@@ -1619,7 +1750,7 @@ amboso_parse_args() {
   scripts_dir="$milestones_dir" # MUST BE SET before checking for -S and -E
   set_amboso_stego_info "$milestones_dir/stego.lock" "$verbose_flag"
   if [[ ! $? -eq 0 ]] ; then {
-    printf "\033[1;31m[CRITICAL]    Could not set amboso stego info.\033[0m\n"
+    log_cl "[CRITICAL]    Could not set amboso stego info." error
     exit 1
   }
   fi
@@ -1633,13 +1764,13 @@ amboso_parse_args() {
   set_supported_tests "$kazoj_dir"
 
   if [[ $verbose_flag -gt 1 ]]; then {
-      printf "\033[1;36m[FETCH]    Fetching remote tags\e[0m\n" >&2
+      log_cl "[FETCH]    Fetching remote tags" info >&2
       echo_tag_info "$version"
   }
   fi
 
   if [[ $verbose_flag -gt 1 ]]; then { #WIP
-      printf "\033[1;35m[VERB]    SYNCPOINT:  listing tag names\e[0m\n" >&2
+      log_cl "[VERB]    SYNCPOINT:  listing tag names" info cyan >&2
       echo_supported_tags >&2
       echo_tests_info "$kazoj_dir" >&2
   }
@@ -1649,7 +1780,7 @@ amboso_parse_args() {
   if [[ -z $kazoj_dir && $test_mode_flag -gt 0 ]] ; then {
 
     #TODO Do we need to do further checks for amboso_testflag_version?
-    printf "\033[1;31m[ERROR]    kazoj_dir was not set, while in test mode.\033[0m\n"
+    log_cl "kazoj_dir was not set, while in test mode." error
     exit 3
 
     # LEGACY
@@ -1705,46 +1836,46 @@ amboso_parse_args() {
 
   #If version for makefile support was not specified, we notify in verbose mode or not in quiet mode
   if [[ -z $makefile_version ]] ; then {
-    [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && printf "\033[1;31m[ASSERT-FALSE]    makefile_version was empty.\e[0m\n" >&2
+    [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && log_cl "[ASSERT-FALSE]    makefile_version was empty" error >&2
     exit 1
   }
   fi
 
   #We notify of missing -E argument if we're in verbose mode or not in quiet mode
   if [[ -z $exec_entrypoint ]] ; then {
-    [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && printf "\033[1;31m[ASSERT-FALSE]    exec_entrypoint was empty.\e[0m\n" >&2
+    [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && log_cl "[ASSERT-FALSE]    exec_entrypoint was empty." error >&2
     exit 1
   }
   fi
 
   #We notify of missing -S argument if we're in verbose mode or not in quiet mode
   if [[ -z $source_name ]] ; then {
-    [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && printf "\033[1;31m[ASSERT-FALSE]    source_name was empty.\e[0m\n" >&2
+    [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && log_cl "[ASSERT-FALSE]    source_name was empty." error >&2
     exit 1
   }
   fi
 
   #We notify of missing -A argument if we're in verbose mode or not in quiet mode
   if [[ -z $use_autoconf_version ]] ; then {
-    [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && printf "\033[1;31m[ASSERT-FALSE]    use_autoconf_version was empty.\e[0m\n" >&2
+    [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && log_cl "[ASSERT-FALSE]    use_autoconf_version was empty." error >&2
     exit 1
   }
   fi
 
   #Display needed values if in verbose mose
-  [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]]  && [[ ! $dir_flag -gt 0 ]] && printf "\033[0;32m[INFO]    Using target dir: ( $scripts_dir ).\e[0m\n" >&2
-  [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && [[ ! $exec_was_set -gt 0 ]] && printf "\033[0;32m[INFO]    Using target bin: ( $exec_entrypoint ).\e[0m\n" >&2
-  [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && [[ ! $sourcename_was_set -gt 0 ]] && printf "\033[0;32m[INFO]    Using source file name: ( $source_name ).\e[0m\n" >&2
-  [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && [[ ! $vers_make_flag -gt 0 ]] && printf "\033[0;32m[INFO]    Using tag for make support: ( $makefile_version ) as first tag compiled with make.\e[0m\n" >&2
-  [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && [[ ! $vers_autoconf_flag -gt 0 ]] && printf "\033[0;32m[INFO]    Using tag for automake support: ( $use_autoconf_version ) as first tag compiled with automake.\e[0m\n" >&2
-  [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && [[ $test_mode_flag -gt 0 && ! $test_info_was_set -gt 0 ]] && printf "\033[0;32m[INFO]    Using tests dir: ( $kazoj_dir ).\e[0m\n" >&2
+  [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]]  && [[ ! $dir_flag -gt 0 ]] && log_cl "Using target dir: ( $scripts_dir )." info >&2
+  [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && [[ ! $exec_was_set -gt 0 ]] && log_cl "Using target bin: ( $exec_entrypoint )." info >&2
+  [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && [[ ! $sourcename_was_set -gt 0 ]] && log_cl "Using source file name: ( $source_name )." info >&2
+  [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && [[ ! $vers_make_flag -gt 0 ]] && log_cl "Using tag for make support: ( $makefile_version ) as first tag compiled with make." info >&2
+  [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && [[ ! $vers_autoconf_flag -gt 0 ]] && log_cl "Using tag for automake support: ( $use_autoconf_version ) as first tag compiled with automake." info >&2
+  [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && [[ $test_mode_flag -gt 0 && ! $test_info_was_set -gt 0 ]] && log_cl "Using tests dir: ( $kazoj_dir )." info >&2
 
   #Check if we are doing init and we're not in test mode
   #Which means we want to build all tags
   #TODO: Why is this checked before determining if we're doing build mode or test mode?
   if [[ $init_flag -gt 0 && $test_mode_flag -eq 0 && $small_test_mode_flag -eq 0 ]] ; then {
     if [[ $quiet_flag -eq 0 && $verbose_flag -gt 1 ]]; then { #WIP
-        printf "\033[1;35m[VERB]    Init mode (no -tT): build all tags\e[0m\n" >&2
+        log_cl "[VERB]    Init mode (no -tT): build all tags" info >&2
         echo_supported_tags >&2
     }
     fi
@@ -1777,20 +1908,20 @@ amboso_parse_args() {
       [[ $git_mode_flag -gt 0 ]] && gitm="g" #We make sure to pass on eventual git mode to the subcalls
       [[ $quiet_flag -gt 0 ]] && quietm="q" #We make sure to pass on eventual quiet mode to the subcalls
       #First pass sets the verbose flag but redirects stderr to /dev/null
-      [[ $verbose_flag -gt 0 ]] && printf "\033[0;35m[VERB]    Running \"$(dirname "$(basename "$prog_name")") -Y $amboso_start_time -M $makefile_version -S $source_name -E $exec_entrypoint -D $scripts_dir -b$verb$gitm$basem$quietm$silentm$packm$ignore_gitcheck$showtimem $init_vers\" ( $(($i+1)) / $tot_vers )\033[0m\n" >&2
+      [[ $verbose_flag -gt 0 ]] && log_cl "[VERB]    Running \"$(dirname "$(basename "$prog_name")") -Y $amboso_start_time -M $makefile_version -S $source_name -E $exec_entrypoint -D $scripts_dir -b$verb$gitm$basem$quietm$silentm$packm$ignore_gitcheck$showtimem $init_vers\" ( $(($i+1)) / $tot_vers )" info >&2
       "$prog_name" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -E "$exec_entrypoint" -D "$scripts_dir" -b"$verb""$gitm""$basem""$quietm""$silentm""$packm""$ignore_gitcheck""$showtimem" "$init_vers" 2>/dev/null
       if [[ $? -eq 0 ]] ; then {
-        [[ $verbose_flag -gt 0 ]] && printf "\033[0;32m[INIT]    $init_vers binary ready.\e[0m\n" >&2
+        [[ $verbose_flag -gt 0 ]] && log_cl "[INIT]    $init_vers binary ready." info >&2
         count_bins=$(($count_bins +1))
       } else {
         verbose_hint=""
         [[ $verbose_flag -lt 1 ]] && verbose_hint="Run with -V <lvl> to see more info."
-        printf "\n\033[1;31m[INIT]    Failed build for $init_vers binary. $verbose_hint\e[0m\n\n"
+        log_cl "\n[INIT]    Failed build for $init_vers binary. $verbose_hint\n" error
         #try building again to get more output, since we discarded stderr before
         #
         #we could just pass -v to the first call if we have it on
         if [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]]; then {
-          printf "[INIT]    Checking errors, running \033[1;33m$(basename "$prog_name") -bV$packm$ignore_gitcheck $init_vers\e[0m.\n" >&2
+          log_cl "[INIT]    Checking errors, running $(basename "$prog_name") -bV$packm$ignore_gitcheck $init_vers" info >&2
       ("$prog_name" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -D "$scripts_dir" -E "$exec_entrypoint" -V 2 -b"$gitm""$basem""$packm""$ignore_gitcheck""$showtimem" "$init_vers") >&2
         }
         fi
@@ -1806,14 +1937,15 @@ amboso_parse_args() {
       display_zero=""
     }
     fi
-    printf "\033[0;34m[INIT]    Took $display_zero$runtime_init seconds, ( $count_bins / $tot_vers ) binaries ready.\e[0m\n"
+    log_cl "[INIT]    Took $display_zero$runtime_init seconds, ( $count_bins / $tot_vers ) binaries ready." info
     #We don't quit after the full build.
     #exit 0
   }
   fi
 
   if [[ $init_flag -gt 0 && $test_mode_flag -gt 0 ]] && [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] ; then {
-    printf "\033[0;35m[TEST]    [-i]\e[0m    Will record all tests.\n" >&2
+    log_cl "[TEST]    [-i]    Will record all tests." info >&2
+    log_cl "DEPRECATED" warn >&2
   }
   fi
   if [[ $purge_flag -gt 0 && $test_mode_flag -gt 0 ]] && [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] ; then {
@@ -1822,7 +1954,7 @@ amboso_parse_args() {
   }
   fi
   if [[ $build_flag -gt 0 && $test_mode_flag -gt 0 ]] && [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] ; then {
-    printf "\033[0;35m[TEST]    [-b]\e[0m    Will record test query.\n" >&2
+    log_cl "[TEST]    [-b]    Will record test query." info >&2
   }
   fi
   if [[ $delete_flag -gt 0 && $test_mode_flag -gt 0 ]] && [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] ; then {
@@ -1838,8 +1970,8 @@ amboso_parse_args() {
     app "$(echo_node doing_test_macro end_node)"
     end_digraph
     if [[ $quiet_flag -eq 0 ]] ; then {
-      printf "\033[1;33m[DEBUG]    -t assert: shortcut to run \"$prog_name\" with -T\n"
-      printf "\033[1;33m[DEBUG]    will pass: ( -qVbw ) to subcall, if asserted.\n\n"
+      log_cl "-t assert: shortcut to run \"$prog_name\" with -T" debug
+      log_cl "will pass: ( -qVbw ) to subcall, if asserted.\n" debug
     }
     fi
     quietm=""
@@ -1850,13 +1982,13 @@ amboso_parse_args() {
     [[ $quiet_flag -gt 0 ]] && quietm="q"
     [[ $verbose_flag -gt 0 ]] && verbm="$verbose_flag"
     [[ $build_flag -gt 0 ]] && buildm="b"
-    [[ $init_flag -gt 0 ]] && buildm="b" && printf "\033[1;31m[DEBUG]    Recording all tests with -ti is deprecated.\n\n        Feature will be dropped in next major update.\n\n"
+    [[ $init_flag -gt 0 ]] && buildm="b" && log_cl "Recording all tests with -ti is deprecated.\n\n        Feature will be dropped in next major update.\n" warn
 
     tot_successes=0
     tot_failures=0
     start_t_tests=$(date +%s.%N)
     for i in $(seq 0 $(($tot_tests-1))); do {
-      [[ $quiet_flag -eq 0 ]] && printf "\033[1;35m[TEST-MACRO]    Running:  \"$prog_name -Y $amboso_start_time -V $verbm -T$quietm$buildm$showtimem -K $kazoj_dir -D $milestones_dir ${supported_tests[$i]}\"\e[0m\n" >&2
+      [[ $quiet_flag -eq 0 ]] && log_cl "[TEST-MACRO]    Running:  \"$prog_name -Y $amboso_start_time -V $verbm -T$quietm$buildm$showtimem -K $kazoj_dir -D $milestones_dir ${supported_tests[$i]}\"" info >&2
       start_t_curr_test=$(date +%s.%N)
       "$prog_name" -Y "$amboso_start_time" -V "$verbm" -T"$quietm$buildm""$showtimem" -K "$kazoj_dir" -D "$milestones_dir" "${supported_tests[$i]}"
       retcod="$?"
@@ -1867,7 +1999,7 @@ amboso_parse_args() {
       }
       fi
       if [[ $retcod -eq 69 ]] ; then {
-        printf "\033[1;31m[PANIC]    A test call returned 69 while in macro mode. Doing the same.\e[0m\n\n"
+        log_cl "[PANIC]    A test call returned 69 while in macro mode. Doing the same.\n" error
         echo_timer "$amboso_start_time"  "Test returned 69" "1"
         exit 69
       }
@@ -1881,7 +2013,7 @@ amboso_parse_args() {
         display_zero=""
       }
       fi
-      [[ $quiet_flag -eq 0 ]] && printf "\033[0;34m[TEST]  ($(($i+1))/$tot_tests)  took $display_zero$runtime_curr_test seconds.\e[0m\n"
+      [[ $quiet_flag -eq 0 ]] && log_cl "[TEST]  ($(($i+1))/$tot_tests)  took $display_zero$runtime_curr_test seconds." info
     }
     done
     end_t_tests=$(date +%s.%N)
@@ -1895,11 +2027,11 @@ amboso_parse_args() {
     fi
     #echo -e "\033[0;34m[TEST]    Full testing took $display_zero$runtime_tests seconds ( $tot_tests done).\e[0m\n"
     echo_timer "$amboso_start_time"  "Test macro" "6"
-    printf "\033[1;35m[TEST]    Successes: {\033[0m\033[1;32m%s\033[1;35m}\033[0m\n" "$tot_successes"
-    printf "\033[1;35m[TEST]    Failures: {\033[0m\033[1;31m%s\033[1;35m}\033[0m\n" "$tot_failures"
+    log_cl "[TEST]    Successes: {$tot_successes}" info
+    log_cl "[TEST]    Failures: {$tot_failures}" info
     exit $tot_failures
   } elif [[ $small_test_mode_flag -gt 0 && $test_mode_flag -gt 0 ]] ; then {
-    printf "\033[1;31m[PANIC]    [-t] used with [-T].\n\n        -t is a shortcut to run as -T on all tests found.\e[0m\n\n"
+    log_cl "[PANIC]    [-t] used with [-T].\n\n        -t is a shortcut to run as -T on all tests found.\n" info
     echo_timer "$amboso_start_time"  "Wrong test flag usage" "1"
     exit 1
   }
@@ -1932,14 +2064,14 @@ amboso_parse_args() {
   fi
 
   if [[ $quiet_flag -eq 0 && $verbose_flag -gt 1 ]]; then { #WIP
-      printf "\033[1;35m[VERB]    SYNCPOINT: shifted args, query was: ( $query ).\e[0m\n" >&2
+      log_cl "[VERB]    SYNCPOINT: shifted args, query was: ( $query )." debug >&2
   }
   fi
 
   tot_left_args=$(( $# ))
   if [[ $tot_left_args -gt 1 ]]; then {
-    printf "\n\033[1;31m[ERROR]    Unknown argument: \"$2\" (ignoring other $(($tot_left_args-1)) args).\e[0m\n\n"
-    printf "\033[1;31m[ERROR]\033[0m    Current \$@: \"$@\"\n"
+    log_cl "\n    Unknown argument: \"$2\" (ignoring other $(($tot_left_args-1)) args).\n" error
+    log_cl "Current \$@: \"$@\"" error
     amboso_usage
     echo_timer "$amboso_start_time"  "Unknown arg [$2]" "1"
     exit 1
@@ -1962,27 +2094,27 @@ amboso_parse_args() {
     app "$(echo_node missing_test_query end_node)"
     end_digraph
     #If in test mode, we still whine about a target test
-    printf "\033[1;31m[ERROR]    Missing test query.\e[0m\n\n"
-    printf "\033[1;33m           Run with -h for help.\e[0m\n\n"
-    printf "can we do init/purge?\n" #TODO wth does this mean
+    log_cl "Missing test query.\n" error
+    log_cl "       Run with -h for help.\n" error
+    #printf "can we do init/purge?\n" #TODO wth does this mean
   }
   fi
   #Check if we are doing a test
   if [[ $test_mode_flag -gt 0 ]]; then {
     app "$(echo_node recursion_lt_3 doing_test)"
     if [[ $quiet_flag -eq 0 && $verbose_flag -gt 1 ]]; then { #WIP
-        printf "\033[1;35m[VERB]    Test mode (-T was on).\e[0m\n" >&2
-        [[ $small_test_mode_flag -gt 0 ]] && printf "\033[1;35m[VERB]    (-t was on).\e[0m\n" >&2
+        log_cl "[VERB]    Test mode (-T was on)." info >&2
+        [[ $small_test_mode_flag -gt 0 ]] && log_cl "[VERB]    (-t was on)." info >&2
         echo_tests_info "$kazoj_dir" >&2
     }
     fi
     test_name=""
     test_type=""
     test_path=""
-    [[ $verbose_flag -gt 0 ]] && printf "\033[0;35m[TEST]    Checking if query $query is a testcase.\e[0m\n" >&2
+    [[ $verbose_flag -gt 0 ]] && log_cl "[TEST]    Checking if query $query is a testcase." info >&2
     for i in $(seq 0 $(($count_tests_names-1))); do {
       current_item="${read_tests_files[$i]}"
-      [[ $verbose_flag -gt 0 ]] && printf "\033[0;35m[TEST]    Checking case ($i/$count_tests_names): $current_item\e[0m\n" >&2
+      [[ $verbose_flag -gt 0 ]] && log_cl "[TEST]    Checking case ($i/$count_tests_names): $current_item" info >&2
       #echo "checking $current_item"
       if [[ $query = "$current_item" ]]; then {
         test_type="casetest"
@@ -1994,10 +2126,10 @@ amboso_parse_args() {
     }
     done
     if [[ -z $test_name ]] ; then {
-      [[ $verbose_flag -gt 0 ]] && printf "\033[0;35m[TEST]    Checking if query $query is a error testcase.\e[0m\n" >&2
+      [[ $verbose_flag -gt 0 ]] && log_cl "[TEST]    Checking if query $query is a error testcase." info >&2
       for i in $(seq 0 $(($count_errortests_names-1))); do {
         current_item="${read_errortests_files[$i]}"
-        [[ $verbose_flag -gt 0 ]] && printf "\033[0;35m[TEST]    Checking error case ($i/$count_errortests_names): $current_item\e[0m\n" >&2
+        [[ $verbose_flag -gt 0 ]] && log_cl "[TEST]    Checking error case ($i/$count_errortests_names): $current_item" info >&2
         #echo "checking $current_item"
         if [[ $query = "$current_item" ]] ; then {
       test_type="errortest"
@@ -2012,7 +2144,7 @@ amboso_parse_args() {
     fi
 
     if [[ $quiet_flag -eq 0 ]]; then { #WIP
-        printf "\033[0;34m[TEST]    Expected:\n\n    type:  $test_type\n\n    name:  $test_name\n    path:  $test_path\n\e[0m\n" >&2
+        log_cl "[TEST]    Expected:\n\n    type:  $test_type\n\n    name:  $test_name\n    path:  $test_path\n" info >&2
     }
     fi
 
@@ -2022,41 +2154,41 @@ amboso_parse_args() {
         flagbuild=""
         [[ $build_flag -gt 0 ]] && flagbuild="b"
         [[ $init_flag -gt 0 ]] && flaginit="t"
-        printf "\033[0;35m[VERB]    Test path was empty but we have [-$flagbuild$flaginit].\e[0m\n" >&2
+        log_cl "[VERB]    Test path was empty but we have [-$flagbuild$flaginit]." debug >&2
       }
       fi
       if [[ -z $test_path && -z $query ]] ; then {
-        [[ $quiet_flag -eq 0 ]] && printf "\033[0;35m[VERB]    testpath was empty, query was empty. Should quit.\e[0m\n" >&2
+        [[ $quiet_flag -eq 0 ]] && log_cl "[VERB]    testpath was empty, query was empty. Should quit." debug >&2
         keep_run_txt=""
         if [[ $init_flag -gt 0 ]] ; then {
           keep_run_txt="[INIT]"
-          printf "\033[1;33m[TEST]    ( \"empty\"[$query] ) is not a supported tag. $keep_run_txt.\e[0m\n" >&2
+          log_cl "[TEST]    ( \"empty\"[$query] ) is not a supported tag. $keep_run_txt." error >&2
           echo_timer "$amboso_start_time"  "Empty test query" "1"
           exit 1
         }
         fi
-        printf "\033[0;35m[VERB]    UNREACHABLE.\e[0m\n"
+        printf "${FUNCNAME}():    UNREACHABLE.\n"
         exit 1
       } elif [[ -z $test_path && ! -z $query ]] ; then {
-        [[ $quiet_flag -eq 0 ]] && printf "\033[0;35m[VERB]    testpath was empty, query was not empty: ( $query ).\e[0m\n" >&2
+        [[ $quiet_flag -eq 0 ]] && log_cl "[VERB]    testpath was empty, query was not empty: ( $query )." info >&2
         keep_run_txt=""
         if [[ $init_flag -gt 0 ]] ; then {
           keep_run_txt="[INIT]"
-          printf "\033[1;33m[TEST]    ( $query ) is not a supported tag, we quit at this point. $keep_run_txt.\e[0m\n" >&2
+          log_cl "[TEST]    ( $query ) is not a supported tag, we quit at this point. $keep_run_txt." error >&2
           echo_timer "$amboso_start_time"  "Unsupported test query [$query]" "3"
           exit 0
         }
         fi
-        [[ $build_flag -gt 0 ]] && keep_run_txt="[BUILD]" && printf "\033[1;33m[TEST]    ( $query ) is not a supported tag, but we continue to $keep_run_txt.\e[0m\n" >&2
+        [[ $build_flag -gt 0 ]] && keep_run_txt="[BUILD]" && log_cl "[TEST]    ( $query ) is not a supported tag, but we continue to $keep_run_txt." debug >&2
       } else {
-        [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && printf "\033[0;33m[TEST] expected:\n  $test_type\n\n  name: $test_name\n  path: $test_path\e[0m\n"# >&2
-        printf "\033[0;32m[TEST]    target: ( $test_path ).\e[0m\n\n"
+        [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]] && log_cl "[TEST] expected:\n  $test_type\n\n  name: $test_name\n  path: $test_path" debug # >&2
+        log_cl "[TEST]    target: ( $test_path ).\n" info
       }
       fi
     } elif [[ -z $test_path && -z $query ]] ; then {
       #Panic
-      printf "\033[1;31m[ERROR]    ( $test_name : at  $test_path ) is not a supported test.\e[0m\n\n"
-      printf "\033[1;33m           Run with -h for help.\e[0m\n\n"
+      log_cl "( $test_name : at  $test_path ) is not a supported test.\n" error
+      log_cl "       Run with -h for help.\n" error
       echo_timer "$amboso_start_time"  "Unsupported test name [$test_name] at [$test_path]" "1"
       exit 1
     }
@@ -2065,7 +2197,7 @@ amboso_parse_args() {
     relative_testpath="$test_path"
 
     if [[ $build_flag -gt 0 ]] ; then {
-      printf "\033[0;34m[TEST]    \"-b\" is set, Recording: ( $relative_testpath ).\e[0m\n" >&2
+      log_cl "[TEST]    \"-b\" is set, Recording: ( $relative_testpath )." debug >&2
       #record_test "$relative_testpath"
     } elif [[ $delete_flag -gt 0 ]] ; then {
       :
@@ -2073,8 +2205,8 @@ amboso_parse_args() {
       #delete_test "$relative_testpath"
     } elif [[ $init_flag -gt 0 ]] ; then {
       #echo "UNREACHABLE." && exit 1
-      printf "\033[0;34m[TEST]    \"-i\" is set, Recording ALL: ( $relative_testpath ).\e[0m\n"
-      printf "\033[1;33m[DEBUG]    ( $tot_tests ) total tests ready.\e[0m\n" >&2
+      log_cl "[TEST]    \"-i\" is set, Recording ALL: ( $relative_testpath )." debug
+      log_cl "( $tot_tests ) total tests ready." debug >&2
       for i in $(seq 0 $(($tot_tests-1))); do {
         TEST="${supported_tests[$i]}"
         verb=0
@@ -2083,12 +2215,12 @@ amboso_parse_args() {
         [[ $show_time_flag -gt 0 ]] && showtimem="w"
         [[ $quiet_flag -gt 0 ]] && quietm="q" #We make sure to pass on eventual quiet flag mode to the subcalls
         [[ $verbose_flag -gt 0 ]] && verb="$verbose_flag" && printf "\n[TEST]    Recording ALL: ( $(($i+1)) / $tot_tests ) ( $TEST )\n" >&2
-        printf "\033[1;35m[TEST]    Running:\e[0m    \033[1;34m\"$prog_name -K $kazoj_dir -D $scripts_dir -V $verb -bT$quietm$showtimem $TEST 2>/dev/null \"\e[0m\n"
+        log_cl "[TEST]    Running:    \"$prog_name -K $kazoj_dir -D $scripts_dir -V $verb -bT$quietm$showtimem $TEST 2>/dev/null \"\e[0m\n" debug
         start_t=$(date +%s.%N)
         ( "$prog_name" -Y "$amboso_start_time" -K "$kazoj_dir" -D "$scripts_dir" -V "$verb" -b"$quietm""$showtimem"T "$TEST" 2>/dev/null ; exit "$?")
         record_res="$?"
         if [[ $record_res -eq 69 ]]; then {
-          printf "\033[1;31m[PANIC]    Unsupported: a test call returned 69. Will do the same.\e[0m\n\n" &&
+          log_cl "[PANIC]    Unsupported: a test call returned 69. Will do the same.\n" error &&
           echo_timer "$amboso_start_time"  "Record Test call returned 69" "1"
           exit 69
         }
@@ -2107,23 +2239,23 @@ amboso_parse_args() {
     fi
     if [[ -z $relative_testpath && $init_flag -eq 0 ]] ; then {
       #Exit 0 as intended behaviour FIXME
-      printf "\033[1;31m[TEST]    Can't proceed further with no valid target path, query was ( $query ).\e[0m\n"
-      printf "\033[1;31m[TEST]    Supported tests:\e[0m\n"
+      log_cl "[TEST]    Can't proceed further with no valid target path, query was ( $query )." warn
+      log_cl "[TEST]    Supported tests:\n" info
       echo_tests_info "$kazoj_dir"
-      printf "\033[1;31m[TEST]    Quitting.\e[0m\n"
+      log_cl "[TEST]    Quitting." error
       echo_timer "$amboso_start_time"  "Invalid target path [$relative_testpath]" "1"
       exit 1
     }
     fi
     if [[ -z $relative_testpath && $init_flag -eq 1 && ! -z $query ]] ; then {
       #Exit 0 as intended behaviour FIXME
-      printf "\033[1;31m[ERROR]    Can't proceed even with -i flag, with no testpath. ( p: $relative_testpath ) can't be be ( q: $query ).\e[0m\n"
+      log_cl "Can't proceed even with -i flag, with no testpath. ( p: $relative_testpath ) can't be be ( q: $query )." error
       echo_timer "$amboso_start_time"  "Invalid target path (-i) [$relative_testpath]" "1"
       exit 0
     }
     fi
     if [[ -z $relative_testpath && $init_flag -eq 1 && -z $query ]] ; then {
-      printf "\033[1;31m[ERROR]    Can't proceed with no query.  ( q: $query, p: $relative_testpath ).\e[0m\n"
+      log_cl "Can't proceed with no query.  ( q: $query, p: $relative_testpath )." error
       echo_timer "$amboso_start_time"  "Empty test query [$query]" "1"
       exit 1
     }
@@ -2132,23 +2264,23 @@ amboso_parse_args() {
     run_tmp_escout="$(mktemp)"
     run_tmp_err="$(mktemp)"
     run_tmp_escerr="$(mktemp)"
-    [[ $verbose_flag -gt 0 ]] && printf "\033[0;33m[TEST]    Created tempfiles.\e[0m\n" >&2
-    printf "\033[0;36m[TEST]    Running:\e[0m    \033[1;35m\"$relative_testpath\"\e[0m\n"
+    [[ $verbose_flag -gt 0 ]] && log_cl "[TEST]    Created tempfiles." debug >&2
+    log_cl "[TEST]    Running:    \"$relative_testpath\"" debug
     run_test "$relative_testpath" >>"$run_tmp_out" 2>>"$run_tmp_err"
     ran_res="$?"
 
     if [[ $ran_res -eq 69 ]] ; then {
-      printf "\033[1;31m[WARN]    Test call returned 69, we clean tmpfiles and follow suit.\e[0m\n"
+      log_cl "Test call returned 69, we clean tmpfiles and follow suit." warn
       #Delete tmpfiles
-      rm -f "$run_tmp_out" || printf "\033[1;31m[ERROR]    Failed removing tmpfile ($run_tmp_out). Why?\e[0m\n\n"
-      [[ $verbose_flag -gt 0 ]] && printf "\033[0;32m[TEST]    Removed tempfile \"$run_tmp_out\".\e[0m\n" >&2
-      rm -f "$run_tmp_err" || printf "\033[1;31m[ERROR]    Failed removing tmpfile ($run_tmp_err). Why?\e[0m\n\n"
-      [[ $verbose_flag -gt 0 ]] && printf "\033[0;32m[TEST]    Removed tempfile \"$run_tmp_err\".\e[0m\n" >&2
-      rm -f "$run_tmp_escout" || printf "\033[1;31m[ERROR]    Failed removing tmpfile ($run_tmp_escout). Why?\n\n"
-      [[ $verbose_flag -gt 0 ]] && printf "\033[0;32m[TEST]    Removed tempfile \"$run_tmp_escout\".\e[0m\n" >&2
-      rm -f "$run_tmp_escerr" || printf "\033[1;31m[ERROR]    Failed removing tmpfile ($run_tmp_escerr). Why?\n\n"
-      [[ $verbose_flag -gt 0 ]] && printf "\033[0;32m[TEST]    Removed tempfile \"$run_tmp_escerr\".\e[0m\n" >&2
-      printf "\033[1;31m[PANIC]    Quitting with 69.\e[0m\n"
+      rm -f "$run_tmp_out" || log_cl "Failed removing tmpfile ($run_tmp_out). Why?\n" error
+      [[ $verbose_flag -gt 0 ]] && log_cl "[TEST]    Removed tempfile \"$run_tmp_out\"." debug >&2
+      rm -f "$run_tmp_err" || log_cl "Failed removing tmpfile ($run_tmp_err). Why?\n" error
+      [[ $verbose_flag -gt 0 ]] && log_cl "[TEST]    Removed tempfile \"$run_tmp_err\"." debug >&2
+      rm -f "$run_tmp_escout" || log_cl "Failed removing tmpfile ($run_tmp_escout). Why?\n" error
+      [[ $verbose_flag -gt 0 ]] && log_cl "[TEST]    Removed tempfile \"$run_tmp_escout\"." debug >&2
+      rm -f "$run_tmp_escerr" || log_cl "Failed removing tmpfile ($run_tmp_escerr). Why?\n" error
+      [[ $verbose_flag -gt 0 ]] && log_cl "[TEST]    Removed tempfile \"$run_tmp_escerr\".\n" debug >&2
+      log_cl "[PANIC]    Quitting with 69." error
       echo_timer "$amboso_start_time"  "Test run ended with 69" "1"
       exit 69
     }
@@ -2160,13 +2292,13 @@ amboso_parse_args() {
       cp "$run_tmp_escout" "$relative_testpath.stdout" || printf "Failed replacing stdout with new file.\n"
       cp "$run_tmp_escerr" "$relative_testpath.stderr" || printf "Failed replacing stderr with new file.\n"
     } else {
-      [[ $quiet_flag -eq 0 || $verbose_flag -gt 0 ]] && printf "\033[1;33m[TEST]    Won't record, no [-b].\e[0m\n\n"
+      [[ $quiet_flag -eq 0 || $verbose_flag -gt 0 ]] && log_cl "[TEST]    Won't record, no [-b].\n" info
     }
     fi
-    rm -f "$run_tmp_out" || printf "\033[1;31m[ERROR]    Failed removing tmpfile ($run_tmp_out). Why?\e[0m\n\n"
-    [[ $verbose_flag -gt 0 ]] && printf "\033[0;32m[TEST]    Removed tempfile \"$run_tmp_out\".\e[0m\n" >&2
-    rm -f "$run_tmp_err" || printf "\033[1;31m[ERROR]    Failed removing tmpfile ($run_tmp_err). Why?\e[0m\n\n"
-    [[ $verbose_flag -gt 0 ]] && printf "\033[0;32m[TEST]    Removed tempfile \"$run_tmp_err\".\e[0m\n" >&2
+    rm -f "$run_tmp_out" || log_cl "Failed removing tmpfile ($run_tmp_out). Why?\n" error
+    [[ $verbose_flag -gt 0 ]] && log_cl "[TEST]    Removed tempfile \"$run_tmp_out\"." debug >&2
+    rm -f "$run_tmp_err" || log_cl "Failed removing tmpfile ($run_tmp_err). Why?\n" error
+    [[ $verbose_flag -gt 0 ]] && log_cl "[TEST]    Removed tempfile \"$run_tmp_err\"." debug >&2
     #Testing diff for escaped stdout
     ( diff "$run_tmp_escout" "$relative_testpath".stdout ) 2>/dev/null 1>&2
     diff_res="$?"
@@ -2175,35 +2307,35 @@ amboso_parse_args() {
       out_res="pass"
       if [[ ! -z "$run_tmp_escout" ]] ; then { #FIXME: SC2157 && ! -z "$relative_testpath".stdout ]]; then {
         #This one doesn't go on stderr since we still want it in recursive calls:
-        [[ $verbose_flag -gt 0 ]] && printf "\033[0;32m[TEST]    Pass, both outputs are not empty.\e[0m\n"
+        [[ $verbose_flag -gt 0 ]] && log_cl "[TEST]    Pass, both outputs are not empty." debug
       } elif [[ -z "$run_tmp_escout" ]]; then {
-        [[ $verbose_flag -gt 0 ]] && printf "\033[0;35m[TEST]    Pass, current stdout is empty. Is that expected?\e[0m\n">&2
+        [[ $verbose_flag -gt 0 ]] && log_cl "[TEST]    Pass, current stdout is empty. Is that expected?" info >&2
       } #FIXME: SC2157 elif [[ -z "$relative_testpath.stdout" ]]; then {
         #[[ $verbose_flag -gt 0 ]] && printf "\033[0;35m[TEST]    Pass, registered stdout is empty. Is that expected?\e[0m\n" >&2
       #}
       fi
       if [[ $verbose_flag -gt 0 && $quiet_flag -eq 0 ]]; then {
-        printf "\n\033[0;32m[TEST]    (stdout) Expected:\e[0m\n"
+        log_cl "\n[TEST]    (stdout) Expected:" info
         cat "$relative_testpath.stdout"
-        printf "\n\033[0;32m[TEST]    (stdout) Found:\e[0m\n"
+        log_cl "\n[TEST]    (stdout) Found:" info
         cat "$run_tmp_escout"
       }
       fi
     } else {
       out_res="fail"
       if [[ $quiet_flag -eq 0 ]]; then {
-        printf "\n\033[1;31m[TEST]    (stdout) Expected:\e[0m\n"
+        log_cl "\n[TEST]    (stdout) Expected:" info
         cat "$relative_testpath.stdout"
-        printf "\n\033[1;31m[TEST]    (stdout) Found:\e[0m\n"
+        log_cl "\n[TEST]    (stdout) Found:" error
         cat "$run_tmp_escout"
       }
       fi
-      printf "\033[1;31m[TEST]    Failed: stdout changed.\e[0m\n"
+      log_cl "[TEST]    Failed: stdout changed." error
       #cat "$run_tmp_escout"
     }
     fi
-    rm -f "$run_tmp_escout" || printf "\033[1;31m[ERROR]    Failed removing tmpfile ($run_tmp_escout). Why?\n\n"
-    [[ $verbose_flag -gt 0 ]] && printf "\033[0;32m[TEST]    Removed tempfile \"$run_tmp_escout\".\e[0m\n" >&2
+    rm -f "$run_tmp_escout" || log_cl "Failed removing tmpfile ($run_tmp_escout). Why?\n" error
+    [[ $verbose_flag -gt 0 ]] && log_cl "[TEST]    Removed tempfile \"$run_tmp_escout\"." debug >&2
     #Testing diff for escaped stderr
     ( diff "$run_tmp_escerr" "$relative_testpath".stderr ) 2>/dev/null 1>&2
     diff_res="$?"
@@ -2211,17 +2343,17 @@ amboso_parse_args() {
       err_res="pass"
       if [[ ! -z "$run_tmp_escerr" ]]; then { #FIXME SC2157 && ! -z "$relative_testpath.stderr" ]]; then {
         #This one doesn't go on stderr since we still want it in recursive calls:
-        [[ $verbose_flag -gt 0 ]] && printf "\033[0;32m[TEST]    Pass, both stderrs are not empty.\e[0m\n"
+        [[ $verbose_flag -gt 0 ]] && log_cl "[TEST]    Pass, both stderrs are not empty." debug
       } elif [[ -z "$run_tmp_escerr" ]]; then {
-        [[ $verbose_flag -gt 0 ]] && printf "\033[0;35m[TEST]    Pass, current run stderr is empty. Is that expected?\e[0m\n">&2
+        [[ $verbose_flag -gt 0 ]] && log_cl "[TEST]    Pass, current run stderr is empty. Is that expected?" info >&2
       } #FIXME SC2157 elif [[ -z "$relative_testpath.stderr" ]]; then {
        # [[ $verbose_flag -gt 0 ]] && printf "\033[0;35m[TEST]    Pass, registered stderr is empty. Is that expected?\e[0m\n" >&2
       #}
       fi
       if [[ $verbose_flag -gt 0 && $quiet_flag -eq 0 ]]; then {
-        printf "\n\033[0;32m[TEST]    (stderr) Expected:\e[0m\n"
+        log_cl "\n[TEST]    (stderr) Expected:" info
         cat "$relative_testpath.stderr"
-        printf "\n\033[0;32m[TEST]    (stderr) Found:\e[0m\n"
+        log_cl "\n[TEST]    (stderr) Found:" info
         cat "$run_tmp_escerr"
       }
       fi
@@ -2229,27 +2361,27 @@ amboso_parse_args() {
     } else {
       err_res="fail"
       if [[ $quiet_flag -eq 0 ]]; then {
-        printf "\n\033[1;31m[TEST]    (stderr) Expected:\e[0m\n"
+        log_cl "\n[TEST]    (stderr) Expected:" info
         cat "$relative_testpath.stderr"
-        printf "\n\033[1;31m[TEST]    (stderr) Found:\e[0m\n"
+        log_cl "\n[TEST]    (stderr) Found:" error
         cat "$run_tmp_escerr"
       }
       fi
-      printf "\033[1;31m[TEST]    Failed: stderr changed.\e[0m\n"
+      log_cl "[TEST]    Failed: stderr changed." error
       #cat "$run_tmp_escerr"
     }
     fi
-    rm -f "$run_tmp_escerr" || printf "\033[1;31m[ERROR]    Failed removing tmpfile ($run_tmp_escerr). Why?\n\n"
-    [[ $verbose_flag -gt 0 ]] && printf "\033[0;32m[TEST]    Removed tempfile \"$run_tmp_escerr\".\e[0m\n" >&2
+    rm -f "$run_tmp_escerr" || log_cl "Failed removing tmpfile ($run_tmp_escerr). Why?\n" error
+    [[ $verbose_flag -gt 0 ]] && log_cl "[TEST]    Removed tempfile \"$run_tmp_escerr\"." debug >&2
     if [[ $build_flag -gt 0 ]] ; then {
       #We simulate success since we're recording
-      printf "\033[1;33m[TEST]    Phony pass (recording).\e[0m\n"
-      [[ $verbose_flag -gt 0 ]] && printf "\033[0;33m    (out: $out_res)\e[0m\n"
-      [[ $verbose_flag -gt 0 ]] && printf "\033[0;33m    (err: $err_res)\e[0m\n"
+      log_cl "[TEST]    Phony pass (recording)." debug
+      [[ $verbose_flag -gt 0 ]] && log_cl "(out: $out_res)" debug
+      [[ $verbose_flag -gt 0 ]] && log_cl "(err: $err_res)" debug
       echo_timer "$amboso_start_time"  "Phony test pass" "3"
       exit 0 #We return earlier
     } elif [[ $out_res = "pass" && $err_res = "pass" ]]; then {
-      printf "\033[1;32m[TEST]    Passed.\e[0m\n"
+      log_cl "[TEST]    Passed." info
       echo_timer "$amboso_start_time"  "Test pass" "2"
       exit 0 #We return earlier
     } elif [[ $out_res = "fail" ]] ; then {
@@ -2257,7 +2389,7 @@ amboso_parse_args() {
     } elif [[ $err_res = "fail" ]] ; then {
      : #echo "failed" #We echoed before
     } else {
-      printf "\033[1;31m[ERROR]    Unexpected values (o:$out_res/e:$err_res) should be either pass or fail.\e[0m. How?\n"
+      log_cl "Unexpected values (o:$out_res/e:$err_res) should be either pass or fail. How?" error
     }
     fi
     echo_timer "$amboso_start_time"  "Test fail" "1"
@@ -2278,15 +2410,15 @@ amboso_parse_args() {
       app "$(echo_node silence_check query_invalid)"
       app "$(echo_node query_invalid end_node)"
       end_digraph
-      printf "\033[1;31m[ERROR]    ( $query ) is not a supported tag.\e[0m\n\n"
-      printf "\033[1;33m           Run with -h for help.\e[0m\n\n"
+      log_cl "( $query ) is not a supported tag.\n" error
+      log_cl "       Run with -h for help.\n" error
       echo_timer "$amboso_start_time"  "Invalid query [$query]" "1"
       exit 1
     } elif [[ ! -z $query && $test_mode_flag -gt 0 ]] ; then { #If we're in test mode, gently tell the user that the version is not supported
       keep_run_txt=""
       [[ $init_flag -gt 0 ]] && keep_run_txt="${mode_txt}[INIT]"
       [[ $purge_flag -gt 0 ]] && keep_run_txt="${mode_txt}[PURGE]"
-      printf "\n\033[1;33m[DEBUG]    ( $query ) is not a supported test. $keep_run_txt.\e[0m\n" >&2
+      log_cl "( $query ) is not a supported test. $keep_run_txt." debug >&2
       echo_timer "$amboso_start_time"  "Invalid test query [$query]" "1"
       exit 1;
     }
@@ -2296,7 +2428,7 @@ amboso_parse_args() {
   #We now should have a valid $version value, outside of purge or init mode
 
   if [[ $gen_C_headers_set -gt 0 && $gen_C_headers_flag -gt 0 ]]; then {
-      printf "\033[1;36m[AMBOSO]    Generate C header for [$version].\e[0m\n" >&2
+      log_cl "[AMBOSO]    Generate C header for [$version]." info >&2
       gen_C_headers "$gen_C_headers_destdir" "$version" "$exec_entrypoint"
   }
   fi
@@ -2317,13 +2449,13 @@ amboso_parse_args() {
       app "$(echo_node silence_check query_success_not_ready)"
     }
     fi
-    printf "\n\033[1;33m[QUERY]    ( $version ) binary not found in ( $script_path ).\e[0m\n" #>&2
+    log_cl "\n[QUERY]    ( $version ) binary not found in ( $script_path )." warn #>&2
     if [[ $verbose_flag -gt 0 ]] ; then {
         echo_tag_info "$version"
     }
     fi
     if [[ ! $build_flag -gt 0 ]] ; then { #We exit here if we don't want to try building and we're not going to purge
-      printf "\033[0;33m[DEBUG]    To try building, run with -b flag\e[0m\n\n" >&2
+      log_cl "To try building, run with -b flag\n" debug >&2
       if [[ ! $purge_flag -gt 0 ]] ; then {
        app "$(echo_node query_success_not_ready end_node)"
        end_digraph
@@ -2333,7 +2465,7 @@ amboso_parse_args() {
       fi
     } else {
       if [[ ! -d "$script_path" ]] ; then
-        printf "\033[1;31m[ERROR]    '$script_path' is not a valid directory.\n    Check your supported versions for details on ( $version ).\e[0m\n\n" >&2
+        log_cl "'$script_path' is not a valid directory.\n    Check your supported versions for details on ( $version ).\n" error >&2
         app "$(echo_node query_success_not_ready end_node)"
         end_digraph
         echo_timer "$amboso_start_time"  "Invalid path [$script_path]" "1"
@@ -2346,10 +2478,10 @@ amboso_parse_args() {
         tool_txt="make"
         if [[ $can_automake -gt 0 ]] ; then { #We support automake by doing autoreconf and ./configure before running make.
           tool_txt="automake"
-          printf "\033[0;33m[MODE]    target ( $version ) >= ( $use_autoconf_version ), can autoconf.\e[0m\n" >&2
+          log_cl "[MODE]    target ( $version ) >= ( $use_autoconf_version ), can autoconf." debug >&2
           autoreconf
           if [[ $? -ne 0 ]] ; then {
-            printf "\033[1;33m[WARN]\033[0m    autoreconf failed. Doing {\033[1;34mautomake --add-missing\033[0m}\n" >&2
+            log_cl "autoreconf failed. Doing \"automake --add-missing ; autoreconf\"" warn >&2
             automake --add-missing
             autoreconf
           }
@@ -2357,32 +2489,32 @@ amboso_parse_args() {
           configure_arg=""
           if [[ "$pass_autoconf_arg_flag" -eq 1 ]] ; then {
               configure_arg="$(cat "$autoconf_arg_file")"
-              printf "\033[1;34m[CONF]    Running \"\033[1;36m%s\033[1;34m\"\033[0m\n" "./configure $configure_arg"
+              log_cl "[CONF]    Running \"./configure $configure_arg\"" debug
           }
           fi
           ./configure "$configure_arg"
           configure_res="$?"
           if [[ "$configure_res" -ne 0 ]]; then {
-              printf "\033[1;33m[WARN]    ./configure returned {\033[1;31m%s\033[1;33m}\033[0m\n" "$configure_res"
+              log_cl "./configure returned {$configure_res}" warn
           }
           fi
-          printf "\033[0;32m[INFO]    Done 'autoreconf' and './configure'.\e[0m\n" >&2
+          log_cl "Done 'autoreconf' and './configure'." info >&2
         }
         fi
-        printf "\033[0;33m[MODE]    target ( $version ) >= ( $makefile_version ), has Makefile.\e[0m\n" >&2
-        [[ $verbose_flag -gt 0 ]] && printf "\033[0;33m[BUILD]    Building ( $version ), using make.\e[0m\n" >&2
+        log_cl "[MODE]    target ( $version ) >= ( $makefile_version ), has Makefile." debug >&2
+        [[ $verbose_flag -gt 0 ]] && log_cl "[BUILD]    Building ( $version ), using make." debug >&2
         curr_dir=$(realpath .)
         start_t=$(date +%s.%N)
         if [[ $git_mode_flag -eq 0 && $base_mode_flag -eq 1 ]] ; then { #Building in base mode, we cd into target directory before make
-          [[ $verbose_flag -gt 0 ]] && printf "\033[0;35m[BUILD]    Running in base mode, expecting full source in $script_path.\e[0m\n" #>&2
-          cd "$script_path" || { printf "\033[1;31m[CRITICAL]    cd failed. Quitting.\n"; exit 4 ; }; make >&2
+          [[ $verbose_flag -gt 0 ]] && log_cl "[BUILD]    Running in base mode, expecting full source in $script_path." debug #>&2
+          cd "$script_path" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4 ; }; make >&2
           comp_res=$?
         } else { #Building in git mode, we checkout the tag and move the binary after the build
-          [[ $verbose_flag -gt 0 ]] && printf "\033[0;34m[BUILD]    Running in git mode, checking out ( $version ).\e[0m\n" #>&2
+          [[ $verbose_flag -gt 0 ]] && log_cl "[BUILD]    Running in git mode, checking out ( $version )." debug #>&2
           git checkout "$version" 2>/dev/null #Repo goes back to tagged state
           checkout_res=$?
           if [[ $checkout_res -gt 0 ]] ; then { #Checkout failed, we don't build and we set comp_res
-            printf "\033[1;31m[ERROR]    Checkout of ( $version ) failed, this stego.lock tag does not work for the repo.\e[0m\n" #>&2
+            log_cl "Checkout of ( $version ) failed, this stego.lock tag does not work for the repo." error #>&2
             comp_res=1
           } else { #Checkout successful, we build
             git submodule update --init --recursive #We set all submodules to commit state
@@ -2390,53 +2522,53 @@ amboso_parse_args() {
             comp_res=$?
             #Output is expected to be in the main dir:
             if [[ ! -e ./$exec_entrypoint ]] ; then {
-              printf "\033[1;31m[ERROR]    $exec_entrypoint not found at $(pwd).\e[0m\n" #>&2
+              log_cl "$exec_entrypoint not found at $(pwd)." error #>&2
             } else {
               mv "./$exec_entrypoint" "$script_path" #All files generated during the build should be ignored by the repo, to avoid conflict when checking out
-              [[ $verbose_flag -gt 0 ]] && printf "\033[0;33m[BUILD]    Moved $exec_entrypoint to $script_path.\e[0m\n" #>&2
+              [[ $verbose_flag -gt 0 ]] && log_cl "[BUILD]    Moved $exec_entrypoint to $script_path." debug #>&2
             }
             fi
             git switch - #We get back to starting repo state
             switch_res="$?"
             if [[ $switch_res -gt 0 ]]; then {
-              printf "\n\033[1;31m[ERROR]    Can't finish checking out ($version).\n    You may have a dirty index and may need to run \033[1;35\"git restore .\"\e[0m.\n Abort.\n\n"
+              log_cl "\nCan't finish checking out ($version).\n    You may have a dirty index and may need to run \"git restore .\".\n Quitting.\n" error
               echo_timer "$amboso_start_time"  "Failed checkout" "1"
               exit 1
             }
             fi
             git submodule update --init --recursive #We set all submodules to commit state
-            [[ $quiet_flag -eq 0 ]] && printf "\033[0;32m[BUILD]    Switched back to starting commit.\e[0m\n"
+            [[ $quiet_flag -eq 0 ]] && log_cl "[BUILD]    Switched back to starting commit." info
           }
           fi
         }
         fi
         end_t=$(date +%s.%N)
         runtime=$( printf "$end_t - $start_t\n" | bc -l )
-        cd "$curr_dir" || { printf "\033[1;31m[CRITICAL]    cd failed. Quitting.\n"; exit 4; };
+        cd "$curr_dir" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4; };
       } else { #Straight gcc mode
-        [[ $verbose_flag -gt 0 ]] && printf "\033[0;33m[MODE]    target ( $version ) < ( $makefile_version ), single file build with gcc.\e[0m\n" >&2
-        [[ $verbose_flag -gt 0 ]] && printf "\033[0;33m[BUILD]    Building ( $version ), using gcc call.\e[0m\n" >&2
+        [[ $verbose_flag -gt 0 ]] && log_cl "[MODE]    target ( $version ) < ( $makefile_version ), single file build with gcc." debug >&2
+        [[ $verbose_flag -gt 0 ]] && log_cl "[BUILD]    Building ( $version ), using gcc call." debug >&2
         #echo "" >&2 #new line for error output
         if [[ -z $source_name ]]; then {
-          printf "\n\033[1;31m[WTF-ERROR]    Missing source file name. ( $version ).\e[0m\n\n"
+          log_cl "\n[WTF-ERROR]    Missing source file name. ( $version ).\n" error
           amboso_usage
           echo_timer "$amboso_start_time"  "Missing source name for [$version]" "1"
           exit 1
         }
         fi
-        [[ $pack_flag -gt 0 ]] && printf "\n\033[1;33m[PACK]    -z is not supported for ($tool_txt). TAG < ($makefile_version).\n\n    \033[1;35Current: ($version @ $source_name).\e[0m\n\n"
+        [[ $pack_flag -gt 0 ]] && log_cl "\n[PACK]    -z is not supported for ($tool_txt). TAG < ($makefile_version).\n\n    Current: ($version @ $source_name).\n" error
 
         start_t=$(date +%s.%N)
         if [[ $git_mode_flag -eq 0 ]] ; then { #Building in base mode, we cd into target directory before make
-          [[ $verbose_flag -gt 0 ]] && printf "\033[0;35m[BUILD]    Running in base mode, expecting full source in $script_path.\e[0m\n" #>&2
+          [[ $verbose_flag -gt 0 ]] && log_cl "[BUILD]    Running in base mode, expecting full source in $script_path." debug #>&2
           "$CC" "$script_path"/"$source_name" -o "$script_path"/"$exec_entrypoint" -lm "$CFLAGS" 2>&2
           comp_res=$?
         } else { #Building in git mode, we checkout the tag and move the binary after the build
-          [[ $verbose_flag -gt 0 ]] && printf "\033[0;34m[BUILD]    Running in git mode, checking out ( $version ).\e[0m\n" #>&2
+          [[ $verbose_flag -gt 0 ]] && log_cl "[BUILD]    Running in git mode, checking out ( $version )." debug #>&2
           git checkout "$version" 2>/dev/null #Repo goes back to tagged state
           checkout_res=$?
           if [[ $checkout_res -gt 0 ]] ; then { #Checkout failed, we set comp_res and don't build
-            printf "\033[1;31m[ERROR]    Checkout of ( $version ) failed, stego.lock may be listing a tag name not on the repo.\e[0m\n"
+            log_cl "Checkout of ( $version ) failed, stego.lock may be listing a tag name not on the repo." error
             comp_res=1
           } else {
             git submodule update --init --recursive 2>/dev/null #We set all submodules to commit state
@@ -2446,12 +2578,12 @@ amboso_parse_args() {
             git switch - 2>/dev/null #We get back to starting repo state
             switch_res="$?"
             if [[ $switch_res -gt 0 ]]; then {
-              printf "\n\033[1;31m[ERROR]    Can't finish checking out ($version). Abort.\n"
+              log_cl "Can't finish checking out ($version). Quitting." error
               echo_timer "$amboso_start_time"  "Failed checkout for [$version]" "1"
               exit 1
             }
             fi
-            [[ $verbose_flag -gt 0 ]] && printf "\033[0;32m[BUILD]    Switched back to starting commit.\e[0m\n" >&2
+            [[ $verbose_flag -gt 0 ]] && log_cl "[BUILD]    Switched back to starting commit." debug >&2
           }
           fi
         }
@@ -2462,10 +2594,10 @@ amboso_parse_args() {
       fi
       #Check compilation result
       if [[ $comp_res -eq 0 ]] ; then
-        printf "\033[1;32m[BUILD]    Done Building ( $version ) , took $runtime seconds, using ( $tool_txt ).\e[0m\n"
+        log_cl "[BUILD]    Done Building ( $version ) , took $runtime seconds, using ( $tool_txt )." info
         app "$(echo_node building build_success)"
       else
-        printf "\033[1;31m[ERROR]    Build for ( $version ) failed, quitting.\e[0m\n\n" >&2
+        log_cl "Build for ( $version ) failed, quitting.\n" error >&2
         app "$(echo_node building build_fail)"
         app "$(echo_node build_fail end_node)"
         end_digraph
@@ -2483,13 +2615,13 @@ amboso_parse_args() {
       app "$(echo_node doing_init query_success_ready)"
     }
     fi
-    printf "\n\033[1;32m[QUERY]    ( $version ) binary is ready at ( $script_path ) .\e[0m\n\n" >&2
+    log_cl "\n[QUERY]    ( $version ) binary is ready at ( $script_path ) .\n" info >&2
     if [[ $verbose_flag -gt 0 ]] ; then {
         echo_tag_info "$version"
     }
     fi
     if [[ $build_flag -gt 0 ]] ; then {
-      printf "\033[0;33m[BUILD]    Found binary for ( $version ), won't build.\e[0m\n" >&2
+      log_cl "[BUILD]    Found binary for ( $version ), won't build.\n" info >&2
       app "$(echo_node query_success_ready build_success)"
 
     }
@@ -2497,13 +2629,13 @@ amboso_parse_args() {
     #Check if we're packing the ready version
     if [[ $pack_flag -gt 0 ]] ; then {
       #We just leverage make pack and assume it's ready to roll
-      printf "\033[0;35m[PACK]    Running in base mode, expecting full source in $script_path.\e[0m\n" #>&2
+      log_cl "[PACK]    Running in base mode, expecting full source in $script_path." warn #>&2
       make pack
       pack_res=$?
       if [[ $pack_res -gt 0 ]] ; then { #make pack failed
-        printf "\033[1;31m[PACK]    Packing ($version) in base mode, failed.\n    Expected source at ($script_path).\e[0m\n" #>&2
+        log_cl "[PACK]    Packing ($version) in base mode, failed.\n    Expected source at ($script_path)." error #>&2
       } else {
-        printf "\033[1;32m[PACK]    Packed ($version):\n    from  ($script_path)\e[0m\n" #>&2
+        log_cl "[PACK]    Packed ($version):\n    from  ($script_path)" info #>&2
       }
       fi
     }
@@ -2511,7 +2643,7 @@ amboso_parse_args() {
 
   } elif [[ ! -z $query ]] ; then {
     app "$(echo_node silence_check query_invalid)"
-    printf "\033[1;31m[QUERY]    ( $query ) invalid query, run with -V <lvl> to see more.\e[0m\n"
+    log_cl "[QUERY]    ( $query ) invalid query, run with -V <lvl> to see more." error
     if [[ $verbose_flag -gt 0 ]] ; then {
         echo_tag_info "$version"
     }
@@ -2527,15 +2659,15 @@ amboso_parse_args() {
       app "$(echo_node query_success_ready running)"
     }
     fi
-    printf "\n\033[0;32m[DEBUG]    Running script $script_path/$exec_entrypoint\e[0m\n"
+    log_cl "\n    Running script $script_path/$exec_entrypoint" debug
     #echo -n "."
     #sleep 1
     #echo ""
-    ( cd "$script_path" || { printf "\033[1;31m[CRITICAL]    cd failed. Quitting.\n"; exit 4 ;} ; ./"$exec_entrypoint" )
+    ( cd "$script_path" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4 ;} ; ./"$exec_entrypoint" )
   } elif [[ ! -z $version && $run_flag -eq 0  ]] ; then {
-    printf "\033[0;33m[DEBUG]    Running without -r flag, won't run.\e[0m\n" >&2
+    log_cl "Running without -r flag, won't run." debug >&2
   } elif [[ -z $version && $run_flag -gt 0 ]] ; then {
-    [[ $verbose_flag -gt 0 ]] && printf "\033[0;33m[DEBUG]    Running with -r but requested an empty tag ( $version )!\e[0m\n" >&2
+    [[ $verbose_flag -gt 0 ]] && log_cl "Running with -r but requested an empty tag ( $version )!" warn >&2
   }
   fi
 
@@ -2557,16 +2689,17 @@ amboso_parse_args() {
       curr_dir=$(realpath .)
       delete_path="$scripts_dir""v""$version"
         if [[ ! -d $delete_path ]] ; then {
-          printf "\033[1;31m[ERROR]    '$delete_path' is not a valid directory.\n    Check your supported versions for details on ( $version ).\e[0m\n\n" #>&2
+          log_cl "'$delete_path' is not a valid directory.\n    Check your supported versions for details on ( $version ).\n" error #>&2
         } elif [[ -x $scripts_dir/v$version/$exec_entrypoint ]] ; then { #Executable exists
-          has_bin=1 && printf "\033[0;33m[DELETE]   ( $version ) has an executable.\e[0m\n\n" >&2
-          cd "$delete_path" || { printf "\033[1;31m[CRITICAL]    cd failed. Quitting.\n"; exit 4 ;}; make clean 2>/dev/null #1>&2
+          has_bin=1 && log_cl "[DELETE]   ( $version ) has an executable.\n" info >&2
+          cd "$delete_path" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4 ;};
+          make clean 2>/dev/null #1>&2
           clean_res=$?
-          cd "$curr_dir" || { printf "\033[1;31m[CRITICAL]    cd failed. Quitting.\n"; exit 4 ;};
+          cd "$curr_dir" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4 ;};
           echo_timer "$amboso_start_time"  "Did delete, res was [$clean_res]" "3"
           exit "$clean_res"
         } else {
-          [[ $verbose_flag -gt 0 ]] && printf "\033[0;31m[DELETE]   ( $version ) does not have an executable at ( $delete_path ).\e[0m\n\n" # >&2
+          [[ $verbose_flag -gt 0 ]] && log_cl "[DELETE]   ( $version ) does not have an executable at ( $delete_path ).\n" debug # >&2
           app "$(echo_node deleting no_target_error)"
           app "$(echo_node no_target_error end_node)"
           end_digraph
@@ -2578,18 +2711,18 @@ amboso_parse_args() {
       tool_txt="rm"
       has_bin=0
       if [[ -x $scripts_dir"/v$version"/"$exec_entrypoint" ]] ; then {
-        has_bin=1 && [[ $verbose_flag -gt 0 ]] && printf "\033[0;33m[DELETE]    ( $version ) has an executable.\e[0m\n" >&2
+        has_bin=1 && [[ $verbose_flag -gt 0 ]] && log_cl "[DELETE]    ( $version ) has an executable." debug >&2
       }
       fi
       rm "$(realpath "$scripts_dir"/"v$version/$exec_entrypoint")" #2>/dev/null
       clean_res=$?
       if [[ $clean_res -eq 0 ]] ; then {
-        printf "\033[0;32m[DELETE]    Success on ( $version ).\e[0m\n"
+        log_cl "[DELETE]    Success on ( $version )." info
         app "$(echo_node deleting delete_success)"
         app "$(echo_node delete_success end_node)"
         end_digraph
       } else {
-        printf "\033[0;31m[DELETE]    Failure on ( $version ).\e[0m\n"
+        log_cl "[DELETE]    Failure on ( $version )." error
         app "$(echo_node deleting delete_fail)"
         app "$(echo_node delete_fail end_node)"
         end_digraph
@@ -2648,7 +2781,7 @@ amboso_parse_args() {
       [[ $git_mode_flag -gt 0 ]] && gitm="g" #We make sure to pass on eventual git mode to the subcalls
       [[ $quiet_flag -gt 0 ]] && quietm="q" #We make sure to pass on eventual quiet flag mode to the subcalls
       if [[ $quiet_flag -eq 0 ]] ; then {
-        printf "\033[1;35m[PURGE]    Running \"$(basename "$prog_name") -Y $amboso_start_time-M $makefile_version -S $source_name -E $exec_entrypoint -D $scripts_dir -d$verb$gitm$basem$quietm$silentm$packm$ignore_gitcheck$showtimem $purge_vers 2>/dev/null\"\e[0m\n"
+        log_cl "[PURGE]    Running \"$(basename "$prog_name") -Y $amboso_start_time-M $makefile_version -S $source_name -E $exec_entrypoint -D $scripts_dir -d$verb$gitm$basem$quietm$silentm$packm$ignore_gitcheck$showtimem $purge_vers 2>/dev/null\"" debug
       }
       fi
       ( $prog_name -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -E "$exec_entrypoint" -D "$scripts_dir" -d"$verb""$gitm""$basem""$quietm""$silentm""$packm""$ignore_gitcheck""$showtimem" "$purge_vers" ) 2>/dev/null
@@ -2659,18 +2792,18 @@ amboso_parse_args() {
       if [[ $clean_res -eq 0 && $has_bin -gt 0 ]] ; then {
         #we advance the count
         tot_removed=$(($tot_removed +1))
-        [[ $verbose_flag -gt 0 ]] && printf "\033[0;33m[PURGE]    Removed ( $purge_vers ) using ( $tool_txt ).\e[0m\n" >&2
+        [[ $verbose_flag -gt 0 ]] && log_cl "[PURGE]    Removed ( $purge_vers ) using ( $tool_txt )." debug >&2
       } else {
         verbose_hint=""
         [[ $verbose_flag -lt 1 ]] && verbose_hint="Run with -V <lvl> to see more info."
-        printf "\n\033[1;31m[PURGE]    Failed delete for ( $purge_vers ) binary. $verbose_hint\e[0m\n\n"
-        [[ $verbose_flag -gt 0 ]] && printf "\033[0;31m[PURGE]    Failed removing ( $purge_vers ) using ( $tool_txt ). $verbose_hint\e[0m\n" #>&2
+        log_cl "\n[PURGE]    Failed delete for ( $purge_vers ) binary. $verbose_hint\n" error
+        [[ $verbose_flag -gt 0 ]] && log_cl "[PURGE]    Failed removing ( $purge_vers ) using ( $tool_txt ). $verbose_hint" error #>&2
         #try deleting again to get more output, since we discarded stderr before
         #
         #we could just pass -v to the first call if we have it on
         if [[ $verbose_flag -gt 0 ]]; then {
           printf "[PURGE]    Verbose flag was asserted as ($verbose_flag).\n" >&2
-          printf "[PURGE]    Checking errors, running \033[1;33m$(basename "$prog_name") -V 2 -d $purge_vers\e[0m.\n" >&2
+          log_cl "[PURGE]    Checking errors, running $(basename "$prog_name") -V 2 -d $purge_vers" debug >&2
           ("$prog_name" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -D "$scripts_dir" -E "$exec_entrypoint" -V 2 -d"$gitm""$basem""$ignore_gitcheck""$showtimem" "$purge_vers") #>&2
         }
         fi
@@ -2679,11 +2812,11 @@ amboso_parse_args() {
 
     done
     if [[ $tot_removed -gt 0 ]] ; then {
-      printf "\033[0;33m[PURGE]    Purged ( $tot_removed / $tot_vers ) versions, quitting.\e[0m\n\n"
+      log_cl "[PURGE]    Purged ( $tot_removed / $tot_vers ) versions, quitting.\n" info
       app "$(echo_node purging purging_success)"
       app "$(echo_node purging_success end_node)"
     } else {
-      printf "\n\033[0;33m[PURGE]    No binaries to purge found.\e[0m\n\n"
+      log_cl "\n[PURGE]    No binaries to purge found.\n" info
       app "$(echo_node purging purging_fail)"
       app "$(echo_node purging_fail end_node)"
     }
@@ -2738,13 +2871,13 @@ amboso_main() {
       }
       fi
       if [[ $cmd = "help" ]] ; then {
-        printf "\033[1;35m[AMBOSO-MAIN]\033[0m    Quick commands:\n\n"
+        log_cl "[AMBOSO-MAIN]    Quick commands:\n" info
         printf "    build        Build latest version\n\n"
         printf "    init         Prepare current dir for an amboso project\n\n"
         printf "    version      Print amboso version\n\n"
         printf "    quit         Quit amboso\n\n"
         printf "    help         Print this message\n\n"
-        printf "\033[1;35m[AMBOSO-MAIN]\033[0m    Amboso help (-h):\n\n"
+        log_cl "[AMBOSO-MAIN]    Amboso help (-h):\n" info
         (amboso_parse_args "-Xh")
         unset AMBOSO_LVL_REC
         return
