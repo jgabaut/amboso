@@ -58,7 +58,11 @@ function echo_invil_notice {
 }
 
 function echo_active_flags {
+  printf "           [ENV]\n\n"
+  printf "    CC == \"%s\"\n" "$CC"
+  printf "    CFLAGS == \"%s\"\n" "$CFLAGS"
   printf "[DEBUG]    Current flags:\n\n"
+
   printf "           [MODE]    -"
   [[ $small_test_mode_flag -gt 0 ]] && printf "t"
   [[ $test_mode_flag -gt 0 ]] && printf "T"
@@ -1300,6 +1304,9 @@ amboso_parse_args() {
   }
   fi
 
+  CC="${CC:-gcc}"
+  CFLAGS="${CFLAGS:-}"
+
   if [[ $quiet_flag -eq 0 && "${AMBOSO_LVL_REC}" -lt 2 ]]; then {
     printf "amboso, v$amboso_currvers\nCopyright (C) 2023  jgabaut\n\n  This program comes with ABSOLUTELY NO WARRANTY; for details type \`$(basename "$prog_name") -W\`.\n  This is free software, and you are welcome to redistribute it\n  under certain conditions; see file \`LICENSE\` for details.\n\n  Full source is available at https://github.com/jgabaut/amboso\n\n"
     awk_check="$(awk -W version 2>/dev/null | grep mawk)"
@@ -2381,7 +2388,7 @@ amboso_parse_args() {
         start_t=$(date +%s.%N)
         if [[ $git_mode_flag -eq 0 ]] ; then { #Building in base mode, we cd into target directory before make
           [[ $verbose_flag -gt 0 ]] && printf "\033[0;35m[BUILD]    Running in base mode, expecting full source in $script_path.\e[0m\n" #>&2
-          gcc "$script_path"/"$source_name" -o "$script_path"/"$exec_entrypoint" -lm 2>&2
+          "$CC" "$script_path"/"$source_name" -o "$script_path"/"$exec_entrypoint" -lm "$CFLAGS" 2>&2
           comp_res=$?
         } else { #Building in git mode, we checkout the tag and move the binary after the build
           [[ $verbose_flag -gt 0 ]] && printf "\033[0;34m[BUILD]    Running in git mode, checking out ( $version ).\e[0m\n" #>&2
@@ -2391,8 +2398,8 @@ amboso_parse_args() {
             printf "\033[1;31m[ERROR]    Checkout of ( $version ) failed, stego.lock may be listing a tag name not on the repo.\e[0m\n"
             comp_res=1
           } else {
-            git submodule update --init --recursive 2>/dev/null#We set all submodules to commit state
-            gcc "./$source_name" -o "$script_path"/"$exec_entrypoint" -lm 2>&2 #Never try to build if checkout fails
+            git submodule update --init --recursive 2>/dev/null #We set all submodules to commit state
+            "$CC" "./$source_name" -o "$script_path"/"$exec_entrypoint" -lm "$CFLAGS" 2>&2 #Never try to build if checkout fails
             comp_res=$?
             #All files generated during the build should be ignored by the repo, to avoid conflict when checking out
             git switch - 2>/dev/null #We get back to starting repo state
