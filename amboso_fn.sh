@@ -1904,21 +1904,22 @@ amboso_parse_args() {
       showtimem=""
       plainm=""
       loggedm=""
-
+      configm=""
+      [[ $pass_autoconf_arg_flag -gt 0 ]] && configm="-C $autoconf_arg_file"
       [[ $do_filelog_flag -gt 0 ]] && loggedm="J"
       [[ $allow_color_flag -le 0 ]] && plainm="P"
       [[ $ignore_git_check_flag -gt 0 ]] && ignore_gitcheck="X"
       [[ $show_time_flag -gt 0 ]] && showtimem="w"
       [[ $pack_flag -gt 0 ]] && packm="z" #Pass pack op mode
       [[ $silent_flag -gt 0 ]] && silentm="s" #Pass silent mode
-      [[ $verbose_flag -gt 0 ]] && verb="V" #Pass verbose mode
+      [[ $verbose_flag -gt 0 ]] && verb="-V $verbose_flag" #Pass verbose mode
       [[ $build_flag -gt 0 ]] && buildm="b" #Pass build op mode
       [[ $base_mode_flag -gt 0 ]] && basem="B" #We make sure to pass on eventual base mode to the subcalls
       [[ $git_mode_flag -gt 0 ]] && gitm="g" #We make sure to pass on eventual git mode to the subcalls
       [[ $quiet_flag -gt 0 ]] && quietm="q" #We make sure to pass on eventual quiet mode to the subcalls
       #First pass sets the verbose flag but redirects stderr to /dev/null
-      [[ $verbose_flag -gt 0 ]] && log_cl "[VERB]    Running \"$(dirname "$(basename "$prog_name")") -Y $amboso_start_time -M $makefile_version -S $source_name -E $exec_entrypoint -D $scripts_dir -b$verb$gitm$basem$quietm$silentm$packm$ignore_gitcheck$showtimem$plainm$loggedm $init_vers\" ( $(($i+1)) / $tot_vers )" info >&2
-      "$prog_name" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -E "$exec_entrypoint" -D "$scripts_dir" -b"$verb""$gitm""$basem""$quietm""$silentm""$packm""$ignore_gitcheck""$showtimem""$plainm""$loggedm" "$init_vers" 2>/dev/null
+      [[ $verbose_flag -gt 0 ]] && log_cl "[VERB]    Running \"$(dirname "$(basename "$prog_name")") -Y $amboso_start_time -M $makefile_version -S $source_name -E $exec_entrypoint -D $scripts_dir $verb $configm -b$verb$gitm$basem$quietm$silentm$packm$ignore_gitcheck$showtimem$plainm$loggedm $init_vers\" ( $(($i+1)) / $tot_vers )" info >&2
+      "$prog_name" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -E "$exec_entrypoint" -D "$scripts_dir" "$verb" "$configm" -b"$gitm""$basem""$quietm""$silentm""$packm""$ignore_gitcheck""$showtimem""$plainm""$loggedm" "$init_vers" 2>/dev/null
       if [[ $? -eq 0 ]] ; then {
         [[ $verbose_flag -gt 0 ]] && log_cl "[INIT]    $init_vers binary ready." info >&2
         count_bins=$(($count_bins +1))
@@ -1984,7 +1985,7 @@ amboso_parse_args() {
     }
     fi
     quietm=""
-    verbm=0
+    verbm=""
     buildm=""
     showtimem=""
     plainm=""
@@ -1993,7 +1994,7 @@ amboso_parse_args() {
     [[ $allow_color_flag -le 0 ]] && plainm="P"
     [[ $show_time_flag -gt 0 ]] && showtimem="w"
     [[ $quiet_flag -gt 0 ]] && quietm="q"
-    [[ $verbose_flag -gt 0 ]] && verbm="$verbose_flag"
+    [[ $verbose_flag -gt 0 ]] && verbm="-V $verbose_flag"
     [[ $build_flag -gt 0 ]] && buildm="b"
     [[ $init_flag -gt 0 ]] && buildm="b" && log_cl "Recording all tests with -ti is deprecated.\n\n        Feature will be dropped in next major update.\n" warn
 
@@ -2001,9 +2002,9 @@ amboso_parse_args() {
     tot_failures=0
     start_t_tests=$(date +%s.%N)
     for i in $(seq 0 $(($tot_tests-1))); do {
-      [[ $quiet_flag -eq 0 ]] && log_cl "[TEST-MACRO]    Running:  \"$prog_name -Y $amboso_start_time -V $verbm -T$quietm$buildm$showtimem$plainm$loggedm -K $kazoj_dir -D $scripts_dir ${supported_tests[$i]}\"" info >&2
+      [[ $quiet_flag -eq 0 ]] && log_cl "[TEST-MACRO]    Running:  \"$prog_name -Y $amboso_start_time $verbm -T$quietm$buildm$showtimem$plainm$loggedm -K $kazoj_dir -D $scripts_dir ${supported_tests[$i]}\"" info >&2
       start_t_curr_test=$(date +%s.%N)
-      "$prog_name" -Y "$amboso_start_time" -V "$verbm" -T"$quietm$buildm""$showtimem""$plainm""$loggedm" -K "$kazoj_dir" -D "$scripts_dir" "${supported_tests[$i]}"
+      "$prog_name" -Y "$amboso_start_time" "$verbm" -T"$quietm$buildm""$showtimem""$plainm""$loggedm" -K "$kazoj_dir" -D "$scripts_dir" "${supported_tests[$i]}"
       retcod="$?"
       if [[ $retcod -eq 0 ]] ; then {
         tot_successes=$(($tot_successes+1))
