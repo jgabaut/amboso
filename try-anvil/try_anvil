@@ -96,7 +96,7 @@ HINT " STEP 5/10
 read </dev/tty
 clear
 
-./anvil -BV 0.1.0
+./anvil -RBV 0.1.0
 HINT " STEP 6/10
 
     Verbose query, should succeed in reporting unbuilt version
@@ -105,7 +105,7 @@ HINT " STEP 6/10
 read </dev/tty
 clear
 
-./anvil -Brbd 0.1.0
+./anvil -RBrbd 0.1.0
 HINT " STEP 7/10
 
     Build, run, delete 0.1.0. Tests single file compilation & execution. Delete is done just before quitting and cleans our binary.
@@ -114,7 +114,7 @@ HINT " STEP 7/10
 read </dev/tty
 clear
 
-./anvil -Brb 0.9.0
+./anvil -RBrb 0.9.0
 HINT " STEP 8/10
 
     Build, run 0.9.0. Tests make compilation & execution. No delete here, so the binary stays in the directory for future queries
@@ -123,7 +123,7 @@ HINT " STEP 8/10
 read </dev/tty
 clear
 
-./anvil -BprbiV 1.0.0
+./anvil -RBprbiV 1.0.0
 HINT " STEP 9/10
 
     Verbose Init, Build, Run and Purge 1.0.0.
@@ -137,7 +137,7 @@ HINT " STEP 9/10
 read </dev/tty
 clear
 
-./anvil -rdiV 1.0.0
+./anvil -RrdiV 1.0.0
 HINT " STEP 10/10
 
     Run in git mode. 1.0.0 is the first compliant tag for amboso itself.
