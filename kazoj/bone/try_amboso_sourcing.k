@@ -84,8 +84,8 @@ source_amboso_api() {
        printf "[WARN]    Legacy stego.lock format is not supported.\n"
     } elif [[ "$AMBOSO_API_LVL" > "1.7.4" && "$AMBOSO_API_LVL" < "1.9.6" ]] ; then {
        printf "[WARN]    Incompatible -C flag, test mode\n"
-    } elif [[ "$AMBOSO_API_LVL" < "2.x.x" ]] ;  then {
-       printf "[WARN]    Deprecated amboso_fn.sh file.\n"
+    } elif [[ "$AMBOSO_API_LVL" < "2.0.0" ]] ;  then {
+       printf "[WARN]    Deprecated amboso 1.x API found.\n"
     }
     fi
     printf "[PANIC]    Could not load functions. Quitting.\n"
