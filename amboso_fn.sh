@@ -263,6 +263,7 @@ function echo_active_flags {
     done
   }
   fi
+  [[ $force_build_flag -gt 0 ]] && printf "F"
   [[ $enable_make_rebuild_flag -ne 1 ]] && printf "R"
   [[ $do_filelog_flag -gt 0 ]] && printf "J"
   [[ $allow_color_flag -lt 1 ]] && printf "P"
@@ -712,6 +713,7 @@ function amboso_help {
     -P     plain    Turn off color output.
     -J     journal    Turn on logging to amboso.log.
     -R     rebuild    Toggles running \"make\" instead of \"make rebuild\".
+    -F     force    Toggles still trying to build when a binary can be found for requested tag.
 
   [...]    TAG_QUERY    Ask a tag for current mode
 
@@ -720,7 +722,7 @@ function amboso_help {
 }
 
 function amboso_usage {
-  printf "Usage:  $(basename "$prog_name") [(-D|-K|-M|-S|-E|-G|-C|-x|-V|-Y) ...ARGS] [-TBtg] [-bripd] [-hHvlLqcwXWPJR] [TAG_QUERY]\n"
+  printf "Usage:  $(basename "$prog_name") [(-D|-K|-M|-S|-E|-G|-C|-x|-V|-Y) ...ARGS] [-TBtg] [-bripd] [-hHvlLqcwXWPJRF] [TAG_QUERY]\n"
   printf "    Query for a build version ( or stego files parser, with -x).\n"
 }
 
@@ -1323,9 +1325,12 @@ amboso_parse_args() {
   allow_color_flag=1
   do_filelog_flag=0
   enable_make_rebuild_flag=1
+  force_build_flag=0
 
-  while getopts "A:M:S:E:D:K:G:Y:x:V:C:wBgbpHhrivdlLtTqsczUXWPJR" opt; do
+  while getopts "A:M:S:E:D:K:G:Y:x:V:C:wBgbpHhrivdlLtTqsczUXWPJRF" opt; do
     case $opt in
+      F )
+        force_build_flag=1
       R )
         enable_make_rebuild_flag=0
         ;;
@@ -1916,6 +1921,8 @@ amboso_parse_args() {
       loggedm=""
       configm=""
       norebuildm=""
+      forcebuildm=""
+      [[ $force_build_flag -gt 0 ]] && forcebuildm="F"
       [[ $enable_make_rebuild_flag -eq 0 ]] && norebuildm="R"
       [[ $pass_autoconf_arg_flag -gt 0 ]] && configm="-C $autoconf_arg_file"
       [[ $do_filelog_flag -gt 0 ]] && loggedm="J"
@@ -1930,8 +1937,8 @@ amboso_parse_args() {
       [[ $git_mode_flag -gt 0 ]] && gitm="g" #We make sure to pass on eventual git mode to the subcalls
       [[ $quiet_flag -gt 0 ]] && quietm="q" #We make sure to pass on eventual quiet mode to the subcalls
       #First pass sets the verbose flag but redirects stderr to /dev/null
-      [[ $verbose_flag -gt 0 ]] && log_cl "[VERB]    Running \"$(dirname "$(basename "$prog_name")") -Y $amboso_start_time -M $makefile_version -S $source_name -E $exec_entrypoint -D $scripts_dir $verb $configm -b$gitm$basem$quietm$silentm$packm$ignore_gitcheck$showtimem$plainm$loggedm$norebuildm $init_vers\" ( $(($i+1)) / $tot_vers )" info >&2
-      "$prog_name" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -E "$exec_entrypoint" -D "$scripts_dir" $verb $configm -b"$gitm""$basem""$quietm""$silentm""$packm""$ignore_gitcheck""$showtimem""$plainm""$loggedm""$norebuildm" "$init_vers" 2>/dev/null
+      [[ $verbose_flag -gt 0 ]] && log_cl "[VERB]    Running \"$(dirname "$(basename "$prog_name")") -Y $amboso_start_time -M $makefile_version -S $source_name -E $exec_entrypoint -D $scripts_dir $verb $configm -b$gitm$basem$quietm$silentm$packm$ignore_gitcheck$showtimem$plainm$loggedm$norebuildm$forcebuildm $init_vers\" ( $(($i+1)) / $tot_vers )" info >&2
+      "$prog_name" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -E "$exec_entrypoint" -D "$scripts_dir" $verb $configm -b"$gitm""$basem""$quietm""$silentm""$packm""$ignore_gitcheck""$showtimem""$plainm""$loggedm""$norebuildm""$forcebuildm" "$init_vers" 2>/dev/null
       if [[ $? -eq 0 ]] ; then {
         [[ $verbose_flag -gt 0 ]] && log_cl "[INIT]    $init_vers binary ready." info >&2
         count_bins=$(($count_bins +1))
@@ -1944,7 +1951,7 @@ amboso_parse_args() {
         #we could just pass -v to the first call if we have it on
         if [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]]; then {
           log_cl "[INIT]    Checking errors, running $(basename "$prog_name") -bV$packm$ignore_gitcheck $init_vers" info >&2
-      ("$prog_name" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -D "$scripts_dir" -E "$exec_entrypoint" -V 2 -b"$gitm""$basem""$packm""$ignore_gitcheck""$showtimem""$plainm""$loggedm""$norebuildm" "$init_vers") >&2
+      ("$prog_name" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -D "$scripts_dir" -E "$exec_entrypoint" -V 2 -b"$gitm""$basem""$packm""$ignore_gitcheck""$showtimem""$plainm""$loggedm""$norebuildm""$forcebuildm" "$init_vers") >&2
         }
         fi
       }
@@ -2474,8 +2481,8 @@ amboso_parse_args() {
   fi
 
   #If we can't find the file we may try to build it
-  if [[ ! -f "$script_path/$exec_entrypoint" && ! -z $version ]] ; then {
-    if [[ $init_flag -eq 0 ]] ; then {
+  if [[ ! -z "$version" && ( ( ! -f "$script_path/$exec_entrypoint" ) || "$force_build_flag" -gt 0 ) ]] ; then {
+    if [[ "$init_flag" -eq 0 ]] ; then {
       app "$(echo_node silence_check query_success_not_ready)"
     }
     fi
