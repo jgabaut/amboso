@@ -1332,7 +1332,6 @@ amboso_parse_args() {
       C )
         pass_autoconf_arg_flag=1
         autoconf_arg_file="$OPTARG"
-        [[ -f "$autoconf_arg_file" ]] || { log_cl "Invalid file for configure argument: {$autoconf_arg_file}" error ; exit 1 ; } ;
         ;;
       x )
         be_stego_parser_flag=1
@@ -1477,6 +1476,11 @@ amboso_parse_args() {
     echo_amboso_version
     echo_timer "$amboso_start_time"  "Version flag, >1" "2"
     exit 0
+  }
+  fi
+
+  if [[ "$pass_autoconf_arg_flag" -gt 0 ]] ; then {
+    [[ -f "$autoconf_arg_file" ]] || { log_cl "Invalid file for configure argument: {$autoconf_arg_file}" error ; exit 1 ; } ;
   }
   fi
 
