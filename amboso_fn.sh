@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="2.0.0-rc1"
+AMBOSO_API_LVL="2.0.0"
 at () {
     printf "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -2016,7 +2016,7 @@ amboso_parse_args() {
     [[ $quiet_flag -gt 0 ]] && quietm="q"
     [[ $verbose_flag -gt 0 ]] && verbm="-V $verbose_flag"
     [[ $build_flag -gt 0 ]] && buildm="b"
-    [[ $init_flag -gt 0 ]] && buildm="b" && log_cl "Recording all tests with -ti is deprecated.\n\n        Feature will be dropped in next major update.\n" warn
+    [[ $init_flag -gt 0 ]] && log_cl "Recording all tests with -ti is deprecated." error && exit 2
 
     tot_successes=0
     tot_failures=0
