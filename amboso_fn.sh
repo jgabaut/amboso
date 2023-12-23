@@ -119,7 +119,7 @@ function log_cl {
             begin_color="$clr_red"
             ;;
         *)
-            printf "${FUNCNAME}(): unexpected lvl => {$lvl}\n"
+            printf "${FUNCNAME[0]}(): unexpected lvl => {$lvl}\n"
             exit 1
             ;;
     esac
@@ -134,7 +134,7 @@ function log_cl {
             :
             ;;
         *)
-            printf "${FUNCNAME}(): unexpected thickness => {$thick}\n"
+            printf "${FUNCNAME[0]}(): unexpected thickness => {$thick}\n"
             exit 1
             ;;
     esac
@@ -167,7 +167,7 @@ function log_cl {
             begin_color="$clr_white"
             ;;
         *)
-            printf "${FUNCNAME}(): unexpected color => {$color}\n"
+            printf "${FUNCNAME[0]}(): unexpected color => {$color}\n"
             exit 1
             ;;
     esac
@@ -2201,7 +2201,7 @@ amboso_parse_args() {
           exit 1
         }
         fi
-        printf "${FUNCNAME}():    UNREACHABLE.\n"
+        printf "${FUNCNAME[0]}():    UNREACHABLE.\n"
         exit 1
       } elif [[ -z $test_path && ! -z $query ]] ; then {
         [[ $quiet_flag -eq 0 ]] && log_cl "[VERB]    testpath was empty, query was not empty: ( $query )." info >&2
