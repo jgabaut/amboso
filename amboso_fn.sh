@@ -2802,15 +2802,15 @@ amboso_parse_args() {
       [[ $ignore_git_check_flag -gt 0 ]] && ignore_gitcheck="X"
       [[ $pack_flag -gt 0 ]] && packm="z"
       [[ $silent_flag -gt 0 ]] && silentm="s"
-      [[ $verbose_flag -gt 0 ]] && verb="V" && printf "\n[PURGE]    Trying to delete ( $purge_vers ) ( $(($i+1)) / $tot_vers )\n" >&2
+      [[ $verbose_flag -gt 0 ]] && verb="-V $verbose_flag" && printf "\n[PURGE]    Trying to delete ( $purge_vers ) ( $(($i+1)) / $tot_vers )\n" >&2
       [[ $base_mode_flag -gt 0 ]] && basem="B" #We make sure to pass on eventual base mode to the subcalls
       [[ $git_mode_flag -gt 0 ]] && gitm="g" #We make sure to pass on eventual git mode to the subcalls
       [[ $quiet_flag -gt 0 ]] && quietm="q" #We make sure to pass on eventual quiet flag mode to the subcalls
       if [[ $quiet_flag -eq 0 ]] ; then {
-        log_cl "[PURGE]    Running \"$(basename "$prog_name") -Y $amboso_start_time-M $makefile_version -S $source_name -E $exec_entrypoint -D $scripts_dir -d$verb$gitm$basem$quietm$silentm$packm$ignore_gitcheck$showtimem$plainm$loggedm $purge_vers 2>/dev/null\"" debug
+        log_cl "[PURGE]    Running \"$(basename "$prog_name") -Y $amboso_start_time-M $makefile_version -S $source_name -E $exec_entrypoint -D $scripts_dir $verb -d$gitm$basem$quietm$silentm$packm$ignore_gitcheck$showtimem$plainm$loggedm $purge_vers 2>/dev/null\"" debug
       }
       fi
-      ( $prog_name -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -E "$exec_entrypoint" -D "$scripts_dir" -d"$verb""$gitm""$basem""$quietm""$silentm""$packm""$ignore_gitcheck""$showtimem""$plainm""$loggedm" "$purge_vers" ) 2>/dev/null
+      ( $prog_name -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -E "$exec_entrypoint" -D "$scripts_dir" $verb -d"$gitm""$basem""$quietm""$silentm""$packm""$ignore_gitcheck""$showtimem""$plainm""$loggedm" "$purge_vers" ) 2>/dev/null
       clean_res="$?"
       #To be sure delete OP is gonna be the returning op here, we assume pack just never makes the script return, so it will always go to delete OP safely.
 
