@@ -1331,6 +1331,7 @@ amboso_parse_args() {
     case $opt in
       F )
         force_build_flag=1
+        ;;
       R )
         enable_make_rebuild_flag=0
         ;;
