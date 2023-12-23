@@ -1706,7 +1706,7 @@ amboso_parse_args() {
       end_digraph
       [[ ! -z $cases_dir ]] && log_cl "bone dir: ( $cases_dir )" debug >&2
       [[ ! -z $errors_dir ]] && log_cl "       kulpo dir: ( $errors_dir )" debug >&2 #&& usage && exit 1
-      log_cl "\n[PANIC]    Running  as \"$prog_name\" in test mode is not supported. Quitting with 69.\n" error #&& usage && exit 1
+      log_cl "[PANIC]    Running  as \"$prog_name\" in test mode is not supported. Quitting with 69.\n" error #&& usage && exit 1
       echo_timer "$amboso_start_time"  "Test calling \"$(basename "$prog_name")\" in test mode to run a test with..." "1"
       exit 69
       #We return 69 and will check for this somewhere
@@ -1727,7 +1727,7 @@ amboso_parse_args() {
       log_cl "bone dir (NO -K passed to this call): ( $cases_dir )" debug >&2
       log_cl "       kulpo dir (NO -K passed to this amboso call): ( $errors_dir )" debug >&2 #&& usage && exit 1
 
-      log_cl "\n[PANIC]    Running  \"$(basename "$prog_name")\" using test mode in a program that will be called by test mode is not supported.\n" error >&2 #&& usage && exit 1
+      log_cl "[PANIC]    Running  \"$(basename "$prog_name")\" using test mode in a program that will be called by test mode is not supported.\n" error >&2 #&& usage && exit 1
       echo_timer "$amboso_start_time"  "Test calling \"$(basename "$prog_name")\" in test mode to run a test with..." "1"
       exit 1
     }
@@ -1946,7 +1946,7 @@ amboso_parse_args() {
       } else {
         verbose_hint=""
         [[ $verbose_flag -lt 1 ]] && verbose_hint="Run with -V <lvl> to see more info."
-        log_cl "\n[INIT]    Failed build for $init_vers binary. $verbose_hint\n" error
+        log_cl "[INIT]    Failed build for $init_vers binary. $verbose_hint\n" error
         #try building again to get more output, since we discarded stderr before
         #
         #we could just pass -v to the first call if we have it on
@@ -2353,18 +2353,18 @@ amboso_parse_args() {
       #}
       fi
       if [[ $verbose_flag -gt 0 && $quiet_flag -eq 0 ]]; then {
-        log_cl "\n[TEST]    (stdout) Expected:" info
+        log_cl "[TEST]    (stdout) Expected:" info
         cat "$relative_testpath.stdout"
-        log_cl "\n[TEST]    (stdout) Found:" info
+        log_cl "[TEST]    (stdout) Found:" info
         cat "$run_tmp_escout"
       }
       fi
     } else {
       out_res="fail"
       if [[ $quiet_flag -eq 0 ]]; then {
-        log_cl "\n[TEST]    (stdout) Expected:" info
+        log_cl "[TEST]    (stdout) Expected:" info
         cat "$relative_testpath.stdout"
-        log_cl "\n[TEST]    (stdout) Found:" error
+        log_cl "[TEST]    (stdout) Found:" error
         cat "$run_tmp_escout"
       }
       fi
@@ -2389,9 +2389,9 @@ amboso_parse_args() {
       #}
       fi
       if [[ $verbose_flag -gt 0 && $quiet_flag -eq 0 ]]; then {
-        log_cl "\n[TEST]    (stderr) Expected:" info
+        log_cl "[TEST]    (stderr) Expected:" info
         cat "$relative_testpath.stderr"
-        log_cl "\n[TEST]    (stderr) Found:" info
+        log_cl "[TEST]    (stderr) Found:" info
         cat "$run_tmp_escerr"
       }
       fi
@@ -2399,9 +2399,9 @@ amboso_parse_args() {
     } else {
       err_res="fail"
       if [[ $quiet_flag -eq 0 ]]; then {
-        log_cl "\n[TEST]    (stderr) Expected:" info
+        log_cl "[TEST]    (stderr) Expected:" info
         cat "$relative_testpath.stderr"
-        log_cl "\n[TEST]    (stderr) Found:" error
+        log_cl "[TEST]    (stderr) Found:" error
         cat "$run_tmp_escerr"
       }
       fi
@@ -2487,7 +2487,12 @@ amboso_parse_args() {
       app "$(echo_node silence_check query_success_not_ready)"
     }
     fi
-    log_cl "\n[QUERY]    ( $version ) binary not found in ( $script_path )." warn #>&2
+    if [[ "$force_build_flag" -le 0 ]] ; then {
+        log_cl "[QUERY]    ( $version ) binary not found in ( $script_path )." warn #>&2
+    } else {
+        log_cl "[QUERY]    Forcing build for ( $version ) binary." debug #>&2
+    }
+    fi
     if [[ $verbose_flag -gt 0 ]] ; then {
         echo_tag_info "$version"
     }
@@ -2606,13 +2611,13 @@ amboso_parse_args() {
         [[ $verbose_flag -gt 0 ]] && log_cl "[BUILD]    Building ( $version ), using gcc call." debug >&2
         #echo "" >&2 #new line for error output
         if [[ -z $source_name ]]; then {
-          log_cl "\n[WTF-ERROR]    Missing source file name. ( $version ).\n" error
+          log_cl "[WTF-ERROR]    Missing source file name. ( $version ).\n" error
           amboso_usage
           echo_timer "$amboso_start_time"  "Missing source name for [$version]" "1"
           exit 1
         }
         fi
-        [[ $pack_flag -gt 0 ]] && log_cl "\n[PACK]    -z is not supported for ($tool_txt). TAG < ($makefile_version).\n\n    Current: ($version @ $source_name).\n" error
+        [[ $pack_flag -gt 0 ]] && log_cl "[PACK]    -z is not supported for ($tool_txt). TAG < ($makefile_version).\n\n    Current: ($version @ $source_name).\n" error
 
         start_t=$(date +%s.%N)
         if [[ $git_mode_flag -eq 0 ]] ; then { #Building in base mode, we cd into target directory before make
@@ -2671,7 +2676,7 @@ amboso_parse_args() {
       app "$(echo_node doing_init query_success_ready)"
     }
     fi
-    log_cl "\n[QUERY]    ( $version ) binary is ready at ( $script_path ) .\n" info >&2
+    log_cl "[QUERY]    ( $version ) binary is ready at ( $script_path ) .\n" info >&2
     if [[ $verbose_flag -gt 0 ]] ; then {
         echo_tag_info "$version"
     }
@@ -2856,7 +2861,7 @@ amboso_parse_args() {
       } else {
         verbose_hint=""
         [[ $verbose_flag -lt 1 ]] && verbose_hint="Run with -V <lvl> to see more info."
-        log_cl "\n[PURGE]    Failed delete for ( $purge_vers ) binary. $verbose_hint\n" error
+        log_cl "[PURGE]    Failed delete for ( $purge_vers ) binary. $verbose_hint\n" error
         [[ $verbose_flag -gt 0 ]] && log_cl "[PURGE]    Failed removing ( $purge_vers ) using ( $tool_txt ). $verbose_hint" error #>&2
         #try deleting again to get more output, since we discarded stderr before
         #
@@ -2876,7 +2881,7 @@ amboso_parse_args() {
       app "$(echo_node purging purging_success)"
       app "$(echo_node purging_success end_node)"
     } else {
-      log_cl "\n[PURGE]    No binaries to purge found.\n" info
+      log_cl "[PURGE]    No binaries to purge found.\n" info
       app "$(echo_node purging purging_fail)"
       app "$(echo_node purging_fail end_node)"
     }
