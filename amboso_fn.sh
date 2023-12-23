@@ -2539,9 +2539,11 @@ amboso_parse_args() {
           [[ $verbose_flag -gt 0 ]] && log_cl "[BUILD]    Running in base mode, expecting full source in $script_path." debug #>&2
           cd "$script_path" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4 ; };
           if [[ "$enable_make_rebuild_flag" -gt 0 ]] ; then {
+            log_cl "Running \"make rebuild\"" debug
             make rebuild >&2
             comp_res=$?
           } else {
+            log_cl "Running \"make\"" debug
             make >&2
             comp_res=$?
           }
@@ -2557,9 +2559,11 @@ amboso_parse_args() {
             git submodule update --init --recursive #We set all submodules to commit state
             #Never try to build if checkout fails
             if [[ "$enable_make_rebuild_flag" -gt 0 ]] ; then {
+              log_cl "Running \"make rebuild\"" debug
               make rebuild >&2
               comp_res=$?
             } else {
+              log_cl "Running \"make\"" debug
               make >&2
               comp_res=$?
             }
