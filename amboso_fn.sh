@@ -201,8 +201,8 @@ function log_cl {
 
 function echo_amboso_splash {
     amboso_version="$1"
-    prog_name="$2"
-    printf "amboso, v$amboso_version\nCopyright (C) 2023  jgabaut\n\n  This program comes with ABSOLUTELY NO WARRANTY; for details type \`$prog_name -W\`.\n  This is free software, and you are welcome to redistribute it\n  under certain conditions; see file \`LICENSE\` for details.\n\n  Full source is available at https://github.com/jgabaut/amboso\n\n"
+    prog="$2"
+    printf "amboso, v$amboso_version\nCopyright (C) 2023  jgabaut\n\n  This program comes with ABSOLUTELY NO WARRANTY; for details type \`$prog -W\`.\n  This is free software, and you are welcome to redistribute it\n  under certain conditions; see file \`LICENSE\` for details.\n\n  Full source is available at https://github.com/jgabaut/amboso\n\n"
 }
 
 function echo_invil_notice {
