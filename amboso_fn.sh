@@ -1922,8 +1922,8 @@ amboso_parse_args() {
       [[ $git_mode_flag -gt 0 ]] && gitm="g" #We make sure to pass on eventual git mode to the subcalls
       [[ $quiet_flag -gt 0 ]] && quietm="q" #We make sure to pass on eventual quiet mode to the subcalls
       #First pass sets the verbose flag but redirects stderr to /dev/null
-      [[ $verbose_flag -gt 0 ]] && log_cl "[VERB]    Running \"$(dirname "$(basename "$prog_name")") -Y $amboso_start_time -M $makefile_version -S $source_name -E $exec_entrypoint -D $scripts_dir $verb $configm -b$verb$gitm$basem$quietm$silentm$packm$ignore_gitcheck$showtimem$plainm$loggedm $init_vers\" ( $(($i+1)) / $tot_vers )" info >&2
-      "$prog_name" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -E "$exec_entrypoint" -D "$scripts_dir" "$verb" "$configm" -b"$gitm""$basem""$quietm""$silentm""$packm""$ignore_gitcheck""$showtimem""$plainm""$loggedm" "$init_vers" 2>/dev/null
+      [[ $verbose_flag -gt 0 ]] && log_cl "[VERB]    Running \"$(dirname "$(basename "$prog_name")") -Y $amboso_start_time -M $makefile_version -S $source_name -E $exec_entrypoint -D $scripts_dir $verb $configm -b$gitm$basem$quietm$silentm$packm$ignore_gitcheck$showtimem$plainm$loggedm $init_vers\" ( $(($i+1)) / $tot_vers )" info >&2
+      "$prog_name" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -E "$exec_entrypoint" -D "$scripts_dir" $verb $configm -b"$gitm""$basem""$quietm""$silentm""$packm""$ignore_gitcheck""$showtimem""$plainm""$loggedm" "$init_vers" 2>/dev/null
       if [[ $? -eq 0 ]] ; then {
         [[ $verbose_flag -gt 0 ]] && log_cl "[INIT]    $init_vers binary ready." info >&2
         count_bins=$(($count_bins +1))
@@ -2008,7 +2008,7 @@ amboso_parse_args() {
     for i in $(seq 0 $(($tot_tests-1))); do {
       [[ $quiet_flag -eq 0 ]] && log_cl "[TEST-MACRO]    Running:  \"$prog_name -Y $amboso_start_time $verbm -T$quietm$buildm$showtimem$plainm$loggedm -K $kazoj_dir -D $scripts_dir ${supported_tests[$i]}\"" info >&2
       start_t_curr_test=$(date +%s.%N)
-      "$prog_name" -Y "$amboso_start_time" "$verbm" -T"$quietm$buildm""$showtimem""$plainm""$loggedm" -K "$kazoj_dir" -D "$scripts_dir" "${supported_tests[$i]}"
+      "$prog_name" -Y "$amboso_start_time" $verbm -T"$quietm$buildm""$showtimem""$plainm""$loggedm" -K "$kazoj_dir" -D "$scripts_dir" "${supported_tests[$i]}"
       retcod="$?"
       if [[ $retcod -eq 0 ]] ; then {
         tot_successes=$(($tot_successes+1))
@@ -2227,7 +2227,7 @@ amboso_parse_args() {
       log_cl "( $tot_tests ) total tests ready." debug >&2
       for i in $(seq 0 $(($tot_tests-1))); do {
         TEST="${supported_tests[$i]}"
-        verb=0
+        verb=""
         quietm=""
         showtimem=""
         plainm=""
@@ -2236,10 +2236,10 @@ amboso_parse_args() {
         [[ $allow_color_flag -le 0 ]] && plainm="P"
         [[ $show_time_flag -gt 0 ]] && showtimem="w"
         [[ $quiet_flag -gt 0 ]] && quietm="q" #We make sure to pass on eventual quiet flag mode to the subcalls
-        [[ $verbose_flag -gt 0 ]] && verb="$verbose_flag" && printf "\n[TEST]    Recording ALL: ( $(($i+1)) / $tot_tests ) ( $TEST )\n" >&2
-        log_cl "[TEST]    Running:    \"$prog_name -K $kazoj_dir -D $scripts_dir -V $verb -bT$quietm$showtimem$plainm$loggedm $TEST 2>/dev/null \"\e[0m\n" debug
+        [[ $verbose_flag -gt 0 ]] && verb="-V $verbose_flag" && printf "\n[TEST]    Recording ALL: ( $(($i+1)) / $tot_tests ) ( $TEST )\n" >&2
+        log_cl "[TEST]    Running:    \"$prog_name -K $kazoj_dir -D $scripts_dir $verb -bT$quietm$showtimem$plainm$loggedm $TEST 2>/dev/null \"\e[0m\n" debug
         start_t=$(date +%s.%N)
-        ( "$prog_name" -Y "$amboso_start_time" -K "$kazoj_dir" -D "$scripts_dir" -V "$verb" -b"$quietm""$showtimem""$plainm""$loggedm"T "$TEST" 2>/dev/null ; exit "$?")
+        ( "$prog_name" -Y "$amboso_start_time" -K "$kazoj_dir" -D "$scripts_dir" $verb -b"$quietm""$showtimem""$plainm""$loggedm"T "$TEST" 2>/dev/null ; exit "$?")
         record_res="$?"
         if [[ $record_res -eq 69 ]]; then {
           log_cl "[PANIC]    Unsupported: a test call returned 69. Will do the same.\n" error &&
