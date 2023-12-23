@@ -3,7 +3,7 @@
 source = "hello_world.c"
 bin = "hello_world"
 makevers = "0.3.0"
-automakevers = "2.0.0"
+automakevers = "3.0.0"
 tests = "kazoj"
 
 [ tests ]
