@@ -263,6 +263,7 @@ function echo_active_flags {
     done
   }
   fi
+  [[ $enable_make_rebuild_flag -ne 1 ]] && printf "R"
   [[ $do_filelog_flag -gt 0 ]] && printf "J"
   [[ $allow_color_flag -lt 1 ]] && printf "P"
   [[ $gen_C_headers_flag -gt 0 ]] && printf "G"
@@ -710,6 +711,7 @@ function amboso_help {
     -W     Warranty    Prints warranty information, as per GPL-3.0 license.
     -P     plain    Turn off color output.
     -J     journal    Turn on logging to amboso.log.
+    -R     rebuild    Toggles running \"make\" instead of \"make rebuild\".
 
   [...]    TAG_QUERY    Ask a tag for current mode
 
@@ -718,7 +720,7 @@ function amboso_help {
 }
 
 function amboso_usage {
-  printf "Usage:  $(basename "$prog_name") [(-D|-K|-M|-S|-E|-G|-C|-x|-V|-Y) ...ARGS] [-TBtg] [-bripd] [-hHvlLqcwXWPJ] [TAG_QUERY]\n"
+  printf "Usage:  $(basename "$prog_name") [(-D|-K|-M|-S|-E|-G|-C|-x|-V|-Y) ...ARGS] [-TBtg] [-bripd] [-hHvlLqcwXWPJR] [TAG_QUERY]\n"
   printf "    Query for a build version ( or stego files parser, with -x).\n"
 }
 
@@ -1320,9 +1322,13 @@ amboso_parse_args() {
   autoconf_arg_file=""
   allow_color_flag=1
   do_filelog_flag=0
+  enable_make_rebuild_flag=1
 
-  while getopts "A:M:S:E:D:K:G:Y:x:V:C:wBgbpHhrivdlLtTqsczUXWPJ" opt; do
+  while getopts "A:M:S:E:D:K:G:Y:x:V:C:wBgbpHhrivdlLtTqsczUXWPJR" opt; do
     case $opt in
+      R )
+        enable_make_rebuild_flag=0
+        ;;
       P )
         allow_color_flag=0
         ;;
@@ -1909,6 +1915,8 @@ amboso_parse_args() {
       plainm=""
       loggedm=""
       configm=""
+      norebuildm=""
+      [[ $enable_make_rebuild_flag -eq 0 ]] && norebuildm="R"
       [[ $pass_autoconf_arg_flag -gt 0 ]] && configm="-C $autoconf_arg_file"
       [[ $do_filelog_flag -gt 0 ]] && loggedm="J"
       [[ $allow_color_flag -le 0 ]] && plainm="P"
@@ -1922,8 +1930,8 @@ amboso_parse_args() {
       [[ $git_mode_flag -gt 0 ]] && gitm="g" #We make sure to pass on eventual git mode to the subcalls
       [[ $quiet_flag -gt 0 ]] && quietm="q" #We make sure to pass on eventual quiet mode to the subcalls
       #First pass sets the verbose flag but redirects stderr to /dev/null
-      [[ $verbose_flag -gt 0 ]] && log_cl "[VERB]    Running \"$(dirname "$(basename "$prog_name")") -Y $amboso_start_time -M $makefile_version -S $source_name -E $exec_entrypoint -D $scripts_dir $verb $configm -b$gitm$basem$quietm$silentm$packm$ignore_gitcheck$showtimem$plainm$loggedm $init_vers\" ( $(($i+1)) / $tot_vers )" info >&2
-      "$prog_name" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -E "$exec_entrypoint" -D "$scripts_dir" $verb $configm -b"$gitm""$basem""$quietm""$silentm""$packm""$ignore_gitcheck""$showtimem""$plainm""$loggedm" "$init_vers" 2>/dev/null
+      [[ $verbose_flag -gt 0 ]] && log_cl "[VERB]    Running \"$(dirname "$(basename "$prog_name")") -Y $amboso_start_time -M $makefile_version -S $source_name -E $exec_entrypoint -D $scripts_dir $verb $configm -b$gitm$basem$quietm$silentm$packm$ignore_gitcheck$showtimem$plainm$loggedm$norebuildm $init_vers\" ( $(($i+1)) / $tot_vers )" info >&2
+      "$prog_name" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -E "$exec_entrypoint" -D "$scripts_dir" $verb $configm -b"$gitm""$basem""$quietm""$silentm""$packm""$ignore_gitcheck""$showtimem""$plainm""$loggedm""$norebuildm" "$init_vers" 2>/dev/null
       if [[ $? -eq 0 ]] ; then {
         [[ $verbose_flag -gt 0 ]] && log_cl "[INIT]    $init_vers binary ready." info >&2
         count_bins=$(($count_bins +1))
@@ -1936,7 +1944,7 @@ amboso_parse_args() {
         #we could just pass -v to the first call if we have it on
         if [[ $verbose_flag -gt 0 || $quiet_flag -eq 0 ]]; then {
           log_cl "[INIT]    Checking errors, running $(basename "$prog_name") -bV$packm$ignore_gitcheck $init_vers" info >&2
-      ("$prog_name" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -D "$scripts_dir" -E "$exec_entrypoint" -V 2 -b"$gitm""$basem""$packm""$ignore_gitcheck""$showtimem""$plainm""$loggedm" "$init_vers") >&2
+      ("$prog_name" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -D "$scripts_dir" -E "$exec_entrypoint" -V 2 -b"$gitm""$basem""$packm""$ignore_gitcheck""$showtimem""$plainm""$loggedm""$norebuildm" "$init_vers") >&2
         }
         fi
       }
@@ -2529,8 +2537,15 @@ amboso_parse_args() {
         start_t=$(date +%s.%N)
         if [[ $git_mode_flag -eq 0 && $base_mode_flag -eq 1 ]] ; then { #Building in base mode, we cd into target directory before make
           [[ $verbose_flag -gt 0 ]] && log_cl "[BUILD]    Running in base mode, expecting full source in $script_path." debug #>&2
-          cd "$script_path" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4 ; }; make >&2
-          comp_res=$?
+          cd "$script_path" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4 ; };
+          if [[ "$enable_make_rebuild_flag" -gt 0 ]] ; then {
+            make rebuild >&2
+            comp_res=$?
+          } else {
+            make >&2
+            comp_res=$?
+          }
+          fi
         } else { #Building in git mode, we checkout the tag and move the binary after the build
           [[ $verbose_flag -gt 0 ]] && log_cl "[BUILD]    Running in git mode, checking out ( $version )." debug #>&2
           git checkout "$version" 2>/dev/null #Repo goes back to tagged state
@@ -2540,8 +2555,15 @@ amboso_parse_args() {
             comp_res=1
           } else { #Checkout successful, we build
             git submodule update --init --recursive #We set all submodules to commit state
-            make >&2 #Never try to build if checkout fails
-            comp_res=$?
+            #Never try to build if checkout fails
+            if [[ "$enable_make_rebuild_flag" -gt 0 ]] ; then {
+              make rebuild >&2
+              comp_res=$?
+            } else {
+              make >&2
+              comp_res=$?
+            }
+            fi
             #Output is expected to be in the main dir:
             if [[ ! -e ./$exec_entrypoint ]] ; then {
               log_cl "$exec_entrypoint not found at $(pwd)." error #>&2
