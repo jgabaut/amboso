@@ -26,4 +26,4 @@ jobs:
 
     - name: (anviltest) use -t test macro flag, +verbose (-tVV)
       run: |
-        ./amboso -t -V 2 || echo -e "\033[1;31mFailed.\e[0m\n"
+        ./amboso -t -V 5 || echo -e "\033[1;31mFailed.\e[0m\n"
