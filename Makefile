@@ -51,9 +51,10 @@ pack: hello_world
 	@echo -e "\033[1;32mSuccess.\e[0m"
 
 install:
-	@echo -en "Installing amboso $(VERSION) globally as 'anvil':    "
+	@echo -e "Installing amboso $(VERSION) globally as 'anvil':    "
 	install "./amboso" /usr/local/bin/anvil
-	@echo -en "Installing amboso_fn.sh $(VERSION) globally as inside '/usr/local/bin':"
+	@echo -e "\033[1;33mDone.\e[0m"
+	@echo -en "Installing amboso_fn.sh $(VERSION) globally as inside '/usr/local/bin':    "
 	install "./amboso_fn.sh" /usr/local/bin/
 	@echo -e "\033[1;33mDone.\e[0m"
 
