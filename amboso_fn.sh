@@ -1626,7 +1626,7 @@ amboso_parse_args() {
   }
   fi
 
-  [[ "$verbose_flag" -gt 1 ]] && log_cl "[AMBOSO]    Current version: $amboso_currvers\n" info
+  [[ "$verbose_flag" -ge 4 ]] && log_cl "[AMBOSO]    Current version: $amboso_currvers\n" info
 
   [[ $quiet_flag -eq 0 && $verbose_flag -ge 3 ]] && for read_arg in "$@"; do { printf "[ARG]    \"$read_arg\"\n" ; } ; done
 
