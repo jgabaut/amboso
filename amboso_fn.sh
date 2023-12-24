@@ -307,7 +307,7 @@ function echo_amboso_version_short {
 
 function echo_timer {
   if [[ $show_time_flag -eq 0 ]] ; then {
-    [[ $verbose_flag -eq 0 || $quiet_flag -gt 0 ]] && return
+    [[ $verbose_flag -le 3 || $quiet_flag -gt 0 ]] && return
   }
   fi
   st="$1"
