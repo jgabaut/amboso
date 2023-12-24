@@ -640,92 +640,60 @@ function git_mode_check {
 }
 
 function amboso_help {
-  amboso_usage
-  printf "Arguments:
-
-  [-D ...]    BINDIR    Sets directory used to host tags
-
-      [-K ...]    TESTDIR    Sets directory used to host tests
-
-  [-S ...]    SOURCENAME    Sets name for target main source
-
-  [-E ...]    EXECNAME    Sets name for target executable
-
-    [-M ...]    MAKETAG    Sets minimum tag for using make as build/clean step
-
-    [-C ...]    CONFIG_FILE    Filename for ./configure args for automake
-
-    [-G ...]    C_HEADER_DIR    Sets desidered output directory for C header of specified version
-
-  [-tgBT]    mode    Sets run mode
-
-        Building:
-
-    -g    git mode    (Default)
-
-    -B    base mode    (Expects a full source copy of every tag. Not recommended.)
-
-        Testing:
-
-    -T    test mode    (Tests TAG_QUERY)
-
-    -t    test macro    (Recurses as -T\"\$PASSED_FLAGS\" on all tests)
-
-        Extra:
-
-    -x  <stego file>    stego parser    (Runs amboso as stego parser)
-
-    -V  <[0-5]>           Set verbose level
-
-        Optional:
-
-          -l    Lint    (Only lint the stego file)
-          -L    Lint    (Only lint the stego file)
-
-  [-bripd]    operation    Combined operations on current tag.
-
-          The operation changes semantics in test mode.
-
-      In the order they are consumed from a top call:
-
-    -i    init    (Recurses as -b\"\$MODE_FLAG\"\"\$PASSED_FLAGS\" on all tags for current build mode)
-                  (TEST: record all test results)
-
-    -b    build    Build TAG_QUERY
-                  (TEST: record TAG_QUERY test results. If using -t for the macro, it's the same as -i)
-
-    -r    run    Run TAG_QUERY (ATM unused in test mode)
-
-    -d    delete    Delete TAG_QUERY (ATM unused in test mode)
-
-    -p    purge    (Recurses as -b\"\$MODE_FLAG\"\"\$PASSED_FLAGS\" on all tags for current build mode)
-
-  [-hHvVlLqc]    info    Change text output for the program.
-
-    -hH    help    Prints help info
-    -v    version    Prints current version and quits
-    -lL    list    Lists all valid tags (-L ignores current build mode to check for tags)
-    -q    quiet    Less output (useful but not well implemented, recommended on recursive calls)
-    -s    silent    Way less output (Some output expected on stderr before the flag is applied)
-    -c    control    Output dotfile \'amboso_cfg.dot\' while running.
-    -w    watch    Always display timers regardless of verbosity.
-    -X    experimental    Ignore the result of git_mode_check, which would stop git mode runs early when git status is not clean.
-    -Y [...] START_TIME    Set start time of the program.
-    -W     Warranty    Prints warranty information, as per GPL-3.0 license.
-    -P     plain    Turn off color output.
-    -J     journal    Turn on logging to anvil.log.
-    -R     rebuild    Toggles running \"make\" instead of \"make rebuild\".
-    -F     force    Toggles still trying to build when a binary can be found for requested tag.
-
-  [...]    TAG_QUERY    Ask a tag for current mode
-
-        Reports if target executable name for TAG_QUERY was found at BINDIR/vTAG_QUERY/EXECNAME.\n"
-
+    amboso_usage
+    amboso_help_string="Options:
+  -D <BIN_DIR>               Specify the directory to host tags [default: ./bin]
+  -K <TESTS_DIR>             Specify the directory to host tests
+  -S <SOURCE_NAME>           Specify the source name
+  -E <EXEC_NAME>             Specify the target executable name
+  -M <MAKE_MINTAG>           Specify min tag using make as build/clean step
+  -G <C_HEADER_DIR>          Generate anvil C header for passed dir
+  -x <LINT_TARGET>           Act as stego linter for passed file
+  -T        (test)           Specify test mode
+  -B        (base)           Specify base mode
+  -g        (git)            Specify git mode
+  -t        (testmacro)      Specify test macro mode
+  -i        (init)           Build all tags for current mode
+  -p        (purge)          Delete binaries for all tags for current mode
+  -d        (delete)         Delete binary for passed tag
+  -b        (build)          Build binary for passed tag
+  -r        (run)            Run binary for passed tag
+  -l        (list)           Print supported tags for current mode
+  -L        (list-all)       Print supported tags for all modes
+  -q        (quiet)          Less output
+  -s        (silent)         Almost no output
+  -V <VERBOSE>               More output [default: 3]
+  -w        (watch)          Report timer
+  -v        (version)        Print current version and quit
+  -W        (warranty)       Print warranty info and quit
+  -X        (no-gitcheck)    Ignore git mode checks
+  -J        (logged)         Output to log file
+  -P        (no-color)       Disable color output
+  -F        (force)          Enable force build
+  -R        (no-rebuild)     Disable calling make rebuild
+  -C <CONFIG_FILE>           Pass configuration file for ./configure arguments
+  -h        (help)           Print help
+  -Y <START_TIME>            Set start time of the program
+  -z        (pack)           Run \"make pack\"
+  -c        (control-flow)   Output dotfile \'amboso_cfg.dot\' while running
+  -H        (bighelp)        Print more help"
+  printf "%s\n" "$amboso_help_string"
 }
 
 function amboso_usage {
-  printf "Usage:  $(basename "$prog_name") [(-D|-K|-M|-S|-E|-G|-C|-x|-V|-Y) ...ARGS] [-TBtg] [-bripd] [-hHvlLqcwXWPJRF] [TAG_QUERY]\n"
-  printf "    Query for a build version ( or stego files parser, with -x).\n"
+  printf "Usage: amboso [OPTIONS] [TAG] [COMMAND]\n"
+  printf "    Build tool wrapping make and git tags\n"
+  printf "    Run with -H for more info about options.\n\n"
+  printf "Commands:
+  test     does testing things
+  build    Tries building latest tag
+  init     Prepare a new anvil project
+  version  Prints invil version
+  help     Print this message or the help of the given subcommand(s)\n"
+
+  printf "Arguments:
+  [TAG]  Optional tag argument\n"
+  printf "Example usage:  $(basename "$prog_name") [(-D|-K|-M|-S|-E|-G|-C|-x|-V|-Y) <ARG>] [-TBtg] [-bripd] [-hHvlLqcwXWPJRF] [TAG]\n"
 }
 
 function escape_colorcodes_tee {
