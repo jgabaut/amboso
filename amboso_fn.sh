@@ -1665,7 +1665,7 @@ amboso_parse_args() {
     git_mode_check
     git_mode_check_res="$?"
     if [[ $git_mode_check_res -eq 0 ]]; then {
-      [[ $verbose_flag -ge 3 ]] && log_cl "[GIT]    Status was clean." debug >&2
+      [[ $verbose_flag -gt 3 ]] && log_cl "[GIT]    Status was clean." debug >&2
     } else {
       [[ $verbose_flag -ge 3 || $quiet_flag -eq 0 ]] && log_cl "[GIT]    Status was not clean!" error >&2
           if [[ $ignore_git_check_flag -eq 0 ]]; then {
