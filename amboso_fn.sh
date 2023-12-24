@@ -1863,12 +1863,12 @@ amboso_parse_args() {
   fi
 
   #Display needed values if in verbose mose
-  [[ $verbose_flag -ge 3 || $quiet_flag -eq 0 ]]  && [[ ! $dir_flag -gt 0 ]] && log_cl "Using target dir: ( $scripts_dir )." info >&2
-  [[ $verbose_flag -ge 3 || $quiet_flag -eq 0 ]] && [[ ! $exec_was_set -gt 0 ]] && log_cl "Using target bin: ( $exec_entrypoint )." info >&2
-  [[ $verbose_flag -ge 3 || $quiet_flag -eq 0 ]] && [[ ! $sourcename_was_set -gt 0 ]] && log_cl "Using source file name: ( $source_name )." info >&2
-  [[ $verbose_flag -ge 3 || $quiet_flag -eq 0 ]] && [[ ! $vers_make_flag -gt 0 ]] && log_cl "Using tag for make support: ( $makefile_version ) as first tag compiled with make." info >&2
-  [[ $verbose_flag -ge 3 || $quiet_flag -eq 0 ]] && [[ ! $vers_autoconf_flag -gt 0 ]] && log_cl "Using tag for automake support: ( $use_autoconf_version ) as first tag compiled with automake." info >&2
-  [[ $verbose_flag -ge 3 || $quiet_flag -eq 0 ]] && [[ $test_mode_flag -gt 0 && ! $test_info_was_set -gt 0 ]] && log_cl "Using tests dir: ( $kazoj_dir )." info >&2
+  [[ $verbose_flag -gt 3 || $quiet_flag -eq 0 ]]  && [[ ! $dir_flag -gt 0 ]] && log_cl "Using target dir: ( $scripts_dir )." info >&2
+  [[ $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] && [[ ! $exec_was_set -gt 0 ]] && log_cl "Using target bin: ( $exec_entrypoint )." info >&2
+  [[ $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] && [[ ! $sourcename_was_set -gt 0 ]] && log_cl "Using source file name: ( $source_name )." info >&2
+  [[ $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] && [[ ! $vers_make_flag -gt 0 ]] && log_cl "Using tag for make support: ( $makefile_version ) as first tag compiled with make." info >&2
+  [[ $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] && [[ ! $vers_autoconf_flag -gt 0 ]] && log_cl "Using tag for automake support: ( $use_autoconf_version ) as first tag compiled with automake." info >&2
+  [[ $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] && [[ $test_mode_flag -gt 0 && ! $test_info_was_set -gt 0 ]] && log_cl "Using tests dir: ( $kazoj_dir )." info >&2
 
   #Check if we are doing init and we're not in test mode
   #Which means we want to build all tags
