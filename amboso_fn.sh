@@ -630,7 +630,7 @@ function git_mode_check {
   git rev-parse --is-inside-work-tree 2>/dev/null 1>&2
   is_git_repo="$?"
   [[ $is_git_repo -gt 0 ]] && log_cl "Not running in a git repo. Try running with -B to use base mode.\n" error && exit 1
-  [[ $verbose_flag -ge 3 ]] && log_cl "[MODE]    Running in git mode." info >&2
+  [[ $verbose_flag -gt 3 ]] && log_cl "[MODE]    Running in git mode." info >&2
   #Check if status is clean
   if output=$(git status --untracked-files=no --porcelain) && [ -z "$output" ]; then
 	  return 0
@@ -1667,14 +1667,14 @@ amboso_parse_args() {
     if [[ $git_mode_check_res -eq 0 ]]; then {
       [[ $verbose_flag -gt 3 ]] && log_cl "[GIT]    Status was clean." debug >&2
     } else {
-      [[ $verbose_flag -ge 3 || $quiet_flag -eq 0 ]] && log_cl "[GIT]    Status was not clean!" error >&2
+      [[ $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] && log_cl "[GIT]    Status was not clean!" error >&2
           if [[ $ignore_git_check_flag -eq 0 ]]; then {
         [[ $verbose_flag -ge 3 || $quiet_flag -eq 0 ]] && log_cl "[AMBOSO]    Quitting." error >&2
             echo_timer "$amboso_start_time"  "Dirty git status" "1"
         return 1
       }
       fi
-      [[ $verbose_flag -ge 3 || $quiet_flag -eq 0 ]] && log_cl "[AMBOZO]    We ignore this and will waste time." info magenta >&2
+      [[ $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] && log_cl "[AMBOZO]    We ignore this and will waste time." info magenta >&2
     }
     fi
   }
@@ -2474,7 +2474,7 @@ amboso_parse_args() {
         log_cl "[QUERY]    Forcing build for ( $version ) binary." debug #>&2
     }
     fi
-    if [[ $verbose_flag -ge 3 ]] ; then {
+    if [[ $verbose_flag -gt 3 ]] ; then {
         echo_tag_info "$version"
     }
     fi
