@@ -1799,32 +1799,9 @@ amboso_parse_args() {
 
   #If we're in test mode and test dir was not set, we check if "./kazoj" is a directory and use that. If it isn't, we may get the name from stego.lock. If that is not a directory, we quit immediately.
   if [[ -z $kazoj_dir && $test_mode_flag -gt 0 ]] ; then {
-
     #TODO Do we need to do further checks for amboso_testflag_version?
     log_cl "kazoj_dir was not set, while in test mode." error
     exit 3
-
-    # LEGACY
-    #
-    #if [[ "$amboso_currvers" > "$amboso_testflag_version" || "$amboso_currvers" = "$amboso_testflag_version" ]] ; then {
-    #   if [[ -d "./kazoj" ]]; then {
-    #     kazoj_dir="./kazoj"
-    #     set_tests_info "$kazoj_dir"
-    #     set_supported_tests "$kazoj_dir"
-    #     [[ $quiet_flag -eq 0 || $verbose_flag -gt 0 ]] && printf "\033[1;33m[DEBUG]  No -K flag on a test run (amboso > $amboso_testflag_version), using \"./kazoj\" as tests dir.\e[0m\n" >&2
-    #   } else {
-    #     [[ $quiet_flag -eq 0 || $verbose_flag -gt 0 ]] && printf "\033[1;33m[DEBUG]  No -K flag on a test run (amboso > $amboso_testflag_version), reading stego.lock.\e[0m\n" >&2
-    #     set_supported_tests "$kazoj_dir"
-    #     [[ $quiet_flag -eq 0 || $verbose_flag -gt 0 ]] && printf "\033[1;33m[DEBUG]  No -K flag on a test run (amboso > $amboso_testflag_version), reading stego.lock.\e[0m\n" >&2
-    #   }
-    #   fi
-    #} else {
-    #   printf "\033[1;31m[ERROR]    No -K flag on a test run, amboso version is < ($amboso_testflag_version).\n    Quitting.\e[0m\n" #>&2
-    #   echo_timer "$amboso_start_time"  "No -K on test run" "3"
-    #   exit 0
-    #}
-    #fi
-    #
   }
   fi
 
