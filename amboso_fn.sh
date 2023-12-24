@@ -1553,7 +1553,7 @@ amboso_parse_args() {
   fi
 
   [[ $verbose_flag -ge 4 ]] && log_cl "[PREP]    Done getopts." debug >&2
-  [[ $verbose_flag -ge 3 && ! "$prog_name" = "anvil" ]] && log_cl "[AMBOZO]    Please, symlink me to \"anvil\".\n" debug >&2
+  [[ $verbose_flag -gt 3 && ! "$prog_name" = "anvil" ]] && log_cl "[AMBOZO]    Please, symlink me to \"anvil\".\n" debug >&2
 
   # Load functions from amboso_fn.sh
   #source_amboso_api
