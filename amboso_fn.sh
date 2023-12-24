@@ -422,9 +422,11 @@ function amboso_init_proj {
       git submodule add --depth 1 "git@github.com:jgabaut/amboso.git"
       [[ $quiet_flag -eq 0 ]] && log_cl "Added amboso submodule" info
       ln -s "amboso/amboso" "anvil"
+      res="$?"
       [[ $quiet_flag -eq 0 ]] && log_cl "Symlinked \"mamboso/amboso\" to \"./anvil\"" info
+      exit "$res"
     )
-    [[ $? -eq 0 ]] || { log_cl "git prep failed for {$target_dir}." error ; return 1 ; } ;
+    [[ "$?" -eq 0 ]] || { log_cl "git prep failed for {$target_dir}." error ; return 1 ; } ;
     [[ $quiet_flag -eq 0 ]] && log_cl "Done init for {$target_dir}" info
 }
 
