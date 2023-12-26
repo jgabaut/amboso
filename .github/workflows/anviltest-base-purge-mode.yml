@@ -23,4 +23,4 @@ jobs:
       run: make distcheck
 
     - name: Run ./amboso as base init -> purge mode, +verbose (-Bip -V 2)
-      run: ./amboso -Bip -V 2
+      run: ./amboso -Bip -V 5

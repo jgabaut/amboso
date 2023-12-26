@@ -23,4 +23,4 @@ jobs:
       run: make distcheck
 
     - name: Run ./amboso as git init mode, +verbose (-gi -V 2)
-      run: ./amboso -gi -V 2
+      run: ./amboso -gi -V 5

@@ -1,0 +1,2 @@
+[CHECK]    Errors occurred during lexing.
+[LINT]    { Failure on: "./stego-examples/bad.stego" }

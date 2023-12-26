@@ -1,41 +1,10 @@
 #!/bin/bash
-#  SPDX-License-Identifier: GPL-3.0-only
-#  Bash script to run a milestone build providing the version number.
-#    Copyright (C) 2023  jgabaut
-#
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation, version 3 of the License.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License
-#    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# Will refuse to run as root. We don't need root privileges in here.
-amboso_start_time=$(date +%s.%N)
-if [ "$(id -u)" -eq 0 ] ; then {
-  printf "[AMBOSO]    Please don't run me as root.\n"
-  exit 3
-}
-fi
-# Set recursion env var if not exists
-prog_name="$(readlink -f "$0")"
-kernel_name="$(uname -s)"
-kernel_release="$(uname -r)"
-kernel_version="$(uname -v)"
-machine_name="$(uname -m)"
-os_name="$(uname -o)"
-amboso_currvers="2.0.0"
 expected_AMBOSO_API_LVL="2.0.0"
-amboso_testflag_version="2.0.0"
-verbose_flag=0
+
+verbose_flag=1
 tell_uname_flag=0
 quiet_flag=0
-try_default=0
 #Function to try sourcing amboso_fn.sh
 source_amboso_api() {
   if [ "$(basename "$(pwd)")" = "amboso" ] ; then {
@@ -131,9 +100,6 @@ source_amboso_api() {
   fi
 }
 
-is_interactive=0
-
-[ "$#" -eq 0 ] && is_interactive=1
-
+printf "[TEST]    source_amboso_api()\n"
 source_amboso_api
-amboso_main "$@"
+printf "[RES]    {$?}\n"

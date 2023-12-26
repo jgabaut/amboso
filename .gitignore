@@ -19,3 +19,6 @@ anvil__hello_world.h
 logic.png
 #ignore cfg dot output
 amboso_cfg.dot
+
+#ignore logfile
+anvil.log

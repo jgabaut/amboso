@@ -1,7 +1,7 @@
 export SHELL=/bin/bash
 
-VERSION="1.9.9"
-ANVIL_C_HEADER_VERSION="1.9.9"
+VERSION="2.0.0"
+ANVIL_C_HEADER_VERSION="2.0.0"
 
 ECHO_VERSION="./amboso"
 RUN_VERSION := $(shell $(ECHO_VERSION) -qv)
@@ -53,7 +53,8 @@ pack: hello_world
 install:
 	@echo -en "Installing amboso $(VERSION) globally as 'anvil':    "
 	install "./amboso" /usr/local/bin/anvil
-	@echo -en "Installing amboso_fn.sh $(VERSION) globally as inside '/usr/local/bin':"
+	@echo -e "\033[1;33mDone.\e[0m"
+	@echo -en "Installing amboso_fn.sh $(VERSION) globally as inside '/usr/local/bin':    "
 	install "./amboso_fn.sh" /usr/local/bin/
 	@echo -e "\033[1;33mDone.\e[0m"
 
