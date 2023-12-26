@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="2.0.0"
+AMBOSO_API_LVL="2.0.1"
 at () {
     printf "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -1521,7 +1521,7 @@ amboso_parse_args() {
   fi
 
   [[ $verbose_flag -ge 4 ]] && log_cl "[PREP]    Done getopts." debug >&2
-  [[ $verbose_flag -gt 3 && ! "$prog_name" = "anvil" ]] && log_cl "[AMBOZO]    Please, symlink me to \"anvil\".\n" debug >&2
+  [[ $verbose_flag -gt 3 && ! "$(basename "$prog_name")" = "anvil" ]] && log_cl "[AMBOZO]    Please, symlink me to \"anvil\".\n" debug >&2
 
   # Load functions from amboso_fn.sh
   #source_amboso_api
