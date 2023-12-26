@@ -1970,7 +1970,7 @@ amboso_parse_args() {
     tot_failures=0
     start_t_tests=$(date +%s.%N)
     for i in $(seq 0 $(($tot_tests-1))); do {
-      [[ $quiet_flag -eq 0 ]] && log_cl "[TEST-MACRO]    Running:  \"$prog_name -Y $amboso_start_time $verbm -T$quietm$buildm$showtimem$plainm$loggedm -K $kazoj_dir -D $scripts_dir ${supported_tests[$i]}\"" info >&2
+      [[ $quiet_flag -eq 0 ]] && log_cl "[TEST-MACRO]    Running:  \"$(basename "$prog_name") -Y $amboso_start_time $verbm -T$quietm$buildm$showtimem$plainm$loggedm -K $kazoj_dir -D $scripts_dir ${supported_tests[$i]}\"" info >&2
       start_t_curr_test=$(date +%s.%N)
       "$prog_name" -Y "$amboso_start_time" $verbm -T"$quietm$buildm""$showtimem""$plainm""$loggedm" -K "$kazoj_dir" -D "$scripts_dir" "${supported_tests[$i]}"
       retcod="$?"
