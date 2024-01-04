@@ -263,6 +263,7 @@ function echo_active_flags {
     done
   }
   fi
+  [[ $extensions_flag -gt 0 ]] && printf "e"
   [[ $force_build_flag -gt 0 ]] && printf "F"
   [[ $enable_make_rebuild_flag -ne 1 ]] && printf "R"
   [[ $do_filelog_flag -gt 0 ]] && printf "J"
@@ -629,7 +630,17 @@ function git_mode_check {
   #Check if we're inside a repo
   git rev-parse --is-inside-work-tree 2>/dev/null 1>&2
   is_git_repo="$?"
-  [[ $is_git_repo -gt 0 ]] && log_cl "Not running in a git repo. Try running with -B to use base mode.\n" error && exit 1
+  if [[ $is_git_repo -gt 0 ]] ; then {
+    if [[ $extensions_flag -gt 0 ]] ; then {
+        log_cl "Not running in a git repo. Extensions enabled, returning success.\n" warn
+        return 0
+    } else {
+        log_cl "Not running in a git repo. Try running with -B to use base mode.\n" error
+        exit 1
+    }
+    fi
+  }
+  fi
   [[ $verbose_flag -gt 3 ]] && log_cl "[MODE]    Running in git mode." info >&2
   #Check if status is clean
   if output=$(git status --untracked-files=no --porcelain) && [ -z "$output" ]; then
@@ -676,7 +687,8 @@ function amboso_help {
   -Y <START_TIME>            Set start time of the program
   -z        (pack)           Run \"make pack\"
   -c        (control-flow)   Output dotfile \'amboso_cfg.dot\' while running
-  -H        (bighelp)        Print more help"
+  -H        (bighelp)        Print more help
+  -e        (extensions)     Enable extensions to 2.0"
   printf "%s\n" "$amboso_help_string"
 }
 
@@ -693,7 +705,7 @@ function amboso_usage {
 
   printf "Arguments:
   [TAG]  Optional tag argument\n"
-  printf "Example usage:  $(basename "$prog_name") [(-D|-K|-M|-S|-E|-G|-C|-x|-V|-Y) <ARG>] [-TBtg] [-bripd] [-hHvlLqcwXWPJRF] [TAG]\n"
+  printf "Example usage:  $(basename "$prog_name") [(-D|-K|-M|-S|-E|-G|-C|-x|-V|-Y) <ARG>] [-TBtg] [-bripd] [-hHvlLqcwXWPJRFe] [TAG]\n"
 }
 
 function escape_colorcodes_tee {
@@ -1296,9 +1308,13 @@ amboso_parse_args() {
   do_filelog_flag=0
   enable_make_rebuild_flag=1
   force_build_flag=0
+  extensions_flag=0
 
-  while getopts "A:M:S:E:D:K:G:Y:x:V:C:wBgbpHhrivdlLtTqsczUXWPJRF" opt; do
+  while getopts "A:M:S:E:D:K:G:Y:x:V:C:wBgbpHhrivdlLtTqsczUXWPJRFe" opt; do
     case $opt in
+      e )
+        extensions_flag=1
+        ;;
       F )
         force_build_flag=1
         ;;
