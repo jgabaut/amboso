@@ -1,6 +1,6 @@
 #!/bin/bash
 
-expected_AMBOSO_API_LVL="2.0.0"
+expected_AMBOSO_API_LVL="2.0.1"
 
 verbose_flag=1
 tell_uname_flag=0
@@ -84,7 +84,7 @@ source_amboso_api() {
        printf "[WARN]    Legacy stego.lock format is not supported.\n"
     } elif [[ "$AMBOSO_API_LVL" > "1.7.4" && "$AMBOSO_API_LVL" < "1.9.6" ]] ; then {
        printf "[WARN]    Incompatible -C flag, test mode\n"
-    } elif [[ "$AMBOSO_API_LVL" < "2.0.0" ]] ;  then {
+    } elif [[ "$AMBOSO_API_LVL" < "2.0.1" ]] ;  then {
        printf "[WARN]    Deprecated amboso 1.x API found.\n"
     }
     fi
