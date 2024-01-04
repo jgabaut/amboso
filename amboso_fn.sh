@@ -957,13 +957,13 @@ try_parsing_stego() {
 
 bash_gulp_stego() {
   # Try gulping the "scopes", "variables" and "values" bash arrays from parsing the passed file
-  if [[ ! -f $1 ]] ; then {
-    log_cl "${FUNCNAME[0]}(): \"$1\" is not a valid file." error
+  input="$1"
+  if [[ ! -f "$input" ]] ; then {
+    log_cl "${FUNCNAME[0]}(): \"$input\" is not a valid file." error
     exit 8
   }
   fi
 
-  input="$1"
   filename="$input"
   verbose="$2"
   try_parsing_stego "$input" "$verbose"
@@ -1667,6 +1667,16 @@ amboso_parse_args() {
   #We always notify of missing -D argument
   [[ ! $dir_flag -gt 0 ]] && scripts_dir="./bin/" && log_cl "No -D flag, using ( $scripts_dir ) for target dir. Run with -V <lvl> to see more." debug >&2 #&& usage && exit 1
 
+  if [[ ! -d "$scripts_dir" ]] ; then {
+    if [[ "$extensions_flag" -gt 0 ]] ; then {
+        log_cl "${FUNCNAME[0]}():    \"$scripts_dir\" was not a valid dir. Trying \".\"." warn
+        scripts_dir="."
+    } else {
+        log_cl "${FUNCNAME[0]}():    \"$scripts_dir\" was not a valid dir." debug
+    }
+    fi
+  }
+  fi
 
   #We always notify of missing -K argument, if in test mode
   if [[ $test_mode_flag -gt 0 && ! $testdir_flag -gt 0 ]] ; then {
