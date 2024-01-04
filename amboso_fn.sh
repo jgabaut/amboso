@@ -688,7 +688,7 @@ function amboso_help {
   -z        (pack)           Run \"make pack\"
   -c        (control-flow)   Output dotfile \'amboso_cfg.dot\' while running
   -H        (bighelp)        Print more help
-  -e        (extensions)     Enable extensions to 2.0"
+  -e        (extensions)     Turn off extensions to 2.0"
   printf "%s\n" "$amboso_help_string"
 }
 
@@ -1308,12 +1308,12 @@ amboso_parse_args() {
   do_filelog_flag=0
   enable_make_rebuild_flag=1
   force_build_flag=0
-  extensions_flag=0
+  extensions_flag=1
 
   while getopts "A:M:S:E:D:K:G:Y:x:V:C:wBgbpHhrivdlLtTqsczUXWPJRFe" opt; do
     case $opt in
       e )
-        extensions_flag=1
+        extensions_flag=0
         ;;
       F )
         force_build_flag=1
