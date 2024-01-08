@@ -1,0 +1,4 @@
+[0;32m[INFO]    Queried {amboso-C} kern[0m
+[0;32m[INFO]    Using {2.0.1} version standard[0m
+[0;33m[WARN]    Running as: {2.0.1}, less than {2.1.0}[0m
+[0;33m[WARN]    Ignoring query for kern {amboso-C}[0m
