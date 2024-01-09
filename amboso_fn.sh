@@ -1157,7 +1157,7 @@ set_amboso_stego_info() {
                   exit 1
                   ;;
             esac
-            log_cl "${FUNCNAME[0]}():  Using ANVIL_VERSION: {$value}\n" info
+            [[ "$verbose_flag" -ge 4 ]] && log_cl "${FUNCNAME[0]}():  Using ANVIL_VERSION: {$value}\n" info
             std_amboso_version="$value"
           } else {
             log_cl "${FUNCNAME[0]}():  Invalid version standard --> {$value}" error
