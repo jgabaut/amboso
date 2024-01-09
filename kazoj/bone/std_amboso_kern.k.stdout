@@ -2,3 +2,7 @@
 [0;32m[INFO]    Using {2.0.1} version standard[0m
 [0;33m[WARN]    Running as: {2.0.1}, less than {3.0.0}[0m
 [0;33m[WARN]    Ignoring query for kern {amboso-C}[0m
+[ERROR]    ( new_kern ) is not a supported tag.
+
+[ERROR]           Run with -h for help.
+
