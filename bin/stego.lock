@@ -1,3 +1,7 @@
+[ anvil ]
+
+version = "2.0.2"
+
 [ build ]
 
 source = "hello_world.c"
@@ -49,4 +53,5 @@ errortestsdir = "kulpo"
 "1.9.8" = "Fix init subcommand by trying to mkdir target dir"
 "1.9.9" = "-C flag expects a file to read config args"
 "2.0.0" = "New flags, proper colored output"
-"2.0.1" = "Foo"
+"2.0.1" = "Add -e flag"
+"2.0.2" = "Add -a, -k flags"

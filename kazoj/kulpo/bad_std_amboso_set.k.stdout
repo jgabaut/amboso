@@ -1,0 +1,2 @@
+[0;31m[ERROR]    Invalid version standard --> {2.a.0}[0m
+[0;31m[ERROR]    Not matching regex --> '^([1-9][0-9]*|0)\.([1-9][0-9]*|0)\.([1-9][0-9]*|0)$'[0m
