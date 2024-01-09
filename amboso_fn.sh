@@ -1538,6 +1538,12 @@ amboso_parse_args() {
   }
   fi
 
+  if [[ "$std_amboso_version" = "2.0.0" ]] ; then {
+    log_cl "Turning off extensions flag" info
+    extensions_flag=0
+  }
+  fi
+
   if [[ "$std_amboso_version" > "$min_amboso_v_kern" ]] ; then {
     if [[ ! -z "$queried_amboso_kern" ]] ; then {
         log_cl "Using {$queried_amboso_kern}" info
