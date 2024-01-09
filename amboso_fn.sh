@@ -1316,7 +1316,7 @@ amboso_parse_args() {
   enable_make_rebuild_flag=1
   force_build_flag=0
   extensions_flag=1
-  std_amboso_version="2.0.0"
+  std_amboso_version="${AMBOSO_API_LVL}"
   std_amboso_regex='^([1-9][0-9]*|0)\.([1-9][0-9]*|0)\.([1-9][0-9]*|0)$'
   std_amboso_version_list=("2.0.0" "2.0.*")
   std_amboso_kern="amboso-C"
