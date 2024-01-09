@@ -1362,7 +1362,7 @@ amboso_parse_args() {
   std_amboso_kern="amboso-C"
   std_amboso_kern_list=("amboso-C")
   queried_amboso_kern=""
-  min_amboso_v_kern="3.0.0"
+  min_amboso_v_kern="2.0.2"
 
   while getopts "A:M:S:E:D:K:G:Y:x:V:C:a:k:wBgbpHhrivdlLtTqsczUXWPJRFe" opt; do
     case $opt in
