@@ -293,7 +293,7 @@ function echo_active_flags {
   [[ $version_flag -eq 1 ]] && printf "v"
   [[ $version_flag -gt 1 ]] && printf "v" #One more level to this option
   printf "\n\n"
-  printf "           [VERBOSE LEVEL]    $verb_lv\n\n"
+  printf "           [VERBOSE LEVEL]    $verbose_flag\n\n"
 }
 
 print_sysinfo () {
