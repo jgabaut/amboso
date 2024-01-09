@@ -1030,6 +1030,11 @@ print_amboso_stego_scopes() {
           printf "ANVIL_KULPO_DIR: {$test_dir}\n"
         }
         fi
+    } elif [[ $scope = "anvil" ]] ; then {
+        if [[ $variable = "anvil_version" ]] ; then {
+          printf "ANVIL_VERSION: {$value}\n"
+        }
+        fi
     }
     fi
   }
@@ -1125,6 +1130,41 @@ set_amboso_stego_info() {
           [[ $verbose -gt 0 ]] && printf "ANVIL_KULPO_DIR: {$read_dir}\n"
           tests_info[1]="$read_dir"
           errors_dir="${tests_info[1]}"
+        }
+        fi
+    } elif [[ $scope = "anvil" ]] ; then {
+        if [[ $variable = "anvil_version" ]] ; then {
+          anvil_version_regex='^([1-9][0-9]*|0)\.([1-9][0-9]*|0)\.([1-9][0-9]*|0)$'
+          if [[ "$value" =~ $anvil_version_regex ]] ; then {
+            case "$value" in
+              2.0.0)
+                  log_cl "${FUNCNAME[0]}():    Turning off extensions flag" info
+                  extensions_flag=0
+                  ;;
+              2.0.1)
+                  :
+                  ;;
+              2.0.*)
+                  :
+                  ;;
+              *)
+                  log_cl "${FUNCNAME[0]}():    Invalid version arg --> {$value}" error
+                  log_cl "Hint: Use one of these: --> {" error
+                  for v in "${std_amboso_version_list[@]}"; do
+                      log_cl "    $v" info
+                  done
+                  log_cl "}" error
+                  exit 1
+                  ;;
+            esac
+            [[ $verbose -gt 0 ]] && printf "ANVIL_VERSION: {$value}\n"
+            std_amboso_version="$value"
+          } else {
+            log_cl "${FUNCNAME[0]}():  Invalid version standard --> {$value}" error
+            log_cl "Not matching regex --> \'$anvil_version_regex\'" error
+            exit 1
+          }
+          fi
         }
         fi
     }
