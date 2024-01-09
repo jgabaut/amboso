@@ -361,7 +361,7 @@ function check_tags {
 function echo_tag_info {
 	tag=$1
 	tag_date=$(git show -q --clear-decorations --format="%at" "$tag" 2>/dev/null)
-	tag_author=$(git show -q --clear-decorations "$tag" 2>/dev/null | grep Author | cut -f2 -d':' | cut -f2 -d' ')
+	tag_author=$(git show -q --clear-decorations "$tag" 2>/dev/null | grep Author | cut -f2 -d':' | awk -F" " '{print $1}')
 	tag_txt=$(git show -q --clear-decorations "$tag" 2>/dev/null | tail -n2 | grep -v '^$')
 	log_cl "[AMBOSO]    Tag text was:  [$tag_txt]" info
 	log_cl "[AMBOSO]    Tag author was:  [$tag_author ]" info
@@ -443,7 +443,7 @@ function gen_C_headers {
 	headername="anvil__$execname.h"
 	c_headername="anvil__$execname.c"
 	tag_date=$(git show -q --clear-decorations --format="%at" "$tag" 2>/dev/null)
-	tag_author=$(git show -q --clear-decorations "$tag" 2>/dev/null | grep Author | cut -f2 -d':' | cut -f2 -d' ')
+	tag_author=$(git show -q --clear-decorations "$tag" 2>/dev/null | grep Author | cut -f2 -d':' | awk -F" " '{printf $1}')
 	tag_txt=$(git show -q --clear-decorations "$tag" 2>/dev/null | head -n1 | grep -v '^$')
 	log_cl "[AMBOSO]    Gen C header for ($execname), v($tag) to dir ($target_dir)" info
 	log_cl "[AMBOSO]    Reset file ($target_dir/$headername)" info
