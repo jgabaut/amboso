@@ -1,2 +1,2 @@
 #!/bin/bash
-"./amboso" -k amboso-C -P -a 2.0.1 -h
+"./amboso" -k amboso-C -P -a 2.0.1 -b
