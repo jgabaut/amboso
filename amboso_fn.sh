@@ -360,12 +360,12 @@ function check_tags {
 
 function echo_tag_info {
 	tag=$1
-	tag_date=$(git show -q --clear-decorations "$tag" 2>/dev/null | grep Date | cut -f2 -d':')
+	tag_date=$(git show -q --clear-decorations --format="%at" "$tag" 2>/dev/null)
 	tag_author=$(git show -q --clear-decorations "$tag" 2>/dev/null | grep Author | cut -f2 -d':' | cut -f2 -d' ')
 	tag_txt=$(git show -q --clear-decorations "$tag" 2>/dev/null | tail -n2 | grep -v '^$')
 	log_cl "[AMBOSO]    Tag text was:  [$tag_txt]" info
 	log_cl "[AMBOSO]    Tag author was:  [$tag_author ]" info
-	log_cl "[AMBOSO]    Tag date was:  [$tag_date   ]" info
+	log_cl "[AMBOSO]    Tag date was:  [$tag_date]" info
 }
 
 function amboso_init_proj {
@@ -442,7 +442,7 @@ function gen_C_headers {
 	execname=$3
 	headername="anvil__$execname.h"
 	c_headername="anvil__$execname.c"
-	tag_date=$(git show -q --clear-decorations "$tag" 2>/dev/null | grep Date | cut -f2 -d':')
+	tag_date=$(git show -q --clear-decorations --format="%at" "$tag" 2>/dev/null)
 	tag_author=$(git show -q --clear-decorations "$tag" 2>/dev/null | grep Author | cut -f2 -d':' | cut -f2 -d' ')
 	tag_txt=$(git show -q --clear-decorations "$tag" 2>/dev/null | head -n1 | grep -v '^$')
 	log_cl "[AMBOSO]    Gen C header for ($execname), v($tag) to dir ($target_dir)" info
