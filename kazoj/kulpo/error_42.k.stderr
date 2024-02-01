@@ -1,5 +1,6 @@
 [MODE]    Running in test mode.
 [DEBUG]    No -D flag, using ( ./bin/ ) for target dir. Run with -V <lvl> to see more.
+[DEBUG]    No -O flag, using ( ../amboso ) for stego dir. Run with -V <lvl> to see more.
 [DEBUG]    bone dir (NO -K passed to this call): ( bone )
 [DEBUG]           kulpo dir (NO -K passed to this amboso call): ( kulpo )
 [PANIC]    Running  "amboso" using test mode in a program that will be called by test mode is not supported.

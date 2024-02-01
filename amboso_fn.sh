@@ -1948,7 +1948,7 @@ amboso_parse_args() {
 
   if [[ "$std_amboso_version" > "$min_amboso_v_stegodir" || "$std_amboso_version" = "$min_amboso_v_stegodir" ]]; then {
     #We always notify of missing -O argument
-    [[ ! $stego_dir_flag -gt 0 ]] && stego_dir="$(basename "$(pwd)")" && log_cl "No -O flag, using ( $stego_dir ) for stego dir. Run with -V <lvl> to see more." debug >&2
+    [[ ! $stego_dir_flag -gt 0 ]] && stego_dir="../$(basename "$(pwd)")" && log_cl "No -O flag, using ( $stego_dir ) for stego dir. Run with -V <lvl> to see more." debug >&2
 
     if [[ ! -f "${stego_dir}/stego.lock" ]] ; then {
       log_cl "${FUNCNAME[0]}():    \"$stego_dir/stego.lock\" was not a valid stego file. Trying {\"$scripts_dir\"}." warn
