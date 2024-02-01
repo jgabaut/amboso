@@ -1211,10 +1211,15 @@ set_amboso_stego_info() {
             if [[ "$std_amboso_version" < "$min_amboso_v_stego_noforce" ]] ; then {
                 log_cl "Taken legacy path: stego.lock defined value always overrides current std_amboso_version." warn cyan
                 log_cl "Current: {$std_amboso_version}, min needed: {$min_amboso_v_stego_noforce}" warn
-                std_amboso_version="$value"
+                if [[ "$std_amboso_version" < "${AMBOSO_API_LVL}" || "$std_amboso_version" = "${AMBOSO_API_LVL}" ]] ; then {
+                  # This check was not present originally.
+                  std_amboso_version="$value"
+                }
+                fi
                 log_cl "Set std_amboso_version to -> {$std_amboso_version}" warn
             } else {
-              if ! [[ "$std_amboso_version" < "${AMBOSO_API_LVL}" ]] ; then {
+              if [[ "$std_amboso_version" < "${AMBOSO_API_LVL}" || "$std_amboso_version" = "${AMBOSO_API_LVL}" ]] ; then {
+                # This check was not present originally.
                 std_amboso_version="$value"
               }
               fi
