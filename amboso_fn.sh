@@ -312,6 +312,9 @@ print_sysinfo () {
 }
 
 function echo_amboso_version {
+  local curr_v="$1"
+  local api_v="$2"
+  local amboso_version="amboso, v$curr_v (Compat: v$api_v)"
   printf "$amboso_version\n"
 }
 function echo_amboso_version_short {
@@ -1438,7 +1441,6 @@ amboso_parse_args() {
   force_build_flag=0
   extensions_flag=1
   std_amboso_version="${AMBOSO_API_LVL}"
-  amboso_version="amboso, v$amboso_currvers (API: $std_amboso_version)"
   std_amboso_regex='^([1-9][0-9]*|0)\.([1-9][0-9]*|0)\.([1-9][0-9]*|0)$'
   std_amboso_short_regex='^([1-9][0-9]*)\.([1-9][0-9]*|0)$'
   std_amboso_version_list=("2.0.0" "2.0.*" "1.*")
@@ -1710,7 +1712,7 @@ amboso_parse_args() {
     echo_timer "$amboso_start_time"  "Version flag, 1" "2"
     exit 0
   } elif [[ $version_flag -gt 1 ]] ; then {
-    echo_amboso_version
+    echo_amboso_version "$amboso_currvers" "$std_amboso_version"
     echo_timer "$amboso_start_time"  "Version flag, >1" "2"
     exit 0
   }
@@ -2033,7 +2035,7 @@ amboso_parse_args() {
       exit 1
     }
     fi
-    echo_amboso_version
+    echo_amboso_version "$amboso_currvers" "$std_amboso_version"
     amboso_usage
 
     printf "Try running with with -H for more info.\n\n"
@@ -2053,7 +2055,7 @@ amboso_parse_args() {
       exit 1
     }
     fi
-    echo_amboso_version
+    echo_amboso_version "$amboso_currvers" "$std_amboso_version"
     amboso_help
     echo_timer "$amboso_start_time"  "Show big help" "2"
     exit 0
