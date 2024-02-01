@@ -200,7 +200,7 @@ function log_cl {
 }
 
 function echo_amboso_splash {
-    amboso_version="$1"
+    local amboso_version="$1"
     prog="$2"
     printf "amboso, v$amboso_version\nCopyright (C) 2023-2024  jgabaut\n\n  This program comes with ABSOLUTELY NO WARRANTY; for details type \`$prog -W\`.\n  This is free software, and you are welcome to redistribute it\n  under certain conditions; see file \`LICENSE\` for details.\n\n  Full source is available at https://github.com/jgabaut/amboso\n\n"
 }
@@ -1387,7 +1387,6 @@ amboso_parse_args() {
 
 
   #Prepare flag values to default value
-  amboso_version="amboso, v$amboso_currvers"
   purge_flag=0
   run_flag=0 #By default we don't run the binary
   build_flag=0
@@ -1439,6 +1438,7 @@ amboso_parse_args() {
   force_build_flag=0
   extensions_flag=1
   std_amboso_version="${AMBOSO_API_LVL}"
+  amboso_version="amboso, v$amboso_currvers (API: $std_amboso_version)"
   std_amboso_regex='^([1-9][0-9]*|0)\.([1-9][0-9]*|0)\.([1-9][0-9]*|0)$'
   std_amboso_short_regex='^([1-9][0-9]*)\.([1-9][0-9]*|0)$'
   std_amboso_version_list=("2.0.0" "2.0.*" "1.*")
