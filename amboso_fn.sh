@@ -508,7 +508,7 @@ function set_supported_tests {
       test_fp="$cases_path/$(basename "$FILE")"
       extens=$(printf "$(realpath "$(basename "$FILE")")\n" | awk -F"." '{print $2}')
       if [[ "$extens" != "k" ]] ; then {
-      [[ $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] && log_cl "{$test_fp} does not have .k extension." warn
+        [[ "${AMBOSO_LVL_REC}" -eq 1 || $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] && log_cl "{$test_fp} does not have .k extension." warn
         skipped=$((skipped+1))
         continue
       }
@@ -2193,6 +2193,7 @@ amboso_parse_args() {
       norebuildm=""
       forcebuildm=""
       extm=""
+      stegodm=""
       [[ $extensions_flag -ne 1 ]] && extm="e"
       [[ $force_build_flag -gt 0 ]] && forcebuildm="F"
       [[ $enable_make_rebuild_flag -eq 0 ]] && norebuildm="R"
@@ -2208,9 +2209,13 @@ amboso_parse_args() {
       [[ $base_mode_flag -gt 0 ]] && basem="B" #We make sure to pass on eventual base mode to the subcalls
       [[ $git_mode_flag -gt 0 ]] && gitm="g" #We make sure to pass on eventual git mode to the subcalls
       [[ $quiet_flag -gt 0 ]] && quietm="q" #We make sure to pass on eventual quiet mode to the subcalls
+      if [[ "$std_amboso_version" > "$min_amboso_v_stegodir" || "$std_amboso_version" = "$min_amboso_v_stegodir" ]] ; then {
+          stegodm="-O $stego_dir"
+      }
+      fi
       #First pass sets the verbose flag but redirects stderr to /dev/null
-      [[ $verbose_flag -gt 3 ]] && log_cl "[VERB]    Running \"$(dirname "$(basename "$prog_name")") -O $stego_dir -k $std_amboso_kern -a $std_amboso_version -Y $amboso_start_time -M $makefile_version -S $source_name -E $exec_entrypoint -D $scripts_dir $verb $configm -b$gitm$basem$quietm$silentm$packm$ignore_gitcheck$showtimem$plainm$loggedm$norebuildm$forcebuildm$extm $init_vers\" ( $(($i+1)) / $tot_vers )" info >&2
-      "$prog_name" -O "$stego_dir" -k "$std_amboso_kern" -a "$std_amboso_version" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -E "$exec_entrypoint" -D "$scripts_dir" $verb $configm -b"$gitm""$basem""$quietm""$silentm""$packm""$ignore_gitcheck""$showtimem""$plainm""$loggedm""$norebuildm""$forcebuildm""$extm" "$init_vers" 2>/dev/null
+      [[ $verbose_flag -gt 3 ]] && log_cl "[VERB]    Running \"$(dirname "$(basename "$prog_name")") $stegodm -k $std_amboso_kern -a $std_amboso_version -Y $amboso_start_time -M $makefile_version -S $source_name -E $exec_entrypoint -D $scripts_dir $verb $configm -b$gitm$basem$quietm$silentm$packm$ignore_gitcheck$showtimem$plainm$loggedm$norebuildm$forcebuildm$extm $init_vers\" ( $(($i+1)) / $tot_vers )" info >&2
+      "$prog_name" -a "$std_amboso_version" "$stegodm" -k "$std_amboso_kern" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -E "$exec_entrypoint" -D "$scripts_dir" $verb $configm -b"$gitm""$basem""$quietm""$silentm""$packm""$ignore_gitcheck""$showtimem""$plainm""$loggedm""$norebuildm""$forcebuildm""$extm" "$init_vers" 2>/dev/null
       if [[ $? -eq 0 ]] ; then {
         [[ $verbose_flag -gt 3 ]] && log_cl "[INIT]    $init_vers binary ready." info >&2
         count_bins=$(($count_bins +1))
@@ -2222,8 +2227,8 @@ amboso_parse_args() {
         #
         #we could just pass -v to the first call if we have it on
         if [[ $verbose_flag -gt 3 || $quiet_flag -eq 0 ]]; then {
-          log_cl "[INIT]    Checking errors, running $(basename "$prog_name") -k $std_amboso_kern-a $std_amboso_version -bV$packm$ignore_gitcheck $init_vers" info >&2
-      ("$prog_name" -O "$stego_dir" -k "$std_amboso_kern" -a "$std_amboso_version" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -D "$scripts_dir" -E "$exec_entrypoint" -V 2 -b"$gitm""$basem""$packm""$ignore_gitcheck""$showtimem""$plainm""$loggedm""$norebuildm""$forcebuildm""$extm" "$init_vers") >&2
+          log_cl "[INIT]    Checking errors, running $(basename "$prog_name") -k $std_amboso_kern -a $std_amboso_version -bV$packm$ignore_gitcheck $init_vers" info >&2
+      ("$prog_name" -a "$std_amboso_version" "$stegodm" -k "$std_amboso_kern" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -D "$scripts_dir" -E "$exec_entrypoint" -V 2 -b"$gitm""$basem""$packm""$ignore_gitcheck""$showtimem""$plainm""$loggedm""$norebuildm""$forcebuildm""$extm" "$init_vers") >&2
         }
         fi
       }
@@ -2282,6 +2287,11 @@ amboso_parse_args() {
     plainm=""
     loggedm=""
     extm=""
+    stegodm=""
+    if [[ "$std_amboso_version" > "$min_amboso_v_stegodir" || "$std_amboso_version" = "$min_amboso_v_stegodir" ]] ; then {
+        stegodm="-O $stego_dir"
+    }
+    fi
     [[ $extensions_flag -ne 1 ]] && ext="e"
     [[ $do_filelog_flag -gt 0 ]] && loggedm="J"
     [[ $allow_color_flag -le 0 ]] && plainm="P"
@@ -2295,9 +2305,9 @@ amboso_parse_args() {
     tot_failures=0
     start_t_tests=$(date +%s.%N)
     for i in $(seq 0 $(($tot_tests-1))); do {
-      [[ $quiet_flag -eq 0 ]] && log_cl "[TEST-MACRO]    Running:  \"$(basename "$prog_name") -O $stego_dir -k $std_amboso_kern -a $std_amboso_version -Y $amboso_start_time $verbm -T$quietm$buildm$showtimem$plainm$loggedm$extm -K $kazoj_dir -D $scripts_dir ${supported_tests[$i]}\"" info >&2
+      [[ $quiet_flag -eq 0 ]] && log_cl "[TEST-MACRO]    Running:  \"$(basename "$prog_name") $stegodm -k $std_amboso_kern -a $std_amboso_version -Y $amboso_start_time $verbm -T$quietm$buildm$showtimem$plainm$loggedm$extm -K $kazoj_dir -D $scripts_dir ${supported_tests[$i]}\"" info >&2
       start_t_curr_test=$(date +%s.%N)
-      "$prog_name" -O "$stego_dir" -k "$std_amboso_kern" -a "$std_amboso_version" -Y "$amboso_start_time" $verbm -T"$quietm$buildm""$showtimem""$plainm""$loggedm""$extm" -K "$kazoj_dir" -D "$scripts_dir" "${supported_tests[$i]}"
+      "$prog_name" -a "$std_amboso_version" "$stegodm" -k "$std_amboso_kern" -Y "$amboso_start_time" $verbm -T"$quietm$buildm""$showtimem""$plainm""$loggedm""$extm" -K "$kazoj_dir" -D "$scripts_dir" "${supported_tests[$i]}"
       retcod="$?"
       if [[ $retcod -eq 0 ]] ; then {
         tot_successes=$(($tot_successes+1))
@@ -2522,6 +2532,11 @@ amboso_parse_args() {
         plainm=""
         loggedm=""
         extm=""
+        stegodm=""
+        if [[ "$std_amboso_version" > "$min_amboso_v_stegodir" || "$std_amboso_version" = "$min_amboso_v_stegodir" ]] ; then {
+            stegodm="-O $stego_dir"
+        }
+        fi
         [[ $extensions_flag -ne 1 ]] && extm="e"
         [[ $do_filelog_flag -gt 0 ]] && loggedm="J"
         [[ $allow_color_flag -le 0 ]] && plainm="P"
@@ -2529,9 +2544,9 @@ amboso_parse_args() {
         [[ $quiet_flag -gt 0 ]] && quietm="q" #We make sure to pass on eventual quiet flag mode to the subcalls
         [[ $verbose_flag -ne 3 ]] && verb="-V $verbose_flag"
         [[ $verbose_flag -gt 3 ]] && printf "\n[TEST]    Recording ALL: ( $(($i+1)) / $tot_tests ) ( $TEST )\n" >&2
-        log_cl "[TEST]    Running:    \"$prog_name -O $stego_dir -k $std_amboso_kern -a $std_amboso_version -K $kazoj_dir -D $scripts_dir $verb -bT$quietm$showtimem$plainm$loggedm$extm $TEST 2>/dev/null \"\e[0m\n" debug
+        log_cl "[TEST]    Running:    \"$prog_name $stegodm -k $std_amboso_kern -a $std_amboso_version -K $kazoj_dir -D $scripts_dir $verb -bT$quietm$showtimem$plainm$loggedm$extm $TEST 2>/dev/null \"\e[0m\n" debug
         start_t=$(date +%s.%N)
-        ( "$prog_name" -O "$stego_dir" -k "$std_amboso_kern" -a "$std_amboso_version" -Y "$amboso_start_time" -K "$kazoj_dir" -D "$scripts_dir" $verb -b"$quietm""$showtimem""$plainm""$loggedm""$extm"T "$TEST" 2>/dev/null ; exit "$?")
+        ( "$prog_name" -a "$std_amboso_version" "$stegodm" -k "$std_amboso_kern" -Y "$amboso_start_time" -K "$kazoj_dir" -D "$scripts_dir" $verb -b"$quietm""$showtimem""$plainm""$loggedm""$extm"T "$TEST" 2>/dev/null ; exit "$?")
         record_res="$?"
         if [[ $record_res -eq 69 ]]; then {
           log_cl "[PANIC]    Unsupported: a test call returned 69. Will do the same.\n" error &&
@@ -3135,6 +3150,11 @@ amboso_parse_args() {
       plainm=""
       loggedm=""
       extm=""
+      stegodm=""
+      if [[ "$std_amboso_version" > "$min_amboso_v_stegodir" || "$std_amboso_version" = "$min_amboso_v_stegodir" ]] ; then {
+          stegodm="-O $stego_dir"
+      }
+      fi
       [[ $extensions_flag -ne 1 ]] && extm="e"
       [[ $do_filelog_flag -gt 0 ]] && loggedm="J"
       [[ $allow_color_flag -le 0 ]] && plainm="P"
@@ -3148,10 +3168,10 @@ amboso_parse_args() {
       [[ $git_mode_flag -gt 0 ]] && gitm="g" #We make sure to pass on eventual git mode to the subcalls
       [[ $quiet_flag -gt 0 ]] && quietm="q" #We make sure to pass on eventual quiet flag mode to the subcalls
       if [[ $quiet_flag -eq 0 ]] ; then {
-        log_cl "[PURGE]    Running \"$(basename "$prog_name") -O $stego_dir -k $std_amboso_kern -a $std_amboso_version -Y $amboso_start_time-M $makefile_version -S $source_name -E $exec_entrypoint -D $scripts_dir $verb -d$gitm$basem$quietm$silentm$packm$ignore_gitcheck$showtimem$plainm$loggedm$extm $purge_vers 2>/dev/null\"" debug
+        log_cl "[PURGE]    Running \"$(basename "$prog_name") $stegodm -k $std_amboso_kern -a $std_amboso_version -Y $amboso_start_time-M $makefile_version -S $source_name -E $exec_entrypoint -D $scripts_dir $verb -d$gitm$basem$quietm$silentm$packm$ignore_gitcheck$showtimem$plainm$loggedm$extm $purge_vers 2>/dev/null\"" debug
       }
       fi
-      ( $prog_name -O "$stego_dir" -k "$std_amboso_kern" -a "$std_amboso_version" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -E "$exec_entrypoint" -D "$scripts_dir" $verb -d"$gitm""$basem""$quietm""$silentm""$packm""$ignore_gitcheck""$showtimem""$plainm""$loggedm""$extm" "$purge_vers" ) 2>/dev/null
+      ( $prog_name -a "$std_amboso_version" "$stegodm" -k "$std_amboso_kern" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -E "$exec_entrypoint" -D "$scripts_dir" $verb -d"$gitm""$basem""$quietm""$silentm""$packm""$ignore_gitcheck""$showtimem""$plainm""$loggedm""$extm" "$purge_vers" ) 2>/dev/null
       clean_res="$?"
       #To be sure delete OP is gonna be the returning op here, we assume pack just never makes the script return, so it will always go to delete OP safely.
 
@@ -3171,7 +3191,7 @@ amboso_parse_args() {
         if [[ $verbose_flag -gt 3 ]]; then {
           printf "[PURGE]    Verbose flag was asserted as ($verbose_flag).\n" >&2
           log_cl "[PURGE]    Checking errors, running $(basename "$prog_name") -k $std_amboso_kern -a $std_amboso_version -V 2 -d $purge_vers" debug >&2
-          ("$prog_name" -O "$stego_dir" -k "$std_amboso_kern" -a "$std_amboso_version" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -D "$scripts_dir" -E "$exec_entrypoint" -V 2 -d"$gitm""$basem""$ignore_gitcheck""$showtimem""$plainm""$loggedm""$extm" "$purge_vers") #>&2
+          ("$prog_name" -a "$std_amboso_version" "$stegodm" -k "$std_amboso_kern" -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -D "$scripts_dir" -E "$exec_entrypoint" -V 2 -d"$gitm""$basem""$ignore_gitcheck""$showtimem""$plainm""$loggedm""$extm" "$purge_vers") #>&2
         }
         fi
       }
