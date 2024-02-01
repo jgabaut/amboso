@@ -2568,6 +2568,29 @@ amboso_parse_args() {
   #End of test mode block
 
   #We expect $scripts_dir to end with /
+  local interpr_regex='stego.lock$'
+  local interpr_does_make=1
+  if [[ "$std_amboso_version" > "2.0.2" && "$query" =~ $interpr_regex ]] ; then {
+    log_cl "Running as interpreter for {$query}\n" info
+    if [[ "$interpr_does_make" -gt 0 ]] ; then {
+      log_cl "Building: -->    {Plain make}\n" info magenta
+      app "$(echo_node silence_check missing_query)"
+      try_doing_make
+      make_res="$?"
+      app "$(echo_node missing_query end_node)"
+      end_digraph
+      #printf "\033[1;31m[ERROR]    Missing query.\e[0m\n\n"
+      #printf "\033[1;33m           Run with -h for help.\e[0m\n\n"
+      echo_timer "$amboso_start_time"  "Missing query" "1"
+      return "$make_res"
+    } else {
+      log_cl "Building: -->    {$latest_version}\n" info magenta
+      check_tags
+      query="$latest_version"
+    }
+    fi
+  }
+  fi
   version=""
   for i in $(seq 0 $(($tot_vers-1))); do
     [[ $query = "${supported_versions[$i]}" ]] && version="$query" && script_path="${scripts_dir}v${version}"

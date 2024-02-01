@@ -1,7 +1,7 @@
-#!/usr/local/bin/anvil
+#!/usr/local/bin/anvil -X
 [ anvil ]
 
-version = "2.0.2"
+version = "2.0.3"
 
 [ build ]
 
