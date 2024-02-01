@@ -1,2 +1,2 @@
 #!/bin/bash
-"./amboso" -a 2.0.0 -Pv
+"./amboso" -Pv -a 2.0.3
