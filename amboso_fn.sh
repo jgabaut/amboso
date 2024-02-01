@@ -2211,6 +2211,13 @@ amboso_parse_args() {
       [[ $quiet_flag -gt 0 ]] && quietm="q" #We make sure to pass on eventual quiet mode to the subcalls
       if [[ "$std_amboso_version" > "$min_amboso_v_stegodir" || "$std_amboso_version" = "$min_amboso_v_stegodir" ]] ; then {
           corem="-O $stego_dir -k $std_amboso_kern -a $std_amboso_version"
+      } elif [[ "$std_amboso_version" < "$min_amboso_v_kern"  ]]; then {
+          log_cl "Taken legacy path, not passing any core arg.\n" warn magenta
+          log_cl "Currently: -O {$stego_dir} -a {$std_amboso_version} -k {$std_amboso_kern}\n" warn cyan
+          corem=""
+      } else {
+          log_cl "Taken legacy path, not passing -O {$stego_dir}.\n" warn magenta
+          corem="-k $std_amboso_kern -a $std_amboso_version"
       }
       fi
       #First pass sets the verbose flag but redirects stderr to /dev/null
@@ -2290,6 +2297,13 @@ amboso_parse_args() {
     corem=""
     if [[ "$std_amboso_version" > "$min_amboso_v_stegodir" || "$std_amboso_version" = "$min_amboso_v_stegodir" ]] ; then {
         corem="-O $stego_dir -k $std_amboso_kern -a $std_amboso_version"
+    } elif [[ "$std_amboso_version" < "$min_amboso_v_kern"  ]]; then {
+        log_cl "Taken legacy path, not passing any core arg.\n" warn magenta
+        log_cl "Currently: -O {$stego_dir} -a {$std_amboso_version} -k {$std_amboso_kern}\n" warn cyan
+        corem=""
+    } else {
+        log_cl "Taken legacy path, not passing -O {$stego_dir}.\n" warn magenta
+        corem="-k $std_amboso_kern -a $std_amboso_version"
     }
     fi
     [[ $extensions_flag -ne 1 ]] && ext="e"
@@ -2535,6 +2549,13 @@ amboso_parse_args() {
         corem=""
         if [[ "$std_amboso_version" > "$min_amboso_v_stegodir" || "$std_amboso_version" = "$min_amboso_v_stegodir" ]] ; then {
           corem="-O $stego_dir -k $std_amboso_kern -a $std_amboso_version"
+        } elif [[ "$std_amboso_version" < "$min_amboso_v_kern"  ]]; then {
+            log_cl "Taken legacy path, not passing any core arg.\n" warn magenta
+            log_cl "Currently: -O {$stego_dir} -a {$std_amboso_version} -k {$std_amboso_kern}\n" warn cyan
+            corem=""
+        } else {
+            log_cl "Taken legacy path, not passing -O {$stego_dir}.\n" warn magenta
+            corem="-k $std_amboso_kern -a $std_amboso_version"
         }
         fi
         [[ $extensions_flag -ne 1 ]] && extm="e"
@@ -3153,8 +3174,16 @@ amboso_parse_args() {
       corem=""
       if [[ "$std_amboso_version" > "$min_amboso_v_stegodir" || "$std_amboso_version" = "$min_amboso_v_stegodir" ]] ; then {
           corem="-O $stego_dir -k $std_amboso_kern -a $std_amboso_version"
+      } elif [[ "$std_amboso_version" < "$min_amboso_v_kern"  ]]; then {
+          log_cl "Taken legacy path, not passing any core arg.\n" warn magenta
+          log_cl "Currently: -O {$stego_dir} -a {$std_amboso_version} -k {$std_amboso_kern}\n" warn cyan
+          corem=""
+      } else {
+          log_cl "Taken legacy path, not passing -O {$stego_dir}.\n" warn magenta
+          corem="-k $std_amboso_kern -a $std_amboso_version"
       }
       fi
+
       [[ $extensions_flag -ne 1 ]] && extm="e"
       [[ $do_filelog_flag -gt 0 ]] && loggedm="J"
       [[ $allow_color_flag -le 0 ]] && plainm="P"
