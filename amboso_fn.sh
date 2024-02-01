@@ -1214,6 +1214,9 @@ set_amboso_stego_info() {
                 if [[ "$std_amboso_version" < "${AMBOSO_API_LVL}" || "$std_amboso_version" = "${AMBOSO_API_LVL}" ]] ; then {
                   # This check was not present originally.
                   std_amboso_version="$value"
+                } else {
+                  log_cl "Resetting std_amboso_version. ($std_amboso_version) -> {${AMBOSO_API_LVL}}" warn magenta
+                  std_amboso_version="${AMBOSO_API_LVL}"
                 }
                 fi
                 log_cl "Set std_amboso_version to -> {$std_amboso_version}" warn
@@ -1221,6 +1224,9 @@ set_amboso_stego_info() {
               if [[ "$std_amboso_version" < "${AMBOSO_API_LVL}" || "$std_amboso_version" = "${AMBOSO_API_LVL}" ]] ; then {
                 # This check was not present originally.
                 std_amboso_version="$value"
+              } else {
+                log_cl "Resetting std_amboso_version. ($std_amboso_version) -> {${AMBOSO_API_LVL}}" warn magenta
+                std_amboso_version="${AMBOSO_API_LVL}"
               }
               fi
             }

@@ -1,7 +1,7 @@
-#!/usr/local/bin/anvil -X
+#!/usr/local/bin/anvil -XV5
 [ anvil ]
 
-version = "2.0.3"
+version = "2.0.4"
 kern = "amboso-C"
 
 [ build ]
