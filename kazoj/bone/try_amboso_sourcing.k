@@ -7,7 +7,27 @@ tell_uname_flag=0
 quiet_flag=0
 #Function to try sourcing amboso_fn.sh
 source_amboso_api() {
-  if [ "$(basename "$(pwd)")" = "amboso" ] ; then {
+  force_global_source="${1:-0}"
+  local source_res=1
+  if [[ "$force_global_source" -eq 1 ]] ; then {
+    if [ -f "/usr/local/bin/amboso_fn.sh" ] ; then { #We only enter here if we force sourcing from global anvil
+      #We need one more message to show me are forcing this.
+      printf "[WARN]   Forcing source from global path -> {%s}\n" "$std_amboso_global_path" >&2
+      amboso_fn_path="/usr/local/bin/amboso_fn.sh"
+      [ "$quiet_flag" -eq 0 ] && printf "[WARN]    Fallback to default path for amboso_fn. Sourcing: \"%s\".\n" "$amboso_fn_path" >&2
+      # shellcheck source=/usr/local/bin/amboso_fn.sh
+      . "$amboso_fn_path";
+      source_res="$?"
+      if [ "$source_res" -ne 0 ] ; then {
+        printf "[PREP]    Failed loading amboso_fn. Quitting.\n\n    Using file: \"%s\".\n" "$amboso_fn_path" >&2
+        exit 3
+      }
+      fi
+    }
+    fi
+  }
+  fi
+  if [[ "$source_res" -ne 0 && "$(basename "$(pwd)")" = "amboso" ]] ; then {
     amboso_fn_path="$(realpath "$(pwd)")/amboso_fn.sh"
     if [ -f "$amboso_fn_path" ] ; then {
       [ "$verbose_flag" -gt 1 ] && printf "[PREP]    Running inside amboso dir. Sourcing: \"%s\".\n" "$amboso_fn_path">&2
@@ -24,7 +44,7 @@ source_amboso_api() {
       exit 2
     }
     fi
-  } else {
+  } elif [[ "$source_res" -ne 0 ]]; then {
     amboso_fn_path="$(realpath "$(pwd)")/amboso/amboso_fn.sh"
     found_amboso_dir=0
     [ "$verbose_flag" -gt 1 ] && printf "[PREP]    Assuming we are running in super-repo. Sourcing: \"%s\".\n" "$amboso_fn_path" >&2
@@ -117,5 +137,5 @@ source_amboso_api() {
 }
 
 printf "[TEST]    source_amboso_api()\n"
-source_amboso_api
+source_amboso_api #Don't force global source
 printf "[RES]    {$?}\n"
