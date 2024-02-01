@@ -1,6 +1,2 @@
-[DEBUG]    No -D flag, using ( ./bin/ ) for target dir. Run with -V <lvl> to see more.
-[INFO]    Using target dir: ( ./bin/ ).
-[INFO]    Using target bin: ( hello_world ).
-[INFO]    Using source file name: ( hello_world.c ).
-[INFO]    Using tag for make support: ( 0.3.0 ) as first tag compiled with make.
-[INFO]    Using tag for automake support: ( 3.0.0 ) as first tag compiled with automake.
+[GIT]    Status was not clean!
+[AMBOSO]    Quitting.
