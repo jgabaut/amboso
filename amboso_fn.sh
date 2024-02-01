@@ -956,6 +956,11 @@ try_parsing_stego() {
   } else {
     # Run the legacy function
     lexed_tokens="$(lex_legacy_stego 1 "$input")"
+    if [[ "$?" != 0 ]]; then {
+        log_cl "[PARSE]    Legacy lex for {$std_amboso_version} failed." error
+        return 1
+    }
+    fi
   }
   fi
   if [[ ! -z $lexed_tokens ]]; then {
@@ -1190,7 +1195,7 @@ set_amboso_stego_info() {
   }
   fi
   if [[ -z $source_name ]] ; then {
-      log_cl "Missing source name." error
+      log_cl "${FUNCNAME[0]}(): Missing source name." error
       exit 2
   }
   fi
@@ -3156,9 +3161,20 @@ lex_legacy_stego() {
 
 amboso_main() {
   if [[ ! $# -eq 0 ]] ; then {
-    cmd="$(printf -- "$1" | cut -f1 -d'-')"
+    local cmd="$(printf -- "$1" | cut -f1 -d'-')"
     if [[ ! -z $cmd ]] ; then {
       printf "COMMAND: {$cmd}\n"
+      local re='stego.lock$'
+      if [[ "$cmd" =~ $re ]] ; then {
+          shift
+          # Try doing make
+          (amboso_parse_args "$@")
+          unset AMBOSO_LVL_REC
+          unset AMBOSO_COLOR
+          unset AMBOSO_LOGGED
+          return "$?"
+      }
+      fi
       if [[ $cmd = "quit" ]] ; then {
         unset AMBOSO_LVL_REC
         unset AMBOSO_COLOR
