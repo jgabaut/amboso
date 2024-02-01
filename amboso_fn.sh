@@ -1149,7 +1149,25 @@ set_amboso_stego_info() {
           anvil_version_regex='^([1-9][0-9]*|0)\.([1-9][0-9]*|0)\.([1-9][0-9]*|0)$'
           if [[ "$value" =~ $anvil_version_regex ]] ; then {
             case "$value" in
-              1.7.*)
+              1.8.*)
+                  log_cl "Invalid version arg --> {$OPTARG}" error
+                  log_cl "Hint: Use one of these: --> {" error
+                  for v in "${std_amboso_version_list[@]}"; do
+                      log_cl "    $v" info
+                  done
+                  log_cl "}" error
+                  exit 1
+                  ;;
+              1.9.*)
+                  log_cl "Invalid version arg --> {$OPTARG}" error
+                  log_cl "Hint: Use one of these: --> {" error
+                  for v in "${std_amboso_version_list[@]}"; do
+                      log_cl "    $v" info
+                  done
+                  log_cl "}" error
+                  exit 1
+                  ;;
+              1.*)
                   log_cl "${FUNCNAME[0]}():    Turning off extensions flag" info
                   extensions_flag=0
                   ;;
@@ -1384,7 +1402,9 @@ amboso_parse_args() {
   extensions_flag=1
   std_amboso_version="${AMBOSO_API_LVL}"
   std_amboso_regex='^([1-9][0-9]*|0)\.([1-9][0-9]*|0)\.([1-9][0-9]*|0)$'
-  std_amboso_version_list=("2.0.0" "2.0.*" "1.7.*")
+  std_amboso_short_regex='^([1-9][0-9]*)\.([1-9][0-9]*|0)$'
+  std_amboso_version_list=("2.0.0" "2.0.*" "1.*")
+  std_amboso_short_version_list=("2.0" "2.1" "1.*")
   std_amboso_kern="amboso-C"
   std_amboso_kern_list=("amboso-C")
   queried_amboso_kern=""
@@ -1414,7 +1434,7 @@ amboso_parse_args() {
       a )
         if [[ "$OPTARG" =~ $std_amboso_regex ]] ; then {
           case "$OPTARG" in
-            1.7.*)
+            1.*)
                 log_cl "${FUNCNAME[0]}():    Turning off extensions flag" info
                 extensions_flag=0
                 std_amboso_version="$OPTARG"
@@ -1440,6 +1460,36 @@ amboso_parse_args() {
                 exit 1
                 ;;
           esac
+        } elif [[ "$OPTARG" =~ $std_amboso_short_regex ]] ; then {
+          case "$OPTARG" in
+            1.[0-9])
+                log_cl "${FUNCNAME[0]}():    Turning off extensions flag" info
+                extensions_flag=0
+                std_amboso_version="${OPTARG}.0"
+                log_cl "Using {$std_amboso_version} version standard" info
+                ;;
+            2.0)
+                log_cl "${FUNCNAME[0]}():    Turning off extensions flag" info
+                #We don't update the std_amboso_version yet, since this version is current and we can use the latest patch.
+                extensions_flag=0
+                log_cl "Using {$std_amboso_version} version standard (patch level: $(cut -f3 -d'.' <<< "$std_amboso_version"))" info
+                ;;
+            2.1)
+                #We don't update the std_amboso_version yet, since this version is in development
+                log_cl "Using {$std_amboso_version} version standard" info
+                ;;
+            *)
+                log_cl "Invalid version arg --> {$OPTARG}" error
+                log_cl "Hint: Use one of these: --> {" error
+                for v in "${std_amboso_short_version_list[@]}"; do
+                    log_cl "    $v" info
+                done
+                log_cl "}" error
+                exit 1
+                ;;
+          esac
+
+            :
         } else {
           log_cl "Invalid version standard --> {$OPTARG}" error
           log_cl "Not matching regex --> \'$std_amboso_regex\'" error
