@@ -1174,7 +1174,17 @@ set_amboso_stego_info() {
                   ;;
             esac
             [[ "$verbose_flag" -ge 4 ]] && log_cl "${FUNCNAME[0]}():  Using ANVIL_VERSION: {$value}\n" info
-            std_amboso_version="$value"
+            if [[ "$std_amboso_version" < "2.0.3" ]] ; then {
+                log_cl "Taken legacy path: stego.lock defined value always overrides current std_amboso_version. Current: {$std_amboso_version}" warn
+                std_amboso_version="$value"
+                log_cl "Set std_amboso_version to -> {$std_amboso_version}" warn
+            } else {
+              if ! [[ "$std_amboso_version" < "${AMBOSO_API_LVL}" ]] ; then {
+                std_amboso_version="$value"
+              }
+              fi
+            }
+            fi
           } else {
             log_cl "${FUNCNAME[0]}():  Invalid version standard --> {$value}" error
             log_cl "Not matching regex --> \'$anvil_version_regex\'" error
@@ -1380,6 +1390,7 @@ amboso_parse_args() {
   queried_amboso_kern=""
   min_amboso_v_kern="2.0.2"
   min_amboso_v_extensions="2.0.1"
+  stego_dir=""
 
   while getopts "A:M:S:E:D:K:G:Y:x:V:C:a:k:wBgbpHhrivdlLtTqsczUXWPJRFe" opt; do
     case $opt in
@@ -1827,10 +1838,17 @@ amboso_parse_args() {
     fi
   }
   fi
+  stego_dir="$scripts_dir"
 
   #We always notify of missing -K argument, if in test mode
   if [[ $test_mode_flag -gt 0 && ! $testdir_flag -gt 0 ]] ; then {
-    set_amboso_stego_info "$scripts_dir/stego.lock" "$verbose_flag"
+    if [[ "$std_amboso_version" < "2.0.3" ]] ; then {
+        log_cl "Using legacy method, scripts_dir contains stego.lock\n" debug
+        set_amboso_stego_info "$scripts_dir/stego.lock" "$verbose_flag"
+    } else {
+        set_amboso_stego_info "$stego_dir/stego.lock" "$verbose_flag"
+    }
+    fi
     res="$?"
     [[ $res -eq 0 ]] || log_cl "Problems when doing set_amboso_stego_info($kazoj_dir).\n" warn
     set_supported_tests "$kazoj_dir"
@@ -1921,7 +1939,13 @@ amboso_parse_args() {
   fi
 
   #Syncpoint: we assert we know these names after this. WIP
-  set_amboso_stego_info "$scripts_dir/stego.lock" "$verbose_flag"
+  if [[ "$std_amboso_version" < "2.0.3" ]] ; then {
+    log_cl "Using legacy method, scripts_dir contains stego.lock\n" debug
+    set_amboso_stego_info "$scripts_dir/stego.lock" "$verbose_flag"
+  } else {
+    set_amboso_stego_info "$stego_dir/stego.lock" "$verbose_flag"
+  }
+  fi
   if [[ ! $? -eq 0 ]] ; then {
     log_cl "[CRITICAL]    Could not set amboso stego info." error
     exit 1
