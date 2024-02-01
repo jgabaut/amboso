@@ -1045,6 +1045,11 @@ print_amboso_stego_scopes() {
     } elif [[ $scope = "anvil" ]] ; then {
         if [[ $variable = "anvil_version" ]] ; then {
           printf "ANVIL_VERSION: {$value}\n"
+        } elif [[ $variable = "anvil_kern" ]] ; then {
+          if [[ "$std_amboso_version" > "$min_amboso_v_kern" || "$std_amboso_version" = "$min_amboso_v_kern" ]]; then {
+              printf "ANVIL_KERN: {$value}\n"
+          }
+          fi
         }
         fi
     }
@@ -1192,8 +1197,8 @@ set_amboso_stego_info() {
                   ;;
             esac
             [[ "$verbose_flag" -ge 4 ]] && log_cl "${FUNCNAME[0]}():  Using ANVIL_VERSION: {$value}\n" info
-            if [[ "$std_amboso_version" < "2.0.3" ]] ; then {
-                log_cl "Taken legacy path: stego.lock defined value always overrides current std_amboso_version. Current: {$std_amboso_version}" warn
+            if [[ "$std_amboso_version" < "$min_amboso_v_stego_noforce" ]] ; then {
+                log_cl "Taken legacy path: stego.lock defined value always overrides current std_amboso_version. Current: {$std_amboso_version}, min needed: {$min_amboso_v_stego_noforce}" warn
                 std_amboso_version="$value"
                 log_cl "Set std_amboso_version to -> {$std_amboso_version}" warn
             } else {
@@ -1207,6 +1212,30 @@ set_amboso_stego_info() {
             log_cl "${FUNCNAME[0]}():  Invalid version standard --> {$value}" error
             log_cl "Not matching regex --> \'$anvil_version_regex\'" error
             exit 1
+          }
+          fi
+        } elif [[ $variable = "anvil_kern" ]] ; then {
+          if [[ "$std_amboso_version" > "$min_amboso_v_kern" || "$std_amboso_version" = "$min_amboso_v_kern" ]]; then {
+            case "$value" in
+              "amboso-C")
+                  [[ "${AMBOSO_LVL_REC}" -eq 1 || "$verbose_flag" -gt 3 ]] && log_cl "stego defined anvil_kern --> {$value}" info blue >&2
+                  ;;
+              *)
+                  log_cl "Invalid kern argument --> {$OPTARG}" error
+                  log_cl "Hint: Use one of these: --> {" error
+                  for v in "${std_amboso_kern_list[@]}"; do
+                      log_cl "    $v" info
+                  done
+                  log_cl "}" error
+                  exit 1
+                  ;;
+            esac
+          } else {
+            if [[ "${AMBOSO_LVL_REC}" -eq 1 || "$verbose_flag" -gt 3 ]] ; then {
+              log_cl "std_amboso_version --> {$std_amboso_version}" info
+              log_cl "Ignoring stego-defined kern --> {$value}" debug
+            }
+            fi
           }
           fi
         }
@@ -1410,6 +1439,7 @@ amboso_parse_args() {
   queried_amboso_kern=""
   min_amboso_v_kern="2.0.2"
   min_amboso_v_extensions="2.0.1"
+  min_amboso_v_stego_noforce="2.0.3"
   stego_dir=""
 
   while getopts "A:M:S:E:D:K:G:Y:x:V:C:a:k:wBgbpHhrivdlLtTqsczUXWPJRFe" opt; do
@@ -1670,7 +1700,7 @@ amboso_parse_args() {
   }
   fi
 
-  if [[ "$std_amboso_version" > "$min_amboso_v_kern" ]] ; then {
+  if [[ "$std_amboso_version" > "$min_amboso_v_kern" || "$std_amboso_version" = "$min_amboso_v_kern" ]]; then {
     if [[ ! -z "$queried_amboso_kern" ]] ; then {
         log_cl "Using {$queried_amboso_kern}" info
         std_amboso_kern="$queried_amboso_kern"
