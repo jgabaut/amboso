@@ -811,7 +811,7 @@ lex_stego_file() {
         exit 9
     fi
 
-    awk '{
+    "${target_awk:-awk}" '{
         # Remove leading and trailing whitespaces
         gsub(/^[ \t]+|[ \t]+$/, "")
 
@@ -1440,7 +1440,11 @@ amboso_parse_args() {
   min_amboso_v_kern="2.0.2"
   min_amboso_v_extensions="2.0.1"
   min_amboso_v_stego_noforce="2.0.3"
+  min_amboso_v_fix_awk="2.0.3"
   stego_dir=""
+  min_amboso_v_stegodir="2.0.3"
+  target_awk="awk"
+  bad_awk="mawk"
 
   while getopts "A:M:S:E:D:K:G:Y:x:V:C:a:k:wBgbpHhrivdlLtTqsczUXWPJRFe" opt; do
     case $opt in
@@ -1728,9 +1732,14 @@ amboso_parse_args() {
   export AMBOSO_LOGGED="${AMBOSO_LOGGED:-0}"
   if [[ $quiet_flag -eq 0 && "${AMBOSO_LVL_REC}" -lt 2 ]]; then {
     echo_amboso_splash "$amboso_currvers" "$(basename "$prog_name")"
-    awk_check="$(awk -W version 2>/dev/null | grep mawk)"
+    awk_check="$("$target_awk" -W version 2>/dev/null | grep "$bad_awk")"
     if [[ ! -z "$awk_check" ]] ; then {
-        log_cl "awk seems to be mawk. The script may fail unexpectedly. See issue: https://github.com/jgabaut/amboso/issues/58" warn
+      log_cl "awk seems to be mawk. The script may fail unexpectedly. See issue: https://github.com/jgabaut/amboso/issues/58" warn
+      if [[ "$std_amboso_version" > "$min_amboso_v_fix_awk" || "$std_amboso_version" = "$min_amboso_v_fix_awk" ]]; then {
+        log_cl "Trying to use gawk instead.\n" warn magenta
+        target_awk="gawk"
+      }
+      fi
     }
     fi
     echo_invil_notice
@@ -1922,7 +1931,7 @@ amboso_parse_args() {
 
   #We always notify of missing -K argument, if in test mode
   if [[ $test_mode_flag -gt 0 && ! $testdir_flag -gt 0 ]] ; then {
-    if [[ "$std_amboso_version" < "2.0.3" ]] ; then {
+    if [[ "$std_amboso_version" < "$min_amboso_v_stegodir" ]] ; then {
         log_cl "Using legacy method, scripts_dir contains stego.lock\n" debug
         set_amboso_stego_info "$scripts_dir/stego.lock" "$verbose_flag"
     } else {
@@ -2019,7 +2028,7 @@ amboso_parse_args() {
   fi
 
   #Syncpoint: we assert we know these names after this. WIP
-  if [[ "$std_amboso_version" < "2.0.3" ]] ; then {
+  if [[ "$std_amboso_version" < "$min_amboso_v_stegodir" ]] ; then {
     log_cl "Using legacy method, scripts_dir contains stego.lock\n" debug
     set_amboso_stego_info "$scripts_dir/stego.lock" "$verbose_flag"
   } else {
