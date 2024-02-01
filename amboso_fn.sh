@@ -1415,13 +1415,13 @@ amboso_parse_args() {
         if [[ "$OPTARG" =~ $std_amboso_regex ]] ; then {
           case "$OPTARG" in
             1.7.*)
-                log_cl "Turning off extensions flag" info
+                log_cl "${FUNCNAME[0]}():    Turning off extensions flag" info
                 extensions_flag=0
                 std_amboso_version="$OPTARG"
                 log_cl "Using {$std_amboso_version} version standard" info
                 ;;
             2.0.0)
-                log_cl "Turning off extensions flag" info
+                log_cl "${FUNCNAME[0]}():    Turning off extensions flag" info
                 extensions_flag=0
                 std_amboso_version="$OPTARG"
                 log_cl "Using {$std_amboso_version} version standard" info
@@ -1613,9 +1613,9 @@ amboso_parse_args() {
   }
   fi
 
-  if [[ "$std_amboso_version" < "$min_amboso_v_extensions" ]] ; then {
+  if [[ "$extensions_flag" -ne 0 && "$std_amboso_version" < "$min_amboso_v_extensions" ]] ; then {
     # Turn off extensions when below 2.0.1
-    log_cl "Turning off extensions flag" info
+    log_cl "${FUNCNAME[0]}():    Turning off extensions flag" info
     extensions_flag=0
   }
   fi

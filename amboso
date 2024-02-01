@@ -25,7 +25,6 @@ fi
 force_global_source=0
 if [[ "$1" = "-a" ]] ; then {
     amb_forced_query="$2"
-    printf "[INFO] Asked for {$amb_forced_query}.\n"
     if [[ -z "$amb_forced_query" ]]; then {
         :
         #TODO: set a default for this one
@@ -60,7 +59,7 @@ source_amboso_api() {
   if [[ "$force" -eq 1 ]] ; then {
     if [ -f "/usr/local/bin/amboso_fn.sh" ] ; then { #We only enter here if we force sourcing from global anvil
       #We need one more message to show me are forcing this.
-      printf "[WARN]   Forcing source from global path -> {%s}\n" "$std_amboso_global_path" >&2
+      printf "[WARN]    Forcing source from global path -> {%s}\n" "$std_amboso_global_path" >&2
       amboso_fn_path="/usr/local/bin/amboso_fn.sh"
       [ "$quiet_flag" -eq 0 ] && printf "[WARN]    Fallback to default path for amboso_fn. Sourcing: \"%s\".\n" "$amboso_fn_path" >&2
       # shellcheck source=/usr/local/bin/amboso_fn.sh
