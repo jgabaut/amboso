@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="2.0.2"
+AMBOSO_API_LVL="2.0.3"
 at () {
     printf "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -950,7 +950,14 @@ try_parsing_stego() {
   fi
   input="$1"
   verbose="$2"
-  lexed_tokens="$(lex_stego_file "$input")"
+  lexed_tokens=""
+  if [[ $std_amboso_version > "1.8.x" ]] ; then {
+    lexed_tokens="$(lex_stego_file "$input")"
+  } else {
+    # Run the legacy function
+    lexed_tokens="$(lex_legacy_stego 1 "$input")"
+  }
+  fi
   if [[ ! -z $lexed_tokens ]]; then {
     parse_lexed_stego "$lexed_tokens"
     parse_res="$?"
@@ -1137,6 +1144,10 @@ set_amboso_stego_info() {
           anvil_version_regex='^([1-9][0-9]*|0)\.([1-9][0-9]*|0)\.([1-9][0-9]*|0)$'
           if [[ "$value" =~ $anvil_version_regex ]] ; then {
             case "$value" in
+              1.7.*)
+                  log_cl "${FUNCNAME[0]}():    Turning off extensions flag" info
+                  extensions_flag=0
+                  ;;
               2.0.0)
                   log_cl "${FUNCNAME[0]}():    Turning off extensions flag" info
                   extensions_flag=0
@@ -1358,11 +1369,12 @@ amboso_parse_args() {
   extensions_flag=1
   std_amboso_version="${AMBOSO_API_LVL}"
   std_amboso_regex='^([1-9][0-9]*|0)\.([1-9][0-9]*|0)\.([1-9][0-9]*|0)$'
-  std_amboso_version_list=("2.0.0" "2.0.*")
+  std_amboso_version_list=("2.0.0" "2.0.*" "1.7.*")
   std_amboso_kern="amboso-C"
   std_amboso_kern_list=("amboso-C")
   queried_amboso_kern=""
   min_amboso_v_kern="2.0.2"
+  min_amboso_v_extensions="2.0.1"
 
   while getopts "A:M:S:E:D:K:G:Y:x:V:C:a:k:wBgbpHhrivdlLtTqsczUXWPJRFe" opt; do
     case $opt in
@@ -1386,9 +1398,16 @@ amboso_parse_args() {
       a )
         if [[ "$OPTARG" =~ $std_amboso_regex ]] ; then {
           case "$OPTARG" in
+            1.7.*)
+                log_cl "Turning off extensions flag" info
+                extensions_flag=0
+                std_amboso_version="$OPTARG"
+                log_cl "Using {$std_amboso_version} version standard" info
+                ;;
             2.0.0)
                 log_cl "Turning off extensions flag" info
                 extensions_flag=0
+                std_amboso_version="$OPTARG"
                 log_cl "Using {$std_amboso_version} version standard" info
                 ;;
             2.0.*)
@@ -1578,7 +1597,8 @@ amboso_parse_args() {
   }
   fi
 
-  if [[ "$std_amboso_version" = "2.0.0" ]] ; then {
+  if [[ "$std_amboso_version" < "$min_amboso_v_extensions" ]] ; then {
+    # Turn off extensions when below 2.0.1
     log_cl "Turning off extensions flag" info
     extensions_flag=0
   }
@@ -3014,6 +3034,124 @@ amboso_parse_args() {
   echo_timer "$amboso_start_time"  "Run" "6"
   exit 0
 
+}
+
+amboso_source_lgcy_pos=1
+amboso_bin_lgcy_pos=2
+amboso_makevers_lgcy_pos=3
+amboso_tests_lgcy_pos=4
+amboso_automakevers_lgcy_pos=5
+amboso_lgcy_build_pos=0
+amboso_lgcy_versions_pos=6
+amboso_lgcy_bone_pos=0
+amboso_lgcy_kulpo_pos=2
+amboso_dashline="------------------------"
+
+function int_to_anvilname() {
+    n="$1"
+    case "$n" in
+        "$amboso_source_lgcy_pos")
+            printf "source"
+        ;;
+        "$amboso_bin_lgcy_pos")
+            printf "bin"
+        ;;
+        "$amboso_makevers_lgcy_pos")
+            printf "makevers"
+        ;;
+        "$amboso_tests_lgcy_pos")
+            printf "tests"
+        ;;
+        "$amboso_automakevers_lgcy_pos")
+            printf "automakevers"
+        ;;
+        *)
+            printf "Unexpected number: {%s}\n" "$n"
+            return 1
+    esac
+    return 0
+}
+
+lex_legacy_kazoj() {
+    local target_dir="$1"
+    local k=0
+    local k_value=""
+    while read -r k_l ; do {
+        k_value="$(cut -f1 -d"#" <<< "$k_l")"
+        if [[ "$k" -eq "$amboso_lgcy_bone_pos" || "$k" -eq "$amboso_lgcy_kulpo_pos" ]]; then {
+            [[ "$k" -eq "$amboso_lgcy_bone_pos" ]] && printf "Scope: tests\n"
+        } else {
+            [[ "$k" -eq $((amboso_lgcy_bone_pos +1)) ]] && printf "Variable: tests_bonedir, Value: %s\n" "$k_value"
+            [[ "$k" -eq $((amboso_lgcy_kulpo_pos +1)) ]] && printf "Variable: tests_kulpodir, Value: %s\n" "$k_value"
+        }
+        fi
+        k="$((k+1))"
+    } done < "$target_dir/kazoj.lock"
+}
+
+
+lex_legacy_stego() {
+    local try_kazoj_lex="$1"
+    local re='^[0-9]+$'
+    if ! [[ "$try_kazoj_lex" =~ $re ]] ; then {
+        try_kazoj_lex=0
+    }
+    fi
+    local input="$2"
+    [[ -f "$input" ]] || { printf "\"%s\" is not a valid file.\n" "$input" ; return 1; } ;
+    local stego_dir=""
+    stego_dir="$(dirname "$input")"
+    [[ -d "$stego_dir" ]] || { printf "\"%s\" is not a valid dir.\n" "$stego_dir" ; return 1; } ;
+
+    local i=0
+    local kulpo_dir=""
+
+
+    local value=""
+    local comment=""
+    while read -r line ; do {
+        value="$(cut -f1 -d"#" <<< "$line")"
+        comment="$(cut -f2 -d"#" <<< "$line")"
+        if [[ -z "$comment" ]]; then {
+            comment="Empty desc."
+        }
+        fi
+
+        if [[ "$i" -eq "$amboso_lgcy_build_pos" ]]; then {
+            printf "Scope: build\n"
+        } elif [[ "$i" -eq "$amboso_lgcy_versions_pos" ]] ; then {
+            printf -- "%s\n" "$amboso_dashline"
+            printf "Scope: versions\n"
+        } else {
+            printf "Variable: "
+            if [[ "$i" -gt "$amboso_lgcy_versions_pos" ]]; then {
+                printf "versions_"
+                if [[ "$(cut -c1 <<< "$value")" == "?" ]]; then {
+                    value="B${value:1}"
+                }
+                fi
+                printf "%s, Value: %s\n" "$value" "$comment"
+            } else {
+                printf "build_%s, Value: %s\n" "$(int_to_anvilname "$i")" "$value"
+                if [[ "$i" -eq 4 ]] ; then {
+                    kulpo_dir="$value" # Save this for later
+                }
+                fi
+            }
+            fi
+            #printf "val: \"$value\", i: {$i}\n"
+        }
+        fi
+        i=$((i+1))
+    }
+    done < "$input"
+    printf -- "%s\n" "$amboso_dashline"
+    if [[ "$try_kazoj_lex" -gt 0 ]] ; then {
+        [[ -f "${kulpo_dir}/kazoj.lock" ]] || { printf "\"%s\" is not a valid file.\n" "${kulpo_dir}/kazoj.lock"; return 1; }
+        lex_legacy_kazoj "$kulpo_dir"
+        printf -- "%s\n" "$amboso_dashline"
+    }
+    fi
 }
 
 amboso_main() {
