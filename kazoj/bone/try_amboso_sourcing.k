@@ -7,9 +7,10 @@ tell_uname_flag=0
 quiet_flag=0
 #Function to try sourcing amboso_fn.sh
 source_amboso_api() {
-  force_global_source="${1:-0}"
+  local force="$1"
+  [[ -z "$force" ]] && force=0
   local source_res=1
-  if [[ "$force_global_source" -eq 1 ]] ; then {
+  if [[ "$force" -eq 1 ]] ; then {
     if [ -f "/usr/local/bin/amboso_fn.sh" ] ; then { #We only enter here if we force sourcing from global anvil
       #We need one more message to show me are forcing this.
       printf "[WARN]   Forcing source from global path -> {%s}\n" "$std_amboso_global_path" >&2

@@ -23,9 +23,18 @@ if [ "$(id -u)" -eq 0 ] ; then {
 }
 fi
 force_global_source=0
-if [[ "$1" == "-a" ]] ; then {
+if [[ "$1" = "-a" ]] ; then {
+    amb_forced_query="$2"
+    printf "[INFO] Asked for {$amb_forced_query}.\n"
+    if [[ -z "$amb_forced_query" ]]; then {
+        :
+        #TODO: set a default for this one
+        #amb_forced_query="$std_amboso_version"
+    } else {
+        :
+    }
+    fi
     force_global_source=1
-    shift
 }
 fi
 # Set recursion env var if not exists
@@ -45,9 +54,10 @@ try_default=0
 std_amboso_global_path="/usr/local/bin/amboso_fn.sh"
 #Function to try sourcing amboso_fn.sh
 source_amboso_api() {
-  force_global_source="${1:-0}"
+  local force="$1"
+  [[ -z "$force" ]] && force=0
   local source_res=1
-  if [[ "$force_global_source" -eq 1 ]] ; then {
+  if [[ "$force" -eq 1 ]] ; then {
     if [ -f "/usr/local/bin/amboso_fn.sh" ] ; then { #We only enter here if we force sourcing from global anvil
       #We need one more message to show me are forcing this.
       printf "[WARN]   Forcing source from global path -> {%s}\n" "$std_amboso_global_path" >&2
@@ -153,7 +163,7 @@ source_amboso_api() {
     } elif [[ "$AMBOSO_API_LVL" = "2.0.0" ]] ; then {
         printf "[WARN]    Minimal amboso 2.0 API found.\n"
         lesser_res=0
-    } elif [[ "$AMBOSO_API_LVL" < "2.1" ]] ; then {
+    } elif [[ "$AMBOSO_API_LVL" < "2.1.x" ]] ; then {
         printf "[WARN]    Minimal amboso 2.0.x API found.\n"
         lesser_res=0
     }
@@ -181,7 +191,8 @@ is_interactive=0
 source_amboso_api "$force_global_source"
 
 if [[ "$force_global_source" -eq 1 ]] ; then {
-    :
+    amboso_main "$@"
+    exit "$?"
 }
 fi
 amboso_main "$@"
