@@ -13,7 +13,7 @@ source_amboso_api() {
   if [[ "$force" -eq 1 ]] ; then {
     if [ -f "/usr/local/bin/amboso_fn.sh" ] ; then { #We only enter here if we force sourcing from global anvil
       #We need one more message to show me are forcing this.
-      printf "[WARN]   Forcing source from global path -> {%s}\n" "$std_amboso_global_path" >&2
+      printf "[WARN]    Forcing source from global path -> {%s}\n" "$std_amboso_global_path" >&2
       amboso_fn_path="/usr/local/bin/amboso_fn.sh"
       [ "$quiet_flag" -eq 0 ] && printf "[WARN]    Fallback to default path for amboso_fn. Sourcing: \"%s\".\n" "$amboso_fn_path" >&2
       # shellcheck source=/usr/local/bin/amboso_fn.sh
@@ -116,7 +116,7 @@ source_amboso_api() {
     } elif [[ "$AMBOSO_API_LVL" = "2.0.0" ]] ; then {
         printf "[WARN]    Minimal amboso 2.0 API found.\n"
         lesser_res=0
-    } elif [[ "$AMBOSO_API_LVL" < "2.1" ]] ; then {
+    } elif [[ "$AMBOSO_API_LVL" < "2.1.x" ]] ; then {
         printf "[WARN]    Minimal amboso 2.0.x API found.\n"
         lesser_res=0
     }
