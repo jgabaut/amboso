@@ -1,3 +1,13 @@
 [INFO]    Queried {amboso-C} kern
 [INFO]    Using {2.0.2} version standard
 [INFO]    Using {amboso-C}
+[WARN]    Taken legacy path, setting stego_dir = scripts_dir -> {./bin/}
+[DEBUG]    Using legacy method, scripts_dir contains stego.lock
+
+[WARN]    Taken legacy path: stego.lock defined value always overrides current std_amboso_version.
+[WARN]    Current: {2.0.2}, min needed: {2.0.3}
+[WARN]    Set std_amboso_version to -> {2.0.3}
+[ERROR]    ( new_kern ) is not a supported tag.
+
+[ERROR]           Run with -h for help.
+
