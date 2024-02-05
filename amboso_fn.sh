@@ -2945,7 +2945,7 @@ amboso_parse_args() {
           fi
         } else { #Building in git mode, we checkout the tag and move the binary after the build
           [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Running in git mode, checking out ( $version )." debug #>&2
-          git checkout "$version" 2>/dev/null #Repo goes back to tagged state
+          git checkout "$version" #Repo goes back to tagged state
           checkout_res=$?
           if [[ $checkout_res -gt 0 ]] ; then { #Checkout failed, we don't build and we set comp_res
             log_cl "Checkout of ( $version ) failed, this stego.lock tag does not work for the repo." error #>&2
