@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="2.0.3"
+AMBOSO_API_LVL="2.0.4-dev"
 at () {
     printf "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -1764,12 +1764,37 @@ amboso_parse_args() {
   export AMBOSO_LOGGED="${AMBOSO_LOGGED:-0}"
   if [[ $quiet_flag -eq 0 && "${AMBOSO_LVL_REC}" -lt 2 ]]; then {
     echo_amboso_splash "$amboso_currvers" "$(basename "$prog_name")"
-    awk_check="$("$target_awk" -W version 2>/dev/null | grep "$bad_awk")"
-    if [[ ! -z "$awk_check" ]] ; then {
-      log_cl "awk seems to be mawk. The script may fail unexpectedly. See issue: https://github.com/jgabaut/amboso/issues/58" warn
-      if [[ "$std_amboso_version" > "$min_amboso_v_fix_awk" || "$std_amboso_version" = "$min_amboso_v_fix_awk" ]]; then {
-        log_cl "Trying to use gawk instead.\n" warn magenta
-        target_awk="gawk"
+    awk_check="$("$target_awk" --version 2>/dev/null)"
+    local is_gawk="$(grep "GNU" <<< "$awk_check")"
+    local is_mawk="$(grep "$bad_awk" <<< "$awk_check")"
+    local is_nawk=""
+    if [[ -z "$is_mawk" && -z "$is_gawk" ]] ; then {
+        is_nawk="yes"
+    } elif [[ -z "$is_mawk" ]]; then {
+        is_gawk="yes"
+    } elif [[ -z "$is_gawk" ]]; then {
+        is_mawk="yes"
+    }
+    fi
+    if ! [[ "$is_gawk" = "yes" ]] ; then {
+      log_cl "This script needs gawk installed to work. It seems your awk is not gawk." warn
+      log_cl "When running as >=2.0.3, a direct invocation of gawk is performed later." debug
+      if [[ "$is_mawk" = "yes" ]] ; then {
+        log_cl "awk seems to be mawk. The script may fail unexpectedly. See issue: https://github.com/jgabaut/amboso/issues/58" warn
+        if [[ "$std_amboso_version" > "$min_amboso_v_fix_awk" || "$std_amboso_version" = "$min_amboso_v_fix_awk" ]]; then {
+            log_cl "Trying to use gawk instead.\n" warn magenta
+            target_awk="gawk"
+        }
+        fi
+      } elif [[ "$is_nawk" = "yes" ]] ; then {
+        log_cl "awk seems to be nawk. The script may fail unexpectedly. See issues:" warn
+        log_cl "https://github.com/jgabaut/amboso/issues/58" warn
+        log_cl "https://github.com/jgabaut/amboso/issues/100" warn
+        if [[ "$std_amboso_version" > "$min_amboso_v_fix_awk" || "$std_amboso_version" = "$min_amboso_v_fix_awk" ]]; then {
+            log_cl "Trying to use gawk instead.\n" warn magenta
+            target_awk="gawk"
+        }
+        fi
       }
       fi
     }
