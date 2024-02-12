@@ -96,30 +96,34 @@ source_amboso_api() {
   [ "$verbose_flag" -gt 1 ] && printf "[PREP]    \"\$AMBOSO_API_LVL\" is: ( %s , expected { %s } ).\n" "$AMBOSO_API_LVL" "$expected_AMBOSO_API_LVL" >&2
   [ "$tell_uname_flag" -eq 1 ] && print_sysinfo
   if expr "'$expected_AMBOSO_API_LVL" \> "'$AMBOSO_API_LVL" >/dev/null ; then {
-    printf "[PANIC]    Unexpected AMBOSO_API_LVL. Needed { %s } , { %s } is too low.\n\n    Check your \"amboso_fn.sh\" file.\n\n" "$expected_AMBOSO_API_LVL" "$AMBOSO_API_LVL"
-    lesser_res=255
-    if [[ "$AMBOSO_API_LVL" < "1.4.3" ]] ; then {
-        printf "[WARN]    amboso_fn.sh does not contain AMBOSO_API_LVL.\n"
-        lesser_res=1
-    } elif [[ "$AMBOSO_API_LVL" > "1.4.2" && "$AMBOSO_API_LVL" < "1.6.6" ]] ; then {
-        printf "[WARN]    Unstable amboso version detected.\n"
-        lesser_res=2
-    } elif [[ "$AMBOSO_API_LVL" > "1.6.5" && "$AMBOSO_API_LVL" < "1.7.4" ]] ; then {
-        printf "[WARN]    Legacy stego.lock format is not supported.\n"
-        lesser_res=3
-    } elif [[ "$AMBOSO_API_LVL" > "1.7.4" && "$AMBOSO_API_LVL" < "1.9.6" ]] ; then {
-        printf "[WARN]    Incompatible -C flag, test mode\n"
-        lesser_res=4
-    } elif [[ "$AMBOSO_API_LVL" < "2.0.0" ]] ;  then {
-        printf "[WARN]    Deprecated amboso 1.x API found.\n"
-        lesser_res=5
-    } elif [[ "$AMBOSO_API_LVL" = "2.0.0" ]] ; then {
-        printf "[WARN]    Minimal amboso 2.0 API found.\n"
-        lesser_res=0
-    } elif [[ "$AMBOSO_API_LVL" < "2.1.x" ]] ; then {
+    if [[ "$AMBOSO_API_LVL" < "2.1.x" ]] ; then {
         printf "[WARN]    Minimal amboso 2.0.x API found.\n"
+        printf "[WARN]    Keep running with API {%s}.\n" "$AMBOSO_API_LVL"
         lesser_res=0
-    }
+    } else {
+        printf "[PANIC]    Unexpected AMBOSO_API_LVL. Needed { %s } , { %s } is too low.\n\n    Check your \"amboso_fn.sh\" file.\n\n" "$expected_AMBOSO_API_LVL" "$AMBOSO_API_LVL"
+        lesser_res=255
+        if [[ "$AMBOSO_API_LVL" < "1.4.3" ]] ; then {
+            printf "[WARN]    amboso_fn.sh does not contain AMBOSO_API_LVL.\n"
+            lesser_res=1
+        } elif [[ "$AMBOSO_API_LVL" > "1.4.2" && "$AMBOSO_API_LVL" < "1.6.6" ]] ; then {
+            printf "[WARN]    Unstable amboso version detected.\n"
+            lesser_res=2
+        } elif [[ "$AMBOSO_API_LVL" > "1.6.5" && "$AMBOSO_API_LVL" < "1.7.4" ]] ; then {
+            printf "[WARN]    Legacy stego.lock format is not supported.\n"
+            lesser_res=3
+        } elif [[ "$AMBOSO_API_LVL" > "1.7.4" && "$AMBOSO_API_LVL" < "1.9.6" ]] ; then {
+            printf "[WARN]    Incompatible -C flag, test mode\n"
+            lesser_res=4
+        } elif [[ "$AMBOSO_API_LVL" < "2.0.0" ]] ;  then {
+            printf "[WARN]    Deprecated amboso 1.x API found.\n"
+            lesser_res=5
+        } elif [[ "$AMBOSO_API_LVL" = "2.0.0" ]] ; then {
+            printf "[WARN]    Minimal amboso 2.0 API found.\n"
+            lesser_res=0
+        }
+        fi
+        }
     fi
     if [[ "$lesser_res" -ne 0 ]] ; then {
         printf "[PANIC]    Could not load functions. Quitting.\n"
