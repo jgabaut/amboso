@@ -1765,15 +1765,25 @@ amboso_parse_args() {
   if [[ $quiet_flag -eq 0 && "${AMBOSO_LVL_REC}" -lt 2 ]]; then {
     echo_amboso_splash "$amboso_currvers" "$(basename "$prog_name")"
     awk_check="$("$target_awk" --version 2>/dev/null)"
+    local awk_check_res="$?"
     local is_gawk="$(grep "GNU" <<< "$awk_check")"
     local is_mawk="$(grep "$bad_awk" <<< "$awk_check")"
     local is_nawk=""
-    if [[ -z "$is_mawk" && -z "$is_gawk" ]] ; then {
+    if [[ "$awk_check_res" -ne 0 ]] ; then {
+      log_cl "awk check result was not zero, assuming it's mawk." warn
+      is_mawk="yes"
+    } else {
+      if [[ -z "$is_mawk" && -z "$is_gawk" ]] ; then {
+        log_cl "Couldn't grep \"GNU\" nor \"mawk\" in awk check output, assuming it's nawk." warn
         is_nawk="yes"
-    } elif [[ -z "$is_mawk" ]]; then {
+      } elif [[ -z "$is_mawk" ]] ; then {
         is_gawk="yes"
-    } elif [[ -z "$is_gawk" ]]; then {
+      } else {
+        log_cl "Got to fallback error for \"mawk\" detection." warn
+        log_cl "awk seems to support --version but it has \"mawk\" in its output." warn
         is_mawk="yes"
+      }
+      fi
     }
     fi
     if ! [[ "$is_gawk" = "yes" ]] ; then {
