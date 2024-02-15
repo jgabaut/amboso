@@ -1977,7 +1977,7 @@ amboso_parse_args() {
 
   if [[ ! -d "$scripts_dir" ]] ; then {
     if [[ "$std_amboso_version" > "$min_amboso_v_treegen" || "$std_amboso_version" = "$min_amboso_v_treegen" ]] ; then {
-        log_cl "Creating scripts_dir: {$scripts_dir}" debug
+        log_cl "Creating scripts_dir: {$scripts_dir}" debug cyan >&2
         mkdir "$scripts_dir" || { log_cl "Failed creating scripts_dir: {$scripts_dir}" error; return 1; } ;
     } else {
         log_cl "${FUNCNAME[0]}():    \"$scripts_dir\" was not a valid dir." debug
@@ -2861,7 +2861,7 @@ amboso_parse_args() {
       if [[ ! -d "$script_path" ]] ; then
         if [[ "$std_amboso_version" > "$min_amboso_v_treegen" || "$std_amboso_version" = "$min_amboso_v_treegen" ]] ; then {
           [[ "$base_mode_flag" -gt 0 ]] && { log_cl "Base mode, can't find target dir {$script_path}." error >&2; return 1; } ;
-          log_cl "Creating script_path {$script_path}" debug
+          log_cl "Creating script_path {$script_path}" debug cyan >&2
           mkdir "$script_path" || { log_cl "Failed creating script_path: {$script_path}" error >&2 ; return 1; } ;
         } else {
           log_cl "'$script_path' is not a valid directory.\n    Check your supported versions for details on ( $version ).\n" error >&2
