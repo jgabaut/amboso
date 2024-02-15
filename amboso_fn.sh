@@ -18,7 +18,7 @@
 AMBOSO_API_LVL="2.0.4"
 at () {
     #printf -- "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] -> {\n"
-    printf -- "{ call: ["
+    log_cl "{ call: [" debug white
     for ((i=${#BASH_LINENO[@]}-1;i>1;i--)); do # i>1 is needed to avoid printing "backtrace" and its little number
     [[ $i -gt 2 ]] && continue #This should skip printing the upper functions that get printed by the "caller" while read
 
@@ -27,11 +27,12 @@ at () {
         printf "\t"
     done
 
-    printf '<%s@%s>' "${FUNCNAME[i]}" "${BASH_LINENO[i-1]}"; # the -1 moves the line number in the output
-    if [[ "$i" -ne 2 ]]; then {
-        printf -- " ->\n"
+    local func="${FUNCNAME[i]}"
+    local linenum="${BASH_LINENO[i-1]}" # the -1 affects the line number in the output, giving us the one that would be to "backtrace"
+    if [[ "$i" -ne 2 ]]; then { #We have something unexpected per this function....
+        printf "<%s@%s> ->\n" "${func}" "${linenum}"
     } else {
-        printf "]}\n"
+        printf "<%s@%s>]}\n" "${func}" "${linenum}"
     }
     fi
     done
@@ -48,11 +49,10 @@ backtrace () {
    fi
    trace_line=1
    while read LINE SUB FILE < <(caller "$trace_line"); do
-       printf "at {%s : %s}" "${SUB}" "${LINE}"
        if [[ "$verbose_flag" -ge 4 ]] ; then {
-           printf " -> {%s}\n" "${FILE}"
+           log_cl "at {${SUB} : ${LINE}} -> {${FILE}}" debug white
        } else {
-           printf "\n"
+           log_cl "at {${SUB} : ${LINE}}" debug white
        }
        fi
        trace_line=$((trace_line+1))
