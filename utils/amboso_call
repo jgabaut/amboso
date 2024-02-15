@@ -21,7 +21,7 @@ query="$2"
 echo -e "[API]    Add B to the flags to not use git mode by default.\n"
 
 start_t_call=`date +%s.%N`
-"./amboso" -sVVV -"$flags" "$query"
+"./amboso" -s -V 5 -"$flags" "$query"
 res="$?"
 end_t_call=`date +%s.%N`
 runtime_call=$( echo "$end_t_call - $start_t_call" | bc -l )
