@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="2.0.4-dev"
+AMBOSO_API_LVL="2.0.4"
 at () {
     printf "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
@@ -1466,6 +1466,7 @@ amboso_parse_args() {
   stego_dir=""
   stego_dir_flag=0
   min_amboso_v_stegodir="2.0.3"
+  min_amboso_v_treegen="2.0.4"
   target_awk="awk"
   bad_awk="mawk"
 
@@ -2001,9 +2002,9 @@ amboso_parse_args() {
   [[ ! $dir_flag -gt 0 ]] && scripts_dir="./bin/" && log_cl "No -D flag, using ( $scripts_dir ) for target dir. Run with -V <lvl> to see more." debug >&2 #&& usage && exit 1
 
   if [[ ! -d "$scripts_dir" ]] ; then {
-    if [[ "$extensions_flag" -gt 0 ]] ; then {
-        log_cl "${FUNCNAME[0]}():    \"$scripts_dir\" was not a valid dir. Trying {\".\"}." warn
-        scripts_dir="."
+    if [[ "$std_amboso_version" > "$min_amboso_v_treegen" || "$std_amboso_version" = "$min_amboso_v_treegen" ]] ; then {
+        log_cl "Creating scripts_dir: {$scripts_dir}" debug
+        mkdir "$scripts_dir" || { log_cl "Failed creating scripts_dir: {$scripts_dir}" error; return 1; } ;
     } else {
         log_cl "${FUNCNAME[0]}():    \"$scripts_dir\" was not a valid dir." debug
     }
@@ -2925,11 +2926,18 @@ amboso_parse_args() {
       fi
     } else {
       if [[ ! -d "$script_path" ]] ; then
-        log_cl "'$script_path' is not a valid directory.\n    Check your supported versions for details on ( $version ).\n" error >&2
-        app "$(echo_node query_success_not_ready end_node)"
-        end_digraph
-        echo_timer "$amboso_start_time"  "Invalid path [$script_path]" "1"
-        exit 1
+        if [[ "$std_amboso_version" > "$min_amboso_v_treegen" || "$std_amboso_version" = "$min_amboso_v_treegen" ]] ; then {
+          [[ "$base_mode_flag" -gt 0 ]] && { log_cl "Base mode, can't find target dir {$script_path}." error >&2; return 1; } ;
+          log_cl "Creating script_path {$script_path}" debug
+          mkdir "$script_path" || { log_cl "Failed creating script_path: {$script_path}" error >&2 ; return 1; } ;
+        } else {
+          log_cl "'$script_path' is not a valid directory.\n    Check your supported versions for details on ( $version ).\n" error >&2
+          app "$(echo_node query_success_not_ready end_node)"
+          end_digraph
+          echo_timer "$amboso_start_time"  "Invalid path [$script_path]" "1"
+          return 1
+        }
+        fi
       fi
       #we try to build
       tool_txt="single file gcc"
