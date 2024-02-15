@@ -702,7 +702,6 @@ function amboso_help {
   -h        (help)           Print help
   -Y <START_TIME>            Set start time of the program
   -z        (pack)           Run \"make pack\"
-  -c        (control-flow)   Output dotfile \'amboso_cfg.dot\' while running
   -H        (bighelp)        Print more help
   -e        (extensions)     Turn off extensions to 2.0
   -a <AMBOSO_VERS>           Specify amboso version to use
@@ -723,7 +722,7 @@ function amboso_usage {
 
   printf "Arguments:
   [TAG]  Optional tag argument\n"
-  printf "Example usage:  $(basename "$prog_name") [(-O|-D|-K|-M|-S|-E|-G|-C|-x|-V|-Y|-a|-k) <ARG>] [-TBtg] [-bripd] [-hHvlLsqcwXWPJRFe] [TAG]\n"
+  printf "Example usage:  $(basename "$prog_name") [(-O|-D|-K|-M|-S|-E|-G|-C|-x|-V|-Y|-a|-k) <ARG>] [-TBtg] [-bripd] [-hHvlLsqwXWPJRFe] [TAG]\n"
 }
 
 function escape_colorcodes_tee {
@@ -1377,28 +1376,6 @@ amboso_parse_args() {
     echo_timer "$amboso_start_time"  "Excessive recursion" "1"
     exit 69
   fi
-  #Functions to output dotfile
-  dotfile="./amboso_cfg.dot"
-  function app() {
-    [[ $print_cfg_flag -eq 0 || ${AMBOSO_LVL_REC} -gt 1 ]] && return
-    txt="$1" file="$dotfile"
-    printf "$txt\n" >> "$file"
-  }
-  function echo_node() {
-    frm="$1" nd="$2"
-    printf " $frm -> $nd \n"
-  }
-  function echo_start_node() {
-    sn="$1"
-    printf " $sn ->\n"
-  }
-  function start_digraph() {
-    app "digraph {"
-  }
-  function end_digraph() {
-    app "}"
-  }
-
 
   #Prepare flag values to default value
   purge_flag=0
@@ -1430,7 +1407,6 @@ amboso_parse_args() {
   small_list_flag=0
   version_flag=0
   silent_flag=0
-  print_cfg_flag=0
   pack_flag=0
   tell_uname_flag=0
   gen_C_headers_set=0
@@ -1470,7 +1446,7 @@ amboso_parse_args() {
   target_awk="awk"
   bad_awk="mawk"
 
-  while getopts "O:A:M:S:E:D:K:G:Y:x:V:C:a:k:wBgbpHhrivdlLtTqsczUXWPJRFe" opt; do
+  while getopts "O:A:M:S:E:D:K:G:Y:x:V:C:a:k:wBgbpHhrivdlLtTqszUXWPJRFe" opt; do
     case $opt in
       O )
         if [[ "$std_amboso_version" > "$min_amboso_v_stegodir" || "$std_amboso_version" = "$min_amboso_v_stegodir" ]] ; then {
@@ -1606,9 +1582,6 @@ amboso_parse_args() {
         ;;
       U )
         tell_uname_flag=1
-        ;;
-      c )
-        print_cfg_flag=1
         ;;
       z )
         pack_flag=1
@@ -1837,19 +1810,6 @@ amboso_parse_args() {
   }
   fi
 
-  if [[ $print_cfg_flag -gt 0 ]] ; then {
-    #Reset output file
-    printf "" > "$dotfile"
-    #Print opening digraph
-    start_digraph
-    start_node="start"
-    #Unnecessary?
-    #app "$( echo_start_node "$start_node" )"
-
-    app "$( echo_node "$start_node" begin_node )"
-  }
-  fi
-
   [[ $verbose_flag -ge 4 ]] && log_cl "[PREP]    Done getopts." debug >&2
   [[ $verbose_flag -gt 3 && ! "$(basename "$prog_name")" = "anvil" ]] && log_cl "[AMBOZO]    Please, symlink me to \"anvil\".\n" debug >&2
 
@@ -1948,8 +1908,6 @@ amboso_parse_args() {
 
   [[ $quiet_flag -eq 0 && $verbose_flag -gt 3 ]] && for read_arg in "$@"; do { printf "[ARG]    \"$read_arg\"\n" ; } ; done
 
-  app "$(echo_node loaded_fn silence_check)"
-
   #We check if we have to silence all subsequent output
   if [[ ( $test_mode_flag -eq 0 && $small_test_mode_flag -eq 0 ) && $silent_flag -gt 0 ]] ; then {
     log_cl "[MODE]    Running in silent mode, will now suppress all output.\n" info
@@ -2047,15 +2005,9 @@ amboso_parse_args() {
   fi
   if [[ $test_mode_flag -gt 0 && $test_info_was_set -gt 0 ]] ; then {
     if [[ $AMBOSO_LVL_REC -lt 3 ]] ; then {
-      app "$(echo_node silence_check test_mode)"
-      app "$(echo_node test_mode recursion_lt_3)"
       log_cl "bone dir: ( $cases_dir )" debug >&2
       log_cl "       kulpo dir: ( $errors_dir )" debug >&2 #&& usage && exit 1
     } else {
-      app "$(echo_node silence_check test_mode)"
-      app "$(echo_node test_mode recursion_ge_3)"
-      app "$(echo_node recursion_ge_3 end_node)"
-      end_digraph
       [[ ! -z $cases_dir ]] && log_cl "bone dir: ( $cases_dir )" debug >&2
       [[ ! -z $errors_dir ]] && log_cl "       kulpo dir: ( $errors_dir )" debug >&2 #&& usage && exit 1
       log_cl "[PANIC]    Running  as \"$prog_name\" in test mode is not supported. Quitting with 69.\n" error #&& usage && exit 1
@@ -2065,16 +2017,10 @@ amboso_parse_args() {
     }
     fi
   } elif [[ $test_info_was_set -eq 0 && $test_mode_flag -gt 0 ]] ; then {
-      app "$(echo_node silence_check test_mode)"
-      app "$(echo_node test_mode no_test_info)"
     if [[ $AMBOSO_LVL_REC -lt 3 ]] ; then {
-      app "$(echo_node no_test_info recursion_lt_3)"
       log_cl "bone dir (NO -K passed to this call): ( $cases_dir )" debug >&2
       log_cl "       kulpo dir (NO -K passed to this amboso call): ( $errors_dir )" debug >&2 #&& usage && exit 1
     } else {
-      app "$(echo_node no_test_info recursion_ge_3)"
-      app "$(echo_node recursion_ge_3 end_node)"
-      end_digraph
       #Deep case: we're running a test, calling a program that calls amboso in test mode.
       log_cl "bone dir (NO -K passed to this call): ( $cases_dir )" debug >&2
       log_cl "       kulpo dir (NO -K passed to this amboso call): ( $errors_dir )" debug >&2 #&& usage && exit 1
@@ -2089,9 +2035,6 @@ amboso_parse_args() {
 
   #Check if we are printing help info and exiting early
   if [[ $smallhelp_flag -gt 0 ]]; then {
-      app "$(echo_node silence_check doing_help)"
-      app "$(echo_node doing_help end_node)"
-      end_digraph
     if [[ $AMBOSO_LVL_REC -gt 1 ]] ; then {
       printf "[AMBOSO]    can't ask for help on a recursive call, try running \"$prog_name -h\" from a shell. ( depth $((${AMBOSO_LVL_REC}-1)) )\n\n        args: (\"$*\")\n" >&2
       echo_timer "$amboso_start_time"  "Recursive help?" "1"
@@ -2109,9 +2052,6 @@ amboso_parse_args() {
   fi
   #Check if we are printing Help info and exiting early
   if [[ $bighelp_flag -gt 0 ]]; then {
-      app "$(echo_node silence_check doing_big_help)"
-      app "$(echo_node doing_big_help end_node)"
-      end_digraph
     if [[ $AMBOSO_LVL_REC -gt 1 ]] ; then {
       printf "[AMBOSO]    can't ask for help on a recursive call, try running \"$prog_name -H\" from a shell. ( depth $((${AMBOSO_LVL_REC}-1)) )\n\n        args: (\"$*\")\n" >&2
       echo_timer "$amboso_start_time"  "Recursive bighelp?" "1"
@@ -2234,7 +2174,6 @@ amboso_parse_args() {
         echo_supported_tags >&2
     }
     fi
-    app "$(echo_node silence_check doing_init)"
 
     count_bins=0
     start_t_init=$(date +%s.%N)
@@ -2350,9 +2289,6 @@ amboso_parse_args() {
   #If we have -t and not -T, we check all tests and EXIT
   #WIP
   if [[ $small_test_mode_flag -gt 0 && $test_mode_flag -eq 0 ]] ; then {
-    app "$(echo_node silence_check doing_test_macro)"
-    app "$(echo_node doing_test_macro end_node)"
-    end_digraph
     if [[ $quiet_flag -eq 0 ]] ; then {
       log_cl "-t assert: shortcut to run \"$prog_name\" with -T" debug
       log_cl "will pass: ( -qVbw ) to subcall, if asserted.\n" debug
@@ -2488,19 +2424,13 @@ amboso_parse_args() {
 
   #If we don't have init or purge flag, we bail on a missing version argument
   if [[ $tot_left_args -lt 1 && $purge_flag -eq 0 && $init_flag -eq 0 && $test_mode_flag -eq 0 ]]; then {
-    app "$(echo_node silence_check missing_query)"
     try_doing_make
     make_res="$?"
-    app "$(echo_node missing_query end_node)"
-    end_digraph
     #printf "\033[1;31m[ERROR]    Missing query.\e[0m\n\n"
     #printf "\033[1;33m           Run with -h for help.\e[0m\n\n"
     echo_timer "$amboso_start_time"  "Missing query" "1"
     return "$make_res"
   } elif [[ $tot_left_args -lt 1 && $test_mode_flag -gt 0 ]] ; then {
-    app "$(echo_node silence_check missing_test_query)"
-    app "$(echo_node missing_test_query end_node)"
-    end_digraph
     #If in test mode, we still whine about a target test
     log_cl "Missing test query.\n" error
     log_cl "       Run with -h for help.\n" error
@@ -2509,7 +2439,6 @@ amboso_parse_args() {
   fi
   #Check if we are doing a test
   if [[ $test_mode_flag -gt 0 ]]; then {
-    app "$(echo_node recursion_lt_3 doing_test)"
     if [[ $quiet_flag -eq 0 && $verbose_flag -ge 4 ]]; then { #WIP
         log_cl "[VERB]    Test mode (-T was on)." info >&2
         [[ $small_test_mode_flag -gt 0 ]] && log_cl "[VERB]    (-t was on)." info >&2
@@ -2838,11 +2767,8 @@ amboso_parse_args() {
     log_cl "Running as interpreter for {$query}\n" info
     if [[ "$interpr_does_make" -gt 0 ]] ; then {
       log_cl "Building: -->    {Plain make}\n" info magenta
-      app "$(echo_node silence_check missing_query)"
       try_doing_make
       make_res="$?"
-      app "$(echo_node missing_query end_node)"
-      end_digraph
       #printf "\033[1;31m[ERROR]    Missing query.\e[0m\n\n"
       #printf "\033[1;33m           Run with -h for help.\e[0m\n\n"
       echo_timer "$amboso_start_time"  "Missing query" "1"
@@ -2863,9 +2789,6 @@ amboso_parse_args() {
   if [[ -z $version ]]; then {
     #We only freak out if we don't have test_mode, purge or init flags on
     if [[ $test_mode_flag -eq 0 && $purge_flag -eq 0 && $init_flag -eq 0 ]] ; then {
-      app "$(echo_node silence_check query_invalid)"
-      app "$(echo_node query_invalid end_node)"
-      end_digraph
       log_cl "( $query ) is not a supported tag.\n" error
       log_cl "       Run with -h for help.\n" error
       echo_timer "$amboso_start_time"  "Invalid query [$query]" "1"
@@ -2901,10 +2824,6 @@ amboso_parse_args() {
 
   #If we can't find the file we may try to build it
   if [[ ! -z "$version" && ( ( ! -f "$script_path/$exec_entrypoint" ) || "$force_build_flag" -gt 0 ) ]] ; then {
-    if [[ "$init_flag" -eq 0 ]] ; then {
-      app "$(echo_node silence_check query_success_not_ready)"
-    }
-    fi
     if [[ "$force_build_flag" -le 0 ]] ; then {
         log_cl "[QUERY]    ( $version ) binary not found in ( $script_path )." warn #>&2
     } else {
@@ -2918,8 +2837,6 @@ amboso_parse_args() {
     if [[ ! $build_flag -gt 0 ]] ; then { #We exit here if we don't want to try building and we're not going to purge
       log_cl "To try building, run with -b flag\n" debug >&2
       if [[ ! $purge_flag -gt 0 ]] ; then {
-       app "$(echo_node query_success_not_ready end_node)"
-       end_digraph
        echo_timer "$amboso_start_time"  "No build flag" "1"
        exit 1 # quit if we're not purging
       }
@@ -2932,8 +2849,6 @@ amboso_parse_args() {
           mkdir "$script_path" || { log_cl "Failed creating script_path: {$script_path}" error >&2 ; return 1; } ;
         } else {
           log_cl "'$script_path' is not a valid directory.\n    Check your supported versions for details on ( $version ).\n" error >&2
-          app "$(echo_node query_success_not_ready end_node)"
-          end_digraph
           echo_timer "$amboso_start_time"  "Invalid path [$script_path]" "1"
           return 1
         }
@@ -2941,7 +2856,6 @@ amboso_parse_args() {
       fi
       #we try to build
       tool_txt="single file gcc"
-      app "$(echo_node query_success_not_ready building)"
       if [[ $has_makefile -gt 0 ]]; then { #Make mode
         tool_txt="make"
         if [[ $can_automake -gt 0 ]] ; then { #We support automake by doing autoreconf and ./configure before running make.
@@ -3081,12 +2995,8 @@ amboso_parse_args() {
       #Check compilation result
       if [[ $comp_res -eq 0 ]] ; then
         log_cl "[BUILD]    Done Building ( $version ) , took $runtime seconds, using ( $tool_txt )." info
-        app "$(echo_node building build_success)"
       else
         log_cl "Build for ( $version ) failed, quitting.\n" error >&2
-        app "$(echo_node building build_fail)"
-        app "$(echo_node build_fail end_node)"
-        end_digraph
         echo_timer "$amboso_start_time"  "Failed build for [$version]" "1"
         exit 1
       fi
@@ -3095,12 +3005,6 @@ amboso_parse_args() {
     fi
 
   } elif [[ ! -z $version ]] ; then { #Binary was present, we notify if we were running with build flag
-    if [[ $init_flag -eq 0 ]] ; then {
-      app "$(echo_node silence_check query_success_ready)"
-    } else {
-      app "$(echo_node doing_init query_success_ready)"
-    }
-    fi
     log_cl "[QUERY]    ( $version ) binary is ready at ( $script_path ) .\n" info >&2
     if [[ $verbose_flag -gt 3 ]] ; then {
         echo_tag_info "$version"
@@ -3108,7 +3012,6 @@ amboso_parse_args() {
     fi
     if [[ $build_flag -gt 0 ]] ; then {
       log_cl "[BUILD]    Found binary for ( $version ), won't build.\n" info >&2
-      app "$(echo_node query_success_ready build_success)"
 
     }
     fi
@@ -3128,7 +3031,6 @@ amboso_parse_args() {
     fi
 
   } elif [[ ! -z $query ]] ; then {
-    app "$(echo_node silence_check query_invalid)"
     log_cl "[QUERY]    ( $query ) invalid query, run with -V <lvl> to see more." error
     if [[ $verbose_flag -gt 3 ]] ; then {
         echo_tag_info "$version"
@@ -3139,16 +3041,16 @@ amboso_parse_args() {
 
   #We check the run flag to run the binary
   if [[ ! -z $version && $run_flag -eq 1 && -x $script_path/$exec_entrypoint ]] ; then {
-    if [[ $build_flag -gt 0 && $comp_res -eq 0 ]]; then { #The second condition is needed to catch running a freshly built tag
-      app "$(echo_node build_success running)"
-    } else {
-      app "$(echo_node query_success_ready running)"
-    }
-    fi
+    # TODO: put this to some use that doesn't involve the legacy app() function
+    #
+    #if [[ $build_flag -gt 0 && $comp_res -eq 0 ]]; then { #The second condition is needed to catch running a freshly built tag
+    #  app "$(echo_node build_success running)"
+    #} else {
+    #  app "$(echo_node query_success_ready running)"
+    #}
+    #fi
+
     log_cl "\n    Running script $script_path/$exec_entrypoint" debug
-    #echo -n "."
-    #sleep 1
-    #echo ""
     ( cd "$script_path" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4 ;} ; ./"$exec_entrypoint" )
   } elif [[ ! -z $version && $run_flag -eq 0  ]] ; then {
     log_cl "Running without -r flag, won't run." debug >&2
@@ -3160,15 +3062,7 @@ amboso_parse_args() {
   #Check if we are deleting and exiting early
   #We skipped first deletion pass if purge mode is requested, since we will enter here later
   if [[ $delete_flag -gt 0 && $purge_flag -eq 0 ]] ; then {
-    if [[ $run_flag -gt 0 ]] ; then {
-      app "$(echo_node running deleting)"
-    } elif [[ $build_flag -gt 0 ]] ; then {
-      app "$(echo_node build_success deleting)"
-    } else {
-      app "$(echo_node query_success_ready deleting)"
-    }
-    fi
-      clean_res=1
+    clean_res=1
     if [[ $has_makeclean -gt 0 && $base_mode_flag -gt 0 ]] ; then { #Running in git mode skips make clean
       tool_txt="make clean"
       has_bin=0
@@ -3186,9 +3080,6 @@ amboso_parse_args() {
           exit "$clean_res"
         } else {
           [[ $verbose_flag -gt 3 ]] && log_cl "[DELETE]   ( $version ) does not have an executable at ( $delete_path ).\n" debug # >&2
-          app "$(echo_node deleting no_target_error)"
-          app "$(echo_node no_target_error end_node)"
-          end_digraph
           echo_timer "$amboso_start_time"  "Nothing to delete" "1"
           exit 1
         }
@@ -3204,14 +3095,8 @@ amboso_parse_args() {
       clean_res=$?
       if [[ $clean_res -eq 0 ]] ; then {
         log_cl "[DELETE]    Success on ( $version )." info
-        app "$(echo_node deleting delete_success)"
-        app "$(echo_node delete_success end_node)"
-        end_digraph
       } else {
         log_cl "[DELETE]    Failure on ( $version )." error
-        app "$(echo_node deleting delete_fail)"
-        app "$(echo_node delete_fail end_node)"
-        end_digraph
       }
       fi
       echo_timer "$amboso_start_time"  "Did delete, res was [$clean_res]" "3"
@@ -3223,15 +3108,6 @@ amboso_parse_args() {
 
   #Check if we are purging
   if [[ purge_flag -gt 0 ]]; then
-    if [[ $run_flag -gt 0 ]] ; then {
-      app "$(echo_node running purging)"
-    } elif [[ $build_flag -gt 0 ]] ; then {
-      app "$(echo_node build_success purging)"
-    } else {
-      app "$(echo_node query_success_ready purging)"
-    }
-    fi
-    #echo "" >&2 #This newline can be redirected when doing recursion for init mode
     tot_removed=0
     tool_txt="rm"
     has_bin=0
@@ -3325,30 +3201,12 @@ amboso_parse_args() {
     done
     if [[ $tot_removed -gt 0 ]] ; then {
       log_cl "[PURGE]    Purged ( $tot_removed / $tot_vers ) versions, quitting.\n" info
-      app "$(echo_node purging purging_success)"
-      app "$(echo_node purging_success end_node)"
     } else {
       log_cl "[PURGE]    No binaries to purge found.\n" info
-      app "$(echo_node purging purging_fail)"
-      app "$(echo_node purging_fail end_node)"
     }
     fi
   fi
 
-  if [[ $delete_flag -eq 0 ]]; then {
-      #We need to close cfg dump
-      if [[ $run_flag -gt 0 ]] ; then {
-        app "$(echo_node running end_node)"
-      } elif [[ $build_flag -gt 0 ]] ; then {
-        app "$(echo_node build_success end_node)"
-      } else {
-        app "$(echo_node query_success_ready end_node)"
-      }
-      fi
-  }
-  fi
-
-  end_digraph
   echo_timer "$amboso_start_time"  "Run" "6"
   exit 0
 
