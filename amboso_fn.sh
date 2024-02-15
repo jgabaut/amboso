@@ -1880,6 +1880,7 @@ amboso_parse_args() {
       [[ -f "$filepath" ]] || { log_cl "\"$filepath\" was not a valid file." error ; exit 1 ; }
 
       if [[ $ignore_git_check_flag -eq 1 ]]; then {
+          log_cl "EXPERIMENTAL:    Running as Makefile parser." debug >&2
           if [[ $big_list_flag -eq 1 ]] ; then {
               najlo_main -d "$filepath"
               exit "$?"
