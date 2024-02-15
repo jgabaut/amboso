@@ -48,7 +48,13 @@ backtrace () {
    fi
    trace_line=1
    while read LINE SUB FILE < <(caller "$trace_line"); do
-       printf "at {%s : %s} -> {%s}\n" "${SUB}" "${LINE}" "${FILE}"
+       printf "at {%s : %s}" "${SUB}" "${LINE}"
+       if [[ "$verbose_flag" -ge 4 ]] ; then {
+           printf " -> {%s}\n" "${FILE}"
+       } else {
+           printf "\n"
+       }
+       fi
        trace_line=$((trace_line+1))
    done
 }
