@@ -69,47 +69,47 @@ trace () {
 }
 
 function log_cl {
-    has_color="${AMBOSO_COLOR:-0}"
-    do_filelog="${AMBOSO_LOGGED:-0}"
-    tk_bold="bold"
-    tk_thin="thin"
-    clr_default="0"
-    clr_red="1"
-    clr_green="2"
-    clr_yellow="3"
-    clr_blue="4"
-    clr_magenta="5"
-    clr_cyan="6"
-    clr_white="7"
-    colorname_0="default"
-    colorname_1="red"
-    colorname_2="green"
-    colorname_3="yellow"
-    colorname_4="blue"
-    colorname_5="magenta"
-    colorname_6="cyan"
-    colorname_7="white"
+    local has_color="${AMBOSO_COLOR:-0}"
+    local do_filelog="${AMBOSO_LOGGED:-0}"
+    local tk_bold="bold"
+    local tk_thin="thin"
+    local clr_default="0"
+    local clr_red="1"
+    local clr_green="2"
+    local clr_yellow="3"
+    local clr_blue="4"
+    local clr_magenta="5"
+    local clr_cyan="6"
+    local clr_white="7"
+    local colorname_0="default"
+    local colorname_1="red"
+    local colorname_2="green"
+    local colorname_3="yellow"
+    local colorname_4="blue"
+    local colorname_5="magenta"
+    local colorname_6="cyan"
+    local colorname_7="white"
 
-    lvl_4="debug"
-    lvl_3="info"
-    lvl_2="warn"
-    lvl_1="error"
+    local lvl_4="debug"
+    local lvl_3="info"
+    local lvl_2="warn"
+    local lvl_1="error"
 
-    lvl_4_tag="DEBUG"
-    lvl_3_tag="INFO"
-    lvl_2_tag="WARN"
-    lvl_1_tag="ERROR"
+    local lvl_4_tag="DEBUG"
+    local lvl_3_tag="INFO"
+    local lvl_2_tag="WARN"
+    local lvl_1_tag="ERROR"
 
-    msg="$1"
-    lvl="$2"
-    color="$3"
-    thick="$4"
+    local msg="$1"
+    local lvl="$2"
+    local color="$3"
+    local thick="$4"
     [[ -z "$thick" ]] && thick="thin"
 
-    verb_lvl=3
-    lvl_tag=""
-    begin_color=0
-    thickness=0
+    local verb_lvl=3
+    local lvl_tag=""
+    local begin_color=0
+    local thickness=0
 
     case $lvl in
         "")
