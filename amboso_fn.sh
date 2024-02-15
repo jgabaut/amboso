@@ -1455,7 +1455,6 @@ amboso_parse_args() {
   min_amboso_v_stegodir="2.0.3"
   min_amboso_v_treegen="2.0.4"
   target_awk="awk"
-  bad_awk="mawk"
 
   while getopts "O:A:M:S:E:D:K:G:Y:x:V:C:a:k:wBgbpHhrivdlLtTqszUXWPJRFe" opt; do
     case $opt in
@@ -1752,7 +1751,7 @@ amboso_parse_args() {
     awk_check="$("$target_awk" --version 2>/dev/null)"
     local awk_check_res="$?"
     local is_gawk="$(grep "GNU" <<< "$awk_check")"
-    local is_mawk="$(grep "$bad_awk" <<< "$awk_check")"
+    local is_mawk="$(grep "mawk" <<< "$awk_check")"
     local is_nawk=""
     if [[ "$awk_check_res" -ne 0 ]] ; then {
       log_cl "awk check result was not zero, assuming it's mawk." warn
