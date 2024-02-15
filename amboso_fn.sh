@@ -17,19 +17,21 @@
 
 AMBOSO_API_LVL="2.0.4"
 at () {
-    printf -- "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] -> {\n"
-    for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
+    #printf -- "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] -> {\n"
+    printf -- "{ call: ["
+    for ((i=${#BASH_LINENO[@]}-1;i>1;i--)); do # i>1 is needed to avoid printing "backtrace" and its little number
+    [[ $i -gt 2 ]] && continue #This should skip printing the upper functions that get printed by the "caller" while read
 
-    local indent="$(( ${#BASH_LINENO[@]} -i ))"
+    local indent="$(( ${#BASH_LINENO[@]} -i  -2 ))" # -2 because of the above
     for ((j=0; j<indent; j++)); do
         printf "\t"
     done
 
-    printf '<%s@%s>' "${FUNCNAME[i]}" "${BASH_LINENO[i]}";
-    if [[ "$i" -ne 0 ]]; then {
+    printf '<%s@%s>' "${FUNCNAME[i]}" "${BASH_LINENO[i-1]}"; # the -1 moves the line number in the output
+    if [[ "$i" -ne 2 ]]; then {
         printf -- " ->\n"
     } else {
-        printf " } }\n"
+        printf "]}\n"
     }
     fi
     done
@@ -45,9 +47,9 @@ backtrace () {
    }
    fi
    trace_line=1
-   while caller "$trace_line" >/dev/null
-   do
-      trace_line=$((trace_line+1))
+   while read LINE SUB FILE < <(caller "$trace_line"); do
+       printf "at {%s : %s} -> {%s}\n" "${SUB}" "${LINE}" "${FILE}"
+       trace_line=$((trace_line+1))
    done
 }
 
@@ -1838,7 +1840,7 @@ amboso_parse_args() {
     trace_line=0
     trace_flag=1;
     log_cl "[TRACE]    Tracing started." debug >&2
-    trap backtrace DEBUG ERR
+    trap backtrace ERR
   } else {
     : #echo "{No trace}" >&2
   }
