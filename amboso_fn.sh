@@ -17,11 +17,23 @@
 
 AMBOSO_API_LVL="2.0.4"
 at () {
-    printf "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] "
+    printf -- "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] -> {\n"
     for ((i=${#BASH_LINENO[@]}-1;i>=0;i--)); do
-    printf '<%s:%s> ' "${FUNCNAME[i]}" "${BASH_LINENO[i]}";
+
+    local indent="$(( ${#BASH_LINENO[@]} -i ))"
+    for ((j=0; j<indent; j++)); do
+        printf "\t"
     done
-    printf "$LINENO\n"
+
+    printf '<%s@%s>' "${FUNCNAME[i]}" "${BASH_LINENO[i]}";
+    if [[ "$i" -ne 0 ]]; then {
+        printf -- " ->\n"
+    } else {
+        printf " } }\n"
+    }
+    fi
+    done
+    #printf "<line: %s>\n" "$LINENO"
 }
 
 backtrace () {
@@ -29,17 +41,14 @@ backtrace () {
    if [[ $trace_line -eq 0 ]] ; then {
      printf "\n\n\n\n{ [$(( $trace_line ))] [ trace at) \n"
    } else {
-     at printf "[\n"
+     at
    }
    fi
    trace_line=1
-   while caller "$trace_line"
+   while caller "$trace_line" >/dev/null
    do
-      #echo "]"
       trace_line=$((trace_line+1))
-      #echo -n "at [ $(( $trace_line  )) ] ["
    done
-   printf "} -> \n"
 }
 
 trace () {
