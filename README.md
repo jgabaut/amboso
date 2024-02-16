@@ -144,10 +144,7 @@ super-repo
 │   ├── hello_world.c
 │   ├── LICENSE
 │   ├── Makefile
-│   ├── README.md
-│   └── try-anvil
-│       ├── try_anvil
-│       └── try_anvil_auto
+│   └── README.md
 ├── kazoj
 ```
 
@@ -295,7 +292,7 @@ This section contains notes about previous versions of `amboso`.
 To see how this marvelous work of art works, run:
 
 ```sh
-  cd try-anvil
+  cd utils/try-anvil
   ./try_anvil
 ```
 All commands ran by the scripts will be shown on screen with a `+` before them.
