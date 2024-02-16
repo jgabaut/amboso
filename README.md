@@ -6,7 +6,6 @@
 
 + [What is this thing?](#witt)
   + [Prerequisites](#prerequisites)
-  + [See how it behaves](#tryanvil)
 + [General Usage](#generalusage)
   + [stego.lock](#stego)
   + [Hard failure](#bin)
@@ -21,6 +20,7 @@
 + [Local installation](#local_install)
 + [Legacy notes](#legacy_notes)
   + [Legacy version dirs](#legacy_version_dirs)
+  + [Legacy usage help script](#legacy_tryanvil)
 + [Todo](#todo)
 
 ### Note
@@ -70,24 +70,7 @@ I did not want to learn how to write nice makefiles or chaining a couple git com
 
 * You should test you have `bc` installed, since it's used to calc runtimes.
 
-## See how it behaves <a name = "tryanvil"></a>
-
-To see how this marvelous work of art works, run:
-
-```sh
-  cd try-anvil
-  ./try_anvil
-```
-
-## try-anvil dir
-
-All commands ran by the scripts will be shown on screen with a `+` before them.
-
-`try-anvil/try_anvil` It's a script running `./anvil` with various flags using the provided ./bin example references, so you can see how to call amboso with different flags.
-
 ### Note
-
-- The script symlinks `amboso` to `./anvil`, using `ln -s PATH_TO/amboso/amboso ./anvil`.
 
   - If you include this repo as a submodule, you should also do the same and have the `anvil` link in your main repo directory, so you can call that instead of `REPO/amboso/amboso`.
 
@@ -95,10 +78,6 @@ All commands ran by the scripts will be shown on screen with a `+` before them.
 
   - When running inside a dir containing an `amboso` folder, `anvil` will try to source `amboso_fn.sh` from `./amboso/amboso_fn.sh` instead of the file located inside global installation `/usr/local/bin/amboso_fn.sh`.
   - You should see a warning message if a version mismatch occurs.
-
-This command hints you to symlinking `./amboso` to `super_repo/anvil`, and shows differents outputs based on the queries made.
-
-It can now also show how the repo itself complies with amboso specs to run in git mode.
 
 ## General usage <a name = "generalusage"></a>
 
@@ -208,8 +187,6 @@ Running `anvil` with `-t` or `-T` will start test mode.
 - Use `-i` to record all the tests stdout and stderr to aptly named files.
 - You can do the same for just 1 file with `-b`.
 
-
-
 ## Maintaining compatibility <a name = "amboso_env"></a>
 
 Using amboso in a project requires some costraints to be valid both from the repo perspective **and** from the build process perspective.
@@ -311,7 +288,22 @@ This section contains notes about previous versions of `amboso`.
 #The * line tells git to ignore all files in the folder, but !.gitignore tells git to still include the .gitignore file, thus keeping the directory checked in with your tag.
 ```
 
-## Todo <a name = "todo"></a>
+### Legacy usage help script <a name = "legacy_tryanvil"></a>
 
-* Since the script is just selecting your `stego.lock` file to find the path to the correct target dir for your tag, we could try to use something other than `make`.
-* ATM I don't really see how to easily change that, and `amboso` is pretty long already. Maybe a second argument with the path to your build-step script?
+#### This info only applies to amboso <= 2.0.3. After 2.0.4, the tryanvil script is no longer working as expected, given that the whole bin dir creation is now done automatically when needed.
+
+To see how this marvelous work of art works, run:
+
+```sh
+  cd try-anvil
+  ./try_anvil
+```
+All commands ran by the scripts will be shown on screen with a `+` before them.
+
+`try-anvil/try_anvil` It's a script running `./anvil` with various flags using the provided ./bin example references, so you can see how to call amboso with different flags.
+
+* The script symlinks `amboso` to `./anvil`, using `ln -s PATH_TO/amboso/amboso ./anvil`.
+
+* A revised version of the script may be added later.
+
+## Todo <a name = "todo"></a>
