@@ -97,11 +97,11 @@ Defined tags are in this format:
 
 You can define both git-mode tags and base-mode tags , each supported when running in the corresponding mode.
 
-Definition of a base-mode tag **must** start with a `-`, like so
+Definition of a base-mode tag **must** start with a `B`, like so
 ```
-"-0.0.1" = "1"# A nice comment
+"B0.0.1" = "1"# A nice comment
 ```
-The `-` character will not be a part of your tag name, it only marks base-mode tags when at the start of a tag name.
+The `B` character will not be a part of your tag name, it only marks base-mode tags when at the start of a tag name.
 
 ## Hard failure <a name = "bin"></a>
 
