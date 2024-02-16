@@ -1,4 +1,4 @@
 #!/bin/bash
 #
 
-./amboso -Pqlx ./bin/stego.lock
+./amboso -Pqlx ./stego.lock
