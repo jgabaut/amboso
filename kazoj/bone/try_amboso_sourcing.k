@@ -1,10 +1,11 @@
 #!/bin/bash
 
-expected_AMBOSO_API_LVL="2.0.4-dev"
+expected_AMBOSO_API_LVL="2.0.4"
 
 verbose_flag=1
 tell_uname_flag=0
 quiet_flag=0
+
 #Function to try sourcing amboso_fn.sh
 source_amboso_api() {
   local force="$1"
