@@ -19,6 +19,8 @@
   + [About git mode](#git_mode)
 + [Why should I consider using this?](#reasons)
 + [Local installation](#local_install)
++ [Legacy notes](#legacy_notes)
+  + [Legacy version dirs](#legacy_version_dirs)
 + [Todo](#todo)
 
 ### Note
@@ -55,15 +57,18 @@ I did not want to learn how to write nice makefiles or chaining a couple git com
 
 ## Prerequisites <a name = "prerequisites"></a>
 
-* At the moment the only supported build step command is `make`. This means you use make without providing a task name.
-
-* You should test you have `bc` installed, since it's used to calc runtimes.
+* At the moment the only supported build step command is `make rebuild`. This means you use make to run the target `rebuild`.
+  * Running with `-R` turns this back to the original behaviour, running just `make` with no target argument.
 
 * You definitely need `bash`, I'm using version `5.1.x` but for now I don't know about incompatible features used here.
-  * For Apple silicon users: check this issue for unexpected behaviour on bash `3.x`. [#21](/../../issues/21)
+  * For macOS users: check this issue for unexpected behaviour on bash `3.x`. [#21](/../../issues/21)
 
-* If you want to try how it works by using this repo's `./bin` dir as an example (or this repo in general) you will need:
-  * `gcc`, for building `helloworld`
+* You need `gawk` to be your `awk` symlink. While work to support `nawk` and `mawk` will be coming, it's not a priority as of now.
+  * macOS ships with `nawk` by default, but if you have `brew` installed, you should be able to run
+    `brew install gawk`
+  * After that, it's just a matter of changing the `awk` binary to be a symlink to `gawk`. Maybe copy it to `awk.bkp` first.
+
+* You should test you have `bc` installed, since it's used to calc runtimes.
 
 ## See how it behaves <a name = "tryanvil"></a>
 
@@ -211,15 +216,21 @@ Using amboso in a project requires some costraints to be valid both from the rep
 
 ### For the super repo: <a name = "super_repo"></a>
 
-I guess you pretty much need a `stego.lock` file to keep the main compliance checks stable.
+Use a `stego.lock` file to keep the main compliance checks stable.
+
 It will store the source file name for single file mode and the target binary name.
-It also stores the lowest version providing a Makefile so that you can easily jump into a small project and not set up make right away (why not I guess).
+
+It also stores the lowest version providing a Makefile, so that you can easily jump into a small project and not set up make right away (why not I guess).
 Even tought it only takes a couple minutes to do that, we like to postpone.
 
-Sticking to a source file name and a target executable name should be pretty easy (maybe similar to repo name?). Plus, you can definitely change idea about those later, by always checking in your lock.
-I can't recommend using the -D flag everytime just to tell amboso where to look, but I guess a fallback option to provide a different default directory name than `./bin` could be easily added. TODO coming soon tm
+Sticking to a source file name and a target executable name should be pretty easy (maybe similar to repo name?).
+
+Plus, you can definitely change idea about those later, by always checking in your lock.
+
+I can't recommend using the -D flag everytime just to tell amboso where to look, but a fallback option to provide a different default directory name than `./bin` through the `stego.lock` itself could be added.
 
 ### .gitignore for git mode  <a name = "gitignore_gitmode"></a>
+
 To successfully use git mode, you must assure idempotency of the switch back to the main version. This is accomplished by correctly setting up your `.gitignore`, so that all object files & the executable are always ignored in all supported versions, and by always having the needed directory for any tag ready inside the tagged commit.
 This must be done for the first version you want to support in git mode, and can stay pretty much untouched after.
 Your repo `.gitignore` should include some lines like this:
@@ -231,18 +242,17 @@ Your repo `.gitignore` should include some lines like this:
 BIN-NAME
 # and also explicitly ignore our debug executable for good measure
 DEBUG-BIN-NAME
+# also ignore our builds dir
+BUILDS-DIR-NAME
 ```
-Where BIN-NAME is the target executable and DEBUG-BIN-NAME is its eventual debug compiled version.
+Where:
+  - BIN-NAME is the target executable
+  - DEBUG-BIN-NAME is its eventual debug compiled version
+  - BUILDS-DIR-NAME is the directory that you're expecting to use to store the built versions.
+    - If it's inside the repo, it's best to gnore it as a whole.
+    - If you're targeting `amboso <2.0.4`, you must refer to the legacy handling of things, which included committing a new directory for every new amboso-supported tag... Link [here](#legacy_version_dirs).
 
-**All** of your "v" directories ("vMYTAG") must include a `.gitignore` with some lines like this:
-
-```
-# You should put this .gitignore inside every one of your vMYTAG folders, each one before creating its own tagged commit on the repo:
-*
-!.gitignore
-#
-#The * line tells git to ignore all files in the folder, but !.gitignore tells git to still include the .gitignore file, thus keeping the directory checked in with your tag.
-```
+That's it. You can easily
 
 I guess suggesting skipping object files and the main project executable is not a hot take.
 
@@ -282,6 +292,24 @@ Not much useful by itself, since you won't probably have a compliant `stego.lock
 May be useful to me to anchor a default version locally.
 
 Run `sudo make uninstall` to clean the installed files.
+
+## Legacy notes <a name = "legacy_notes"></a>
+
+This section contains notes about previous versions of `amboso`.
+
+### Legacy version directories <a name = "legacy_version_dirs"></a>
+
+#### This info only applies to amboso <= 2.0.3. After 2.0.4, there's no need to prepare the build directory tree beforehand.
+
+**All** of your "version" directories (`vMYTAG/`) must include a `.gitignore` with some lines like this:
+
+```
+# You should put this .gitignore inside every one of your vMYTAG folders, each one before creating its own tagged commit on the repo:
+*
+!.gitignore
+#
+#The * line tells git to ignore all files in the folder, but !.gitignore tells git to still include the .gitignore file, thus keeping the directory checked in with your tag.
+```
 
 ## Todo <a name = "todo"></a>
 
