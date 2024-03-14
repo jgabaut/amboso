@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #  SPDX-License-Identifier: GPL-3.0-only
 #  Bash symbols sourced by amboso.
 #    Copyright (C) 2023-2024  jgabaut
@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="2.0.4"
+AMBOSO_API_LVL="2.0.5-dev"
 at () {
     #printf -- "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] -> {\n"
     log_cl "{ call: [" debug white
