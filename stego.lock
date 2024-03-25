@@ -1,7 +1,7 @@
 #!/usr/local/bin/anvil -XV5
 [ anvil ]
 
-version = "2.0.4"
+version = "2.0.5"
 kern = "amboso-C"
 
 [ build ]
@@ -59,3 +59,4 @@ errortestsdir = "kulpo"
 "2.0.2" = "Add -a, -k flags"
 "2.0.3" = "Add 1.7.x std_amboso_version, lex_legacy() functions"
 "2.0.4" = "Fix awk version check, bump embedded najlo to 0.0.4, mkdir build dirs"
+"2.0.5" = "Use env bash in shebang, error on anvilPy from stego.lock"
