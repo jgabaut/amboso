@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="2.0.5-dev"
+AMBOSO_API_LVL="2.0.5"
 at () {
     #printf -- "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] -> {\n"
     log_cl "{ call: [" debug white
@@ -1262,6 +1262,15 @@ set_amboso_stego_info() {
             case "$value" in
               "amboso-C")
                   [[ "${AMBOSO_LVL_REC}" -eq 1 || "$verbose_flag" -gt 3 ]] && log_cl "stego defined anvil_kern --> {$value}" info blue >&2
+                  ;;
+              "anvilPy")
+                  log_cl "Unsupported stego-defined kern --> {$value}" error >&2
+                  log_cl "Hint: Use one of these: --> {" error
+                  for v in "${std_amboso_kern_list[@]}"; do
+                      log_cl "    $v" info
+                  done
+                  log_cl "}" error
+                  exit 1
                   ;;
               *)
                   log_cl "Invalid kern argument --> {$OPTARG}" error
