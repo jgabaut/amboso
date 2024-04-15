@@ -1,6 +1,6 @@
 #!/bin/bash
 
-expected_AMBOSO_API_LVL="2.0.6-dev"
+expected_AMBOSO_API_LVL="2.0.6"
 
 verbose_flag=1
 tell_uname_flag=0
