@@ -19,6 +19,7 @@
 + [Why should I consider using this?](#reasons)
 + [Local installation](#local_install)
 + [Legacy notes](#legacy_notes)
+  + [Legacy kazoj dir](#legacy_kazoj_lock)
   + [Legacy version dirs](#legacy_version_dirs)
   + [Legacy usage help script](#legacy_tryanvil)
 + [Todo](#todo)
@@ -166,13 +167,14 @@ amboso -D SOME_DIR -h
 
 ## kazoj/ <a name = "kazoj"></a>
 
-Contains a directory for each test group, ATM there's one for successful tests and one for failures. The two subdirectories can have any name and they are to be specified in `kazoj.lock`. Canonic names are, respectively:
+Contains a directory for each test group, ATM there's one for successful tests and one for failures.
+
+The two subdirectories can have any name and they can be specified in the `tests` section of `stego.lock`.
+Canonic names are, respectively:
 - `bone` : The general directory, for successful tests
 - `kulpo` : The error directory, for failure tests
 
 You should have your own `kazoj` directory (which you can specify in `stego.lock`), in your super-repo.
-And there, there should be a `kazoj.lock` file to remember the names of your cases/errors folders.
-Maybe run it with your super-repo `anvil` symlink.
 
 ## Test mode <a name = "test_mode"></a>
 
@@ -270,6 +272,17 @@ Run `sudo make uninstall` to clean the installed files.
 ## Legacy notes <a name = "legacy_notes"></a>
 
 This section contains notes about previous versions of `amboso`.
+
+### Legacy kazoj.lock usage, tests feature <a name = "legacy_kazoj_lock"></a>
+
+#### This info only applies to amboso <= 2.0.0. After 2.0.0, there's no need for a kazoj.lock file, since the test directories name can be specified in stego.lock.
+
+`kazoj/` contains a directory for each test group, ATM there's one for successful tests and one for failures. The two subdirectories can have any name and they are to be specified in `kazoj.lock`. Canonic names are, respectively:
+- `bone` : The general directory, for successful tests
+- `kulpo` : The error directory, for failure tests
+
+You should have your own `kazoj` directory (which you can specify in `stego.lock`), in your super-repo.
+And there, there should be a `kazoj.lock` file to remember the names of your cases/errors folders.
 
 ### Legacy version directories <a name = "legacy_version_dirs"></a>
 
