@@ -1619,24 +1619,20 @@ amboso_parse_args() {
           anvil-version)
             val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
             handle_anvil_arg "$val"
-            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
             ;;
           anvil-version=*)
             val=${OPTARG#*=}
             opt=${OPTARG%=$val}
             handle_anvil_arg "$val"
-            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
             ;;
           anvil-kern)
             val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
             handle_kern_arg "$val"
-            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
             ;;
           anvil-kern=*)
             val=${OPTARG#*=}
             opt=${OPTARG%=$val}
             handle_kern_arg "$val"
-            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
             ;;
           amboso-dir)
             val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
@@ -1721,13 +1717,11 @@ amboso_parse_args() {
           gen-c-header)
             val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
             handle_genC_arg "$val"
-            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
             ;;
           gen-c-header=*)
             val=${OPTARG#*=}
             opt=${OPTARG%=$val}
             handle_genC_arg "$val"
-            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
             ;;
           linter)
             val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
@@ -1767,97 +1761,51 @@ amboso_parse_args() {
             #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
             ;;
           test)
-            test_mode_flag=1
-            #log_cl "Parsing option: '--${OPTARG}'" debug;
-            ;;
+            test_mode_flag=1;;
           base)
-            base_mode_flag=1
-            #log_cl "Parsing option: '--${OPTARG}'" debug;
-            ;;
+            base_mode_flag=1;;
           git)
-            git_mode_flag=1
-            #log_cl "Parsing option: '--${OPTARG}'" debug;
-            ;;
+            git_mode_flag=1;;
           testmacro)
-            small_test_mode_flag=1
-            #log_cl "Parsing option: '--${OPTARG}'" debug;
-            ;;
+            small_test_mode_flag=1;;
           init)
-            init_flag=1
-            #log_cl "Parsing option: '--${OPTARG}'" debug;
-            ;;
+            init_flag=1;;
           purge)
-            purge_flag=1
-            #log_cl "Parsing option: '--${OPTARG}'" debug;
-            ;;
+            purge_flag=1;;
           build)
-            build_flag=1
-            #log_cl "Parsing option: '--${OPTARG}'" debug;
-            ;;
+            build_flag=1;;
           delete)
-            delete_flag=1
-            #log_cl "Parsing option: '--${OPTARG}'" debug;
-            ;;
+            delete_flag=1;;
           run)
-            run_flag=1
-            #log_cl "Parsing option: '--${OPTARG}'" debug;
-            ;;
+            run_flag=1;;
           list)
-            small_list_flag=1
-            #log_cl "Parsing option: '--${OPTARG}'" debug;
-            ;;
+            small_list_flag=1;;
           list-all)
-            big_list_flag=1
-            #log_cl "Parsing option: '--${OPTARG}'" debug;
-            ;;
+            big_list_flag=1;;
           quiet)
-            quiet_flag=1
-            #log_cl "Parsing option: '--${OPTARG}'" debug;
-            ;;
+            quiet_flag=1;;
           silent)
-            silent_flag=1
-            #log_cl "Parsing option: '--${OPTARG}'" debug;
-            ;;
+            silent_flag=1;;
           watch)
-            show_time_flag=1
-            #log_cl "Parsing option: '--${OPTARG}'" debug;
-            ;;
+            show_time_flag=1;;
           version)
-            version_flag=$(($version_flag+1))
-            #log_cl "Parsing option: '--${OPTARG}'" debug;
-            ;;
+            version_flag=$(($version_flag+1));;
           warranty)
-            show_warranty_flag=1
-            #log_cl "Parsing option: '--${OPTARG}'" debug;
-            ;;
+            show_warranty_flag=1;;
           ignore-gitcheck)
-            ignore_git_check_flag=1
-            #log_cl "Parsing option: '--${OPTARG}'" debug;
-            ;;
+            ignore_git_check_flag=1;;
           logged)
-            do_filelog_flag=1
-            #log_cl "Parsing option: '--${OPTARG}'" debug;
-            ;;
+            do_filelog_flag=1;;
           no-color)
-            allow_color_flag=0
-            #log_cl "Parsing option: '--${OPTARG}'" debug;
-            ;;
+            allow_color_flag=0;;
           force)
-            force_build_flag=1
-            #log_cl "Parsing option: '--${OPTARG}'" debug;
-            ;;
+            force_build_flag=1;;
           no-rebuild)
-            enable_make_rebuild_flag=0
-            #log_cl "Parsing option: '--${OPTARG}'" debug;
-            ;;
+            enable_make_rebuild_flag=0;;
           strict)
-            extensions_flag=0
-            #log_cl "Parsing option: '--${OPTARG}'" debug;
-            ;;
+            extensions_flag=0;;
           help)
-            smallhelp_flag=1
-            #log_cl "Parsing option: '--${OPTARG}'" debug;
-            ;;
+            smallhelp_flag=1;;
         *)
           if [ "$OPTERR" = 1 ] && [ "${optspec:0:1}" != ":" ]; then
             echo "Unknown option --${OPTARG}" >&2
