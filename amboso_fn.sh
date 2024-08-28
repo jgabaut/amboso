@@ -1982,9 +1982,13 @@ amboso_parse_args() {
     }
     fi
     echo_amboso_version "$amboso_currvers" "$std_amboso_version"
-    amboso_usage
-
-    printf "\nTry running with with -H for more info.\n\n"
+    if [[ "$extensions_flag" -eq 0 ]] ; then { # To keep the old behaviour of -h having less output than -H
+        amboso_usage
+        printf "\nTry running with with -H for more info.\n\n"
+    } else {
+        amboso_help
+    }
+    fi
     #"$prog_name" -H -D "$scripts_dir" | less
     echo_timer "$amboso_start_time"  "Show help" "2"
     exit 0
