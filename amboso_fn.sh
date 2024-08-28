@@ -767,7 +767,7 @@ function amboso_usage {
   help     Print this message or the help of the given subcommand(s)\n"
 
   printf "Arguments:
-  [TAG]  Optional tag argument\n"
+  [TAG]  Optional tag argument\n\n"
   printf "Example usage:  $(basename "$prog_name") [(-O|-D|-K|-M|-S|-E|-G|-C|-x|-V|-Y|-a|-k) <ARG>] [-TBtg] [-bripd] [-hHvlLsqwXWPJRFe] [TAG]\n"
 }
 
@@ -2025,6 +2025,38 @@ amboso_parse_args() {
   }
   fi
 
+  #Check if we are printing help info and exiting early
+  if [[ $smallhelp_flag -gt 0 ]]; then {
+    if [[ $AMBOSO_LVL_REC -gt 1 ]] ; then {
+      printf "[AMBOSO]    can't ask for help on a recursive call, try running \"$prog_name -h\" from a shell. ( depth $((${AMBOSO_LVL_REC}-1)) )\n\n        args: (\"$*\")\n" >&2
+      echo_timer "$amboso_start_time"  "Recursive help?" "1"
+      exit 1
+    }
+    fi
+    echo_amboso_version "$amboso_currvers" "$std_amboso_version"
+    amboso_usage
+
+    printf "\nTry running with with -H for more info.\n\n"
+    #"$prog_name" -H -D "$scripts_dir" | less
+    echo_timer "$amboso_start_time"  "Show help" "2"
+    exit 0
+  }
+  fi
+  #Check if we are printing Help info and exiting early
+  if [[ $bighelp_flag -gt 0 ]]; then {
+    if [[ $AMBOSO_LVL_REC -gt 1 ]] ; then {
+      printf "[AMBOSO]    can't ask for help on a recursive call, try running \"$prog_name -H\" from a shell. ( depth $((${AMBOSO_LVL_REC}-1)) )\n\n        args: (\"$*\")\n" >&2
+      echo_timer "$amboso_start_time"  "Recursive bighelp?" "1"
+      exit 1
+    }
+    fi
+    echo_amboso_version "$amboso_currvers" "$std_amboso_version"
+    amboso_help
+    echo_timer "$amboso_start_time"  "Show big help" "2"
+    exit 0
+  }
+  fi
+
   if [[ "$extensions_flag" -ne 0 && "$std_amboso_version" < "$min_amboso_v_extensions" ]] ; then {
     # Turn off extensions when below 2.0.1
     log_cl "${FUNCNAME[0]}():    Turning off extensions flag" info
@@ -2353,38 +2385,6 @@ amboso_parse_args() {
       exit 1
     }
     fi
-  }
-  fi
-
-  #Check if we are printing help info and exiting early
-  if [[ $smallhelp_flag -gt 0 ]]; then {
-    if [[ $AMBOSO_LVL_REC -gt 1 ]] ; then {
-      printf "[AMBOSO]    can't ask for help on a recursive call, try running \"$prog_name -h\" from a shell. ( depth $((${AMBOSO_LVL_REC}-1)) )\n\n        args: (\"$*\")\n" >&2
-      echo_timer "$amboso_start_time"  "Recursive help?" "1"
-      exit 1
-    }
-    fi
-    echo_amboso_version "$amboso_currvers" "$std_amboso_version"
-    amboso_usage
-
-    printf "Try running with with -H for more info.\n\n"
-    #"$prog_name" -H -D "$scripts_dir" | less
-    echo_timer "$amboso_start_time"  "Show help" "2"
-    exit 0
-  }
-  fi
-  #Check if we are printing Help info and exiting early
-  if [[ $bighelp_flag -gt 0 ]]; then {
-    if [[ $AMBOSO_LVL_REC -gt 1 ]] ; then {
-      printf "[AMBOSO]    can't ask for help on a recursive call, try running \"$prog_name -H\" from a shell. ( depth $((${AMBOSO_LVL_REC}-1)) )\n\n        args: (\"$*\")\n" >&2
-      echo_timer "$amboso_start_time"  "Recursive bighelp?" "1"
-      exit 1
-    }
-    fi
-    echo_amboso_version "$amboso_currvers" "$std_amboso_version"
-    amboso_help
-    echo_timer "$amboso_start_time"  "Show big help" "2"
-    exit 0
   }
   fi
 
