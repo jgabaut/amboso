@@ -431,8 +431,8 @@ function amboso_init_proj {
         :
     } elif [[ "$is_strict" -eq 1 ]] ; then {
         #Doing strict init
-        dir_basename = "hello_world"
-        caps_dir_basename = "HW"
+        dir_basename="hello_world"
+        caps_dir_basename="HW"
     } else {
         #Invalid
         log_cgl "Invalid argument: {$is_strict}" error
@@ -2686,7 +2686,6 @@ amboso_parse_args() {
   tot_left_args=$(( $# ))
   if [[ $tot_left_args -gt 1 ]]; then {
     log_cl "\n    Unknown argument: \"$2\" (ignoring other $(($tot_left_args-1)) args).\n" error
-    log_cl "Current \$@: \"$@\"" error
     amboso_usage
     echo_timer "$amboso_start_time"  "Unknown arg [$2]" "1"
     exit 1
