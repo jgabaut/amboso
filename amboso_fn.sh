@@ -2223,9 +2223,10 @@ amboso_parse_args() {
 
   #Get global conf
   #if [[ "$extensions_flag" -eq 0 ]]; then {
+  if [[ -f "$HOME/.anvil/anvil.toml" ]] ; then {
       set_anvil_conf_info "$HOME/.anvil/anvil.toml" "$verbose_flag"
-  #}
-  #fi
+  }
+  fi
 
   #We always notify of missing -D argument
   [[ ! $dir_flag -gt 0 ]] && scripts_dir="./bin/" && log_cl "No -D flag, using ( $scripts_dir ) for target dir. Run with -V <lvl> to see more." debug >&2 #&& usage && exit 1
