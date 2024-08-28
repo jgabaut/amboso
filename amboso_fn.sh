@@ -1621,8 +1621,7 @@ amboso_parse_args() {
             handle_anvil_arg "$val"
             ;;
           anvil-version=*)
-            val=${OPTARG#*=}
-            opt=${OPTARG%=$val}
+            val=${OPTARG#*=}; opt=${OPTARG%=$val}
             handle_anvil_arg "$val"
             ;;
           anvil-kern)
@@ -1630,8 +1629,7 @@ amboso_parse_args() {
             handle_kern_arg "$val"
             ;;
           anvil-kern=*)
-            val=${OPTARG#*=}
-            opt=${OPTARG%=$val}
+            val=${OPTARG#*=}; opt=${OPTARG%=$val}
             handle_kern_arg "$val"
             ;;
           amboso-dir)
@@ -1641,8 +1639,7 @@ amboso_parse_args() {
             #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
             ;;
           amboso-dir=*)
-            val=${OPTARG#*=}
-            opt=${OPTARG%=$val}
+            val=${OPTARG#*=}; opt=${OPTARG%=$val}
             dir_flag=1
             scripts_dir="$val"
             #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
@@ -1654,8 +1651,7 @@ amboso_parse_args() {
             #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
             ;;
           stego-dir=*)
-            val=${OPTARG#*=}
-            opt=${OPTARG%=$val}
+            val=${OPTARG#*=}; opt=${OPTARG%=$val}
             stego_dir_flag=1
             stego_dir="$val"
             #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
@@ -1668,8 +1664,7 @@ amboso_parse_args() {
             #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
             ;;
           kazoj-dir=*)
-            val=${OPTARG#*=}
-            opt=${OPTARG%=$val}
+            val=${OPTARG#*=}; opt=${OPTARG%=$val}
             testdir_flag=1
             kazoj_dir="$val"
             test_info_was_set=1
@@ -1682,8 +1677,7 @@ amboso_parse_args() {
             #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
             ;;
           source=*)
-            val=${OPTARG#*=}
-            opt=${OPTARG%=$val}
+            val=${OPTARG#*=}; opt=${OPTARG%=$val}
             source_name="$val"
             sourcename_was_set=1
             #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
@@ -1695,8 +1689,7 @@ amboso_parse_args() {
             #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
             ;;
           execname=*)
-            val=${OPTARG#*=}
-            opt=${OPTARG%=$val}
+            val=${OPTARG#*=}; opt=${OPTARG%=$val}
             exec_entrypoint="$val"
             exec_was_set=1
             #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
@@ -1708,8 +1701,7 @@ amboso_parse_args() {
             #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
             ;;
           maketag=*)
-            val=${OPTARG#*=}
-            opt=${OPTARG%=$val}
+            val=${OPTARG#*=}; opt=${OPTARG%=$val}
             vers_make_flag=1
             makefile_version="$val"
             #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
@@ -1719,8 +1711,7 @@ amboso_parse_args() {
             handle_genC_arg "$val"
             ;;
           gen-c-header=*)
-            val=${OPTARG#*=}
-            opt=${OPTARG%=$val}
+            val=${OPTARG#*=}; opt=${OPTARG%=$val}
             handle_genC_arg "$val"
             ;;
           linter)
@@ -1730,8 +1721,7 @@ amboso_parse_args() {
             #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
             ;;
           linter=*)
-            val=${OPTARG#*=}
-            opt=${OPTARG%=$val}
+            val=${OPTARG#*=}; opt=${OPTARG%=$val}
             be_stego_parser_flag=1
             queried_stego_filepath="$val"
             #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
@@ -1742,8 +1732,7 @@ amboso_parse_args() {
             #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
             ;;
           verbose=*)
-            val=${OPTARG#*=}
-            opt=${OPTARG%=$val}
+            val=${OPTARG#*=}; opt=${OPTARG%=$val}
             handle_verbose_arg "$val"
             #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
             ;;
@@ -1754,58 +1743,34 @@ amboso_parse_args() {
             #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
             ;;
           config=*)
-            val=${OPTARG#*=}
-            opt=${OPTARG%=$val}
+            val=${OPTARG#*=}; opt=${OPTARG%=$val}
             pass_autoconf_arg_flag=1
             autoconf_arg_file="$val"
             #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
             ;;
-          test)
-            test_mode_flag=1;;
-          base)
-            base_mode_flag=1;;
-          git)
-            git_mode_flag=1;;
-          testmacro)
-            small_test_mode_flag=1;;
-          init)
-            init_flag=1;;
-          purge)
-            purge_flag=1;;
-          build)
-            build_flag=1;;
-          delete)
-            delete_flag=1;;
-          run)
-            run_flag=1;;
-          list)
-            small_list_flag=1;;
-          list-all)
-            big_list_flag=1;;
-          quiet)
-            quiet_flag=1;;
-          silent)
-            silent_flag=1;;
-          watch)
-            show_time_flag=1;;
-          version)
-            version_flag=$(($version_flag+1));;
-          warranty)
-            show_warranty_flag=1;;
-          ignore-gitcheck)
-            ignore_git_check_flag=1;;
-          logged)
-            do_filelog_flag=1;;
-          no-color)
-            allow_color_flag=0;;
-          force)
-            force_build_flag=1;;
-          no-rebuild)
-            enable_make_rebuild_flag=0;;
-          strict)
-            extensions_flag=0;;
-          help)
-            smallhelp_flag=1;;
+          test) test_mode_flag=1;;
+          base) base_mode_flag=1;;
+          git) git_mode_flag=1;;
+          testmacro) small_test_mode_flag=1;;
+          init) init_flag=1;;
+          purge) purge_flag=1;;
+          build) build_flag=1;;
+          delete) delete_flag=1;;
+          run) run_flag=1;;
+          list) small_list_flag=1;;
+          list-all) big_list_flag=1;;
+          quiet) quiet_flag=1;;
+          silent) silent_flag=1;;
+          watch) show_time_flag=1;;
+          version) version_flag=$(($version_flag+1));;
+          warranty) show_warranty_flag=1;;
+          ignore-gitcheck) ignore_git_check_flag=1;;
+          logged) do_filelog_flag=1;;
+          no-color) allow_color_flag=0;;
+          force) force_build_flag=1;;
+          no-rebuild) enable_make_rebuild_flag=0;;
+          strict) extensions_flag=0;;
+          help) smallhelp_flag=1;;
         *)
           if [ "$OPTERR" = 1 ] && [ "${optspec:0:1}" != ":" ]; then
             echo "Unknown option --${OPTARG}" >&2
