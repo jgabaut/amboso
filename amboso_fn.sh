@@ -1054,7 +1054,7 @@ try_parsing_stego() {
 
 bash_gulp_anvil_conf() {
   # Try gulping the "scopes", "variables" and "values" bash arrays from parsing the passed file
-  input="$1"
+  local input="$1"
   if [[ ! -f "$input" ]] ; then {
     log_cl "${FUNCNAME[0]}(): \"$input\" is not a valid file." error
     exit 8
@@ -1073,6 +1073,82 @@ bash_gulp_anvil_conf() {
   } else {
     log_cl "${FUNCNAME[0]}(): Failed parsing file { $1 }\n" error
     return 1
+  }
+  fi
+}
+
+use_anvil_version_arg() {
+  local my_value="$1"
+  local anvil_version_regex='^([1-9][0-9]*|0)\.([1-9][0-9]*|0)\.([1-9][0-9]*|0)$'
+  if [[ "$my_value" =~ $anvil_version_regex ]] ; then {
+    case "$my_value" in
+      1.8.*)
+          log_cl "Invalid version arg --> {$my_value}" error
+          log_cl "Hint: Use one of these: --> {" error
+          for v in "${std_amboso_version_list[@]}"; do
+              log_cl "    $v" info
+          done
+          log_cl "}" error
+          exit 1
+          ;;
+      1.9.*)
+          log_cl "Invalid version arg --> {$my_value}" error
+          log_cl "Hint: Use one of these: --> {" error
+          for v in "${std_amboso_version_list[@]}"; do
+              log_cl "    $v" info
+          done
+          log_cl "}" error
+          exit 1
+          ;;
+      1.*)
+          log_cl "${FUNCNAME[0]}():    Turning off extensions flag" info
+          extensions_flag=0
+          ;;
+      2.0.0)
+          log_cl "${FUNCNAME[0]}():    Turning off extensions flag" info
+          extensions_flag=0
+          ;;
+      2.0.*)
+          :
+          ;;
+      *)
+          log_cl "${FUNCNAME[0]}():    Invalid version arg --> {$my_value}" error
+          log_cl "Hint: Use one of these: --> {" error
+          for v in "${std_amboso_version_list[@]}"; do
+              log_cl "    $v" info
+          done
+          log_cl "}" error
+          exit 1
+          ;;
+    esac
+    [[ "$verbose_flag" -ge 4 ]] && log_cl "${FUNCNAME[0]}():  Using ANVIL_VERSION: {$my_value}\n" info
+    if [[ "$std_amboso_version" < "$min_amboso_v_stego_noforce" ]] ; then {
+        log_cl "Taken legacy path: stego.lock defined value always overrides current std_amboso_version." warn cyan
+        log_cl "Current: {$std_amboso_version}, min needed: {$min_amboso_v_stego_noforce}" warn
+        if [[ "$std_amboso_version" < "${AMBOSO_API_LVL}" || "$std_amboso_version" = "${AMBOSO_API_LVL}" ]] ; then {
+          # This check was not present originally.
+          std_amboso_version="$my_value"
+        } else {
+          log_cl "Resetting std_amboso_version. ($std_amboso_version) -> {${AMBOSO_API_LVL}}" warn magenta
+          std_amboso_version="${AMBOSO_API_LVL}"
+        }
+        fi
+        log_cl "Set std_amboso_version to -> {$std_amboso_version}" warn
+    } else {
+      if [[ "$std_amboso_version" < "${AMBOSO_API_LVL}" || "$std_amboso_version" = "${AMBOSO_API_LVL}" ]] ; then {
+        # This check was not present originally.
+        std_amboso_version="$my_value"
+      } else {
+        log_cl "Resetting std_amboso_version. ($std_amboso_version) -> {${AMBOSO_API_LVL}}" warn magenta
+        std_amboso_version="${AMBOSO_API_LVL}"
+      }
+      fi
+    }
+    fi
+  } else {
+    log_cl "${FUNCNAME[0]}():  Invalid version standard --> {$my_value}" error
+    log_cl "Not matching regex --> \'$anvil_version_regex\'" error
+    exit 1
   }
   fi
 }
@@ -1105,106 +1181,10 @@ set_anvil_conf_info() {
     #printf "\033[1;34mScope:\033[0m \"$scope\", \033[1;33mVariable:\033[0m \"$variable\", Value: \"\033[1;36m$value\033[0m\"\n\n"
     if [[ $scope = "anvil" ]] ; then {
         if [[ $variable = "anvil_version" ]] ; then {
-          anvil_version_regex='^([1-9][0-9]*|0)\.([1-9][0-9]*|0)\.([1-9][0-9]*|0)$'
-          if [[ "$value" =~ $anvil_version_regex ]] ; then {
-            case "$value" in
-              1.8.*)
-                  log_cl "Invalid version arg --> {$OPTARG}" error
-                  log_cl "Hint: Use one of these: --> {" error
-                  for v in "${std_amboso_version_list[@]}"; do
-                      log_cl "    $v" info
-                  done
-                  log_cl "}" error
-                  exit 1
-                  ;;
-              1.9.*)
-                  log_cl "Invalid version arg --> {$OPTARG}" error
-                  log_cl "Hint: Use one of these: --> {" error
-                  for v in "${std_amboso_version_list[@]}"; do
-                      log_cl "    $v" info
-                  done
-                  log_cl "}" error
-                  exit 1
-                  ;;
-              1.*)
-                  log_cl "${FUNCNAME[0]}():    Turning off extensions flag" info
-                  extensions_flag=0
-                  ;;
-              2.0.0)
-                  log_cl "${FUNCNAME[0]}():    Turning off extensions flag" info
-                  extensions_flag=0
-                  ;;
-              2.0.1)
-                  :
-                  ;;
-              2.0.*)
-                  :
-                  ;;
-              *)
-                  log_cl "${FUNCNAME[0]}():    Invalid version arg --> {$value}" error
-                  log_cl "Hint: Use one of these: --> {" error
-                  for v in "${std_amboso_version_list[@]}"; do
-                      log_cl "    $v" info
-                  done
-                  log_cl "}" error
-                  exit 1
-                  ;;
-            esac
-            [[ "$verbose_flag" -ge 4 ]] && log_cl "${FUNCNAME[0]}():  Using ANVIL_VERSION: {$value}\n" info
-            if [[ "$std_amboso_version" < "$min_amboso_v_stego_noforce" ]] ; then {
-                log_cl "Taken legacy path: stego.lock defined value always overrides current std_amboso_version." warn cyan
-                log_cl "Current: {$std_amboso_version}, min needed: {$min_amboso_v_stego_noforce}" warn
-                if [[ "$std_amboso_version" < "${AMBOSO_API_LVL}" || "$std_amboso_version" = "${AMBOSO_API_LVL}" ]] ; then {
-                  # This check was not present originally.
-                  std_amboso_version="$value"
-                } else {
-                  log_cl "Resetting std_amboso_version. ($std_amboso_version) -> {${AMBOSO_API_LVL}}" warn magenta
-                  std_amboso_version="${AMBOSO_API_LVL}"
-                }
-                fi
-                log_cl "Set std_amboso_version to -> {$std_amboso_version}" warn
-            } else {
-              if [[ "$std_amboso_version" < "${AMBOSO_API_LVL}" || "$std_amboso_version" = "${AMBOSO_API_LVL}" ]] ; then {
-                # This check was not present originally.
-                std_amboso_version="$value"
-              } else {
-                log_cl "Resetting std_amboso_version. ($std_amboso_version) -> {${AMBOSO_API_LVL}}" warn magenta
-                std_amboso_version="${AMBOSO_API_LVL}"
-              }
-              fi
-            }
-            fi
-          } else {
-            log_cl "${FUNCNAME[0]}():  Invalid version standard --> {$value}" error
-            log_cl "Not matching regex --> \'$anvil_version_regex\'" error
-            exit 1
-          }
-          fi
+          use_anvil_version_arg "$value"
         } elif [[ $variable = "anvil_kern" ]] ; then {
           if [[ "$std_amboso_version" > "$min_amboso_v_kern" || "$std_amboso_version" = "$min_amboso_v_kern" ]]; then {
-            case "$value" in
-              "amboso-C")
-                  [[ "${AMBOSO_LVL_REC}" -eq 1 || "$verbose_flag" -gt 3 ]] && log_cl "conf defined anvil_kern --> {$value}" info blue >&2
-                  ;;
-              "anvilPy")
-                  log_cl "Unsupported conf-defined kern --> {$value}" error >&2
-                  log_cl "Hint: Use one of these: --> {" error
-                  for v in "${std_amboso_kern_list[@]}"; do
-                      log_cl "    $v" info
-                  done
-                  log_cl "}" error
-                  exit 1
-                  ;;
-              *)
-                  log_cl "Invalid kern argument --> {$OPTARG}" error
-                  log_cl "Hint: Use one of these: --> {" error
-                  for v in "${std_amboso_kern_list[@]}"; do
-                      log_cl "    $v" info
-                  done
-                  log_cl "}" error
-                  exit 1
-                  ;;
-            esac
+            handle_kern_arg "$value"
           } else {
             if [[ "${AMBOSO_LVL_REC}" -eq 1 || "$verbose_flag" -gt 3 ]] ; then {
               log_cl "std_amboso_version --> {$std_amboso_version}" info
@@ -1401,106 +1381,10 @@ set_amboso_stego_info() {
         fi
     } elif [[ $scope = "anvil" ]] ; then {
         if [[ $variable = "anvil_version" ]] ; then {
-          anvil_version_regex='^([1-9][0-9]*|0)\.([1-9][0-9]*|0)\.([1-9][0-9]*|0)$'
-          if [[ "$value" =~ $anvil_version_regex ]] ; then {
-            case "$value" in
-              1.8.*)
-                  log_cl "Invalid version arg --> {$OPTARG}" error
-                  log_cl "Hint: Use one of these: --> {" error
-                  for v in "${std_amboso_version_list[@]}"; do
-                      log_cl "    $v" info
-                  done
-                  log_cl "}" error
-                  exit 1
-                  ;;
-              1.9.*)
-                  log_cl "Invalid version arg --> {$OPTARG}" error
-                  log_cl "Hint: Use one of these: --> {" error
-                  for v in "${std_amboso_version_list[@]}"; do
-                      log_cl "    $v" info
-                  done
-                  log_cl "}" error
-                  exit 1
-                  ;;
-              1.*)
-                  log_cl "${FUNCNAME[0]}():    Turning off extensions flag" info
-                  extensions_flag=0
-                  ;;
-              2.0.0)
-                  log_cl "${FUNCNAME[0]}():    Turning off extensions flag" info
-                  extensions_flag=0
-                  ;;
-              2.0.1)
-                  :
-                  ;;
-              2.0.*)
-                  :
-                  ;;
-              *)
-                  log_cl "${FUNCNAME[0]}():    Invalid version arg --> {$value}" error
-                  log_cl "Hint: Use one of these: --> {" error
-                  for v in "${std_amboso_version_list[@]}"; do
-                      log_cl "    $v" info
-                  done
-                  log_cl "}" error
-                  exit 1
-                  ;;
-            esac
-            [[ "$verbose_flag" -ge 4 ]] && log_cl "${FUNCNAME[0]}():  Using ANVIL_VERSION: {$value}\n" info
-            if [[ "$std_amboso_version" < "$min_amboso_v_stego_noforce" ]] ; then {
-                log_cl "Taken legacy path: stego.lock defined value always overrides current std_amboso_version." warn cyan
-                log_cl "Current: {$std_amboso_version}, min needed: {$min_amboso_v_stego_noforce}" warn
-                if [[ "$std_amboso_version" < "${AMBOSO_API_LVL}" || "$std_amboso_version" = "${AMBOSO_API_LVL}" ]] ; then {
-                  # This check was not present originally.
-                  std_amboso_version="$value"
-                } else {
-                  log_cl "Resetting std_amboso_version. ($std_amboso_version) -> {${AMBOSO_API_LVL}}" warn magenta
-                  std_amboso_version="${AMBOSO_API_LVL}"
-                }
-                fi
-                log_cl "Set std_amboso_version to -> {$std_amboso_version}" warn
-            } else {
-              if [[ "$std_amboso_version" < "${AMBOSO_API_LVL}" || "$std_amboso_version" = "${AMBOSO_API_LVL}" ]] ; then {
-                # This check was not present originally.
-                std_amboso_version="$value"
-              } else {
-                log_cl "Resetting std_amboso_version. ($std_amboso_version) -> {${AMBOSO_API_LVL}}" warn magenta
-                std_amboso_version="${AMBOSO_API_LVL}"
-              }
-              fi
-            }
-            fi
-          } else {
-            log_cl "${FUNCNAME[0]}():  Invalid version standard --> {$value}" error
-            log_cl "Not matching regex --> \'$anvil_version_regex\'" error
-            exit 1
-          }
-          fi
+          use_anvil_version_arg "$value"
         } elif [[ $variable = "anvil_kern" ]] ; then {
           if [[ "$std_amboso_version" > "$min_amboso_v_kern" || "$std_amboso_version" = "$min_amboso_v_kern" ]]; then {
-            case "$value" in
-              "amboso-C")
-                  [[ "${AMBOSO_LVL_REC}" -eq 1 || "$verbose_flag" -gt 3 ]] && log_cl "stego defined anvil_kern --> {$value}" info blue >&2
-                  ;;
-              "anvilPy")
-                  log_cl "Unsupported stego-defined kern --> {$value}" error >&2
-                  log_cl "Hint: Use one of these: --> {" error
-                  for v in "${std_amboso_kern_list[@]}"; do
-                      log_cl "    $v" info
-                  done
-                  log_cl "}" error
-                  exit 1
-                  ;;
-              *)
-                  log_cl "Invalid kern argument --> {$OPTARG}" error
-                  log_cl "Hint: Use one of these: --> {" error
-                  for v in "${std_amboso_kern_list[@]}"; do
-                      log_cl "    $v" info
-                  done
-                  log_cl "}" error
-                  exit 1
-                  ;;
-            esac
+            handle_kern_arg "$value"
           } else {
             if [[ "${AMBOSO_LVL_REC}" -eq 1 || "$verbose_flag" -gt 3 ]] ; then {
               log_cl "std_amboso_version --> {$std_amboso_version}" info
@@ -1629,7 +1513,7 @@ handle_anvil_arg() {
            log_cl "Using {$std_amboso_version} version standard" info
            ;;
        2.0.*)
-           std_amboso_version="$OPTARG"
+           std_amboso_version="$arg"
            log_cl "Using {$std_amboso_version} version standard" info
            ;;
        *)
@@ -1684,11 +1568,11 @@ handle_kern_arg() {
   local arg="$1"
   case "$arg" in
    "amboso-C")
-       queried_amboso_kern="$OPTARG"
-       log_cl "Queried {$queried_amboso_kern} kern" info
+       queried_amboso_kern="$arg"
+       [[ "$verbose_flag" -gt 3 ]] && log_cl "Queried {$queried_amboso_kern} kern" info
        ;;
    *)
-       log_cl "Invalid kern argument --> {$OPTARG}" error
+       log_cl "Invalid kern argument --> {$arg}" error
        log_cl "Hint: Use one of these: --> {" error
        for v in "${std_amboso_kern_list[@]}"; do
            log_cl "    $v" info

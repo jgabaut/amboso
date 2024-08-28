@@ -14,6 +14,7 @@
 - Fix init subcommand bug introduced by 2.0.6
 - Fix a shellcheck error in reporting unused arguments
 - Compacted getopt code since it's a couple expressions in each case anyway
+- Compacted usage of anvil_version and anvil_kern from toml parsing
 
 ## [2.0.6] - 2024-04-19
 
