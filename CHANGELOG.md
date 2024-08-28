@@ -1,14 +1,14 @@
 # Changelog
 
-## [2.0.7-dev] - Unreleased
+## [2.0.7] - 2024-08-29
 
 ### Added
 
 - Parse global conf at $HOME/.anvil/anvil.toml
+- Handle long options with the "-:" getopt trick
 
 ### Changed
 
-- Handle long options with the "-:" getopt trick
 - Handle help flag earlier
 - Improved help message
 - Fix init subcommand bug introduced by 2.0.6
