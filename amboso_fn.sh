@@ -974,6 +974,28 @@ parse_lexed_stego() {
   done <<< "$input"
 }
 
+try_parsing_anvil_conf() {
+  if [[ ! -f $1 ]] ; then {
+    log_cl "${FUNCNAME[0]}(): \"$1\" is not a valid file." error
+    exit 9
+  }
+  fi
+  input="$1"
+  verbose="$2"
+  lexed_tokens=""
+
+  lexed_tokens="$(lex_stego_file "$input")"
+  if [[ ! -z $lexed_tokens ]]; then {
+    parse_lexed_stego "$lexed_tokens"
+    parse_res="$?"
+    return "$parse_res"
+  } else {
+    log_cl "[PARSE]    Lint failed." error
+    return 1
+  }
+  fi
+}
+
 lint_stego_file() {
   #Try lexing input file. If verbose is 1, print the lexed tokens.
   #If lex output is empty, return 1.
@@ -1028,6 +1050,178 @@ try_parsing_stego() {
     return 1
   }
   fi
+}
+
+bash_gulp_anvil_conf() {
+  # Try gulping the "scopes", "variables" and "values" bash arrays from parsing the passed file
+  input="$1"
+  if [[ ! -f "$input" ]] ; then {
+    log_cl "${FUNCNAME[0]}(): \"$input\" is not a valid file." error
+    exit 8
+  }
+  fi
+
+  filename="$input"
+  verbose="$2"
+  try_parsing_anvil_conf "$input" "$verbose"
+  parse_res="$?"
+  if [[ $parse_res -eq 0 ]]; then {
+    [[ $verbose -eq 1 ]] && log_cl "[SUCCESS]    Parsed file \"$filename\"" info
+    [[ $verbose -eq 1 ]] && log_cl "[Lexed variables] { ${variables[*]} }\n" info magenta
+    [[ $verbose -eq 1 ]] && log_cl "[Lexed values]    { ${values[*]} }" info blue
+    return 0
+  } else {
+    log_cl "${FUNCNAME[0]}(): Failed parsing file { $1 }\n" error
+    return 1
+  }
+  fi
+}
+
+set_anvil_conf_info() {
+  # Reads the passed file and sets
+  # - Anvil version and kern
+  anvil_file="$1"
+  verbose="$2"
+
+  bash_gulp_anvil_conf "$anvil_file" 0 #&& print_amboso_stego_scopes
+  if [[ ! $? -eq 0 ]]; then {
+    log_cl "Failed parsing conf file at \"$anvil_file\"." error
+    exit 10
+  }
+  fi
+  for ((i=0; i<${#scopes[@]}; i++)); do
+  [[ $verbose -gt 1 ]] && printf "{${variables[i]}} = {${values[i]}}\n"
+  scope="${scopes[i]}"
+  variable="${variables[i]}"
+  value="${values[i]}"
+  #is_noscope=0
+  if [[ -z $scope ]] ; then {
+    :
+    #is_noscope=1
+    #Display scope as "main", even tho it should be equal to ""
+    #printf "\033[1;35mScope:\033[0m \"main\", \033[1;33mVariable:\033[0m \"$variable\", Value: \"\033[1;36m$value\033[0m\"\n\n"
+  } else {
+    #Print values for all scopes
+    #printf "\033[1;34mScope:\033[0m \"$scope\", \033[1;33mVariable:\033[0m \"$variable\", Value: \"\033[1;36m$value\033[0m\"\n\n"
+    if [[ $scope = "anvil" ]] ; then {
+        if [[ $variable = "anvil_version" ]] ; then {
+          anvil_version_regex='^([1-9][0-9]*|0)\.([1-9][0-9]*|0)\.([1-9][0-9]*|0)$'
+          if [[ "$value" =~ $anvil_version_regex ]] ; then {
+            case "$value" in
+              1.8.*)
+                  log_cl "Invalid version arg --> {$OPTARG}" error
+                  log_cl "Hint: Use one of these: --> {" error
+                  for v in "${std_amboso_version_list[@]}"; do
+                      log_cl "    $v" info
+                  done
+                  log_cl "}" error
+                  exit 1
+                  ;;
+              1.9.*)
+                  log_cl "Invalid version arg --> {$OPTARG}" error
+                  log_cl "Hint: Use one of these: --> {" error
+                  for v in "${std_amboso_version_list[@]}"; do
+                      log_cl "    $v" info
+                  done
+                  log_cl "}" error
+                  exit 1
+                  ;;
+              1.*)
+                  log_cl "${FUNCNAME[0]}():    Turning off extensions flag" info
+                  extensions_flag=0
+                  ;;
+              2.0.0)
+                  log_cl "${FUNCNAME[0]}():    Turning off extensions flag" info
+                  extensions_flag=0
+                  ;;
+              2.0.1)
+                  :
+                  ;;
+              2.0.*)
+                  :
+                  ;;
+              *)
+                  log_cl "${FUNCNAME[0]}():    Invalid version arg --> {$value}" error
+                  log_cl "Hint: Use one of these: --> {" error
+                  for v in "${std_amboso_version_list[@]}"; do
+                      log_cl "    $v" info
+                  done
+                  log_cl "}" error
+                  exit 1
+                  ;;
+            esac
+            [[ "$verbose_flag" -ge 4 ]] && log_cl "${FUNCNAME[0]}():  Using ANVIL_VERSION: {$value}\n" info
+            if [[ "$std_amboso_version" < "$min_amboso_v_stego_noforce" ]] ; then {
+                log_cl "Taken legacy path: stego.lock defined value always overrides current std_amboso_version." warn cyan
+                log_cl "Current: {$std_amboso_version}, min needed: {$min_amboso_v_stego_noforce}" warn
+                if [[ "$std_amboso_version" < "${AMBOSO_API_LVL}" || "$std_amboso_version" = "${AMBOSO_API_LVL}" ]] ; then {
+                  # This check was not present originally.
+                  std_amboso_version="$value"
+                } else {
+                  log_cl "Resetting std_amboso_version. ($std_amboso_version) -> {${AMBOSO_API_LVL}}" warn magenta
+                  std_amboso_version="${AMBOSO_API_LVL}"
+                }
+                fi
+                log_cl "Set std_amboso_version to -> {$std_amboso_version}" warn
+            } else {
+              if [[ "$std_amboso_version" < "${AMBOSO_API_LVL}" || "$std_amboso_version" = "${AMBOSO_API_LVL}" ]] ; then {
+                # This check was not present originally.
+                std_amboso_version="$value"
+              } else {
+                log_cl "Resetting std_amboso_version. ($std_amboso_version) -> {${AMBOSO_API_LVL}}" warn magenta
+                std_amboso_version="${AMBOSO_API_LVL}"
+              }
+              fi
+            }
+            fi
+          } else {
+            log_cl "${FUNCNAME[0]}():  Invalid version standard --> {$value}" error
+            log_cl "Not matching regex --> \'$anvil_version_regex\'" error
+            exit 1
+          }
+          fi
+        } elif [[ $variable = "anvil_kern" ]] ; then {
+          if [[ "$std_amboso_version" > "$min_amboso_v_kern" || "$std_amboso_version" = "$min_amboso_v_kern" ]]; then {
+            case "$value" in
+              "amboso-C")
+                  [[ "${AMBOSO_LVL_REC}" -eq 1 || "$verbose_flag" -gt 3 ]] && log_cl "conf defined anvil_kern --> {$value}" info blue >&2
+                  ;;
+              "anvilPy")
+                  log_cl "Unsupported conf-defined kern --> {$value}" error >&2
+                  log_cl "Hint: Use one of these: --> {" error
+                  for v in "${std_amboso_kern_list[@]}"; do
+                      log_cl "    $v" info
+                  done
+                  log_cl "}" error
+                  exit 1
+                  ;;
+              *)
+                  log_cl "Invalid kern argument --> {$OPTARG}" error
+                  log_cl "Hint: Use one of these: --> {" error
+                  for v in "${std_amboso_kern_list[@]}"; do
+                      log_cl "    $v" info
+                  done
+                  log_cl "}" error
+                  exit 1
+                  ;;
+            esac
+          } else {
+            if [[ "${AMBOSO_LVL_REC}" -eq 1 || "$verbose_flag" -gt 3 ]] ; then {
+              log_cl "std_amboso_version --> {$std_amboso_version}" info
+              log_cl "Ignoring stego-defined kern --> {$value}" debug
+            }
+            fi
+          }
+          fi
+        }
+        fi
+    }
+    fi
+  }
+  fi
+  done
+  count_source_infos="${#sources_info[@]}"
+  return 0
 }
 
 bash_gulp_stego() {
@@ -2026,6 +2220,12 @@ amboso_parse_args() {
     fi
   }
   fi
+
+  #Get global conf
+  #if [[ "$extensions_flag" -eq 0 ]]; then {
+      set_anvil_conf_info "$HOME/.anvil/anvil.toml" "$verbose_flag"
+  #}
+  #fi
 
   #We always notify of missing -D argument
   [[ ! $dir_flag -gt 0 ]] && scripts_dir="./bin/" && log_cl "No -D flag, using ( $scripts_dir ) for target dir. Run with -V <lvl> to see more." debug >&2 #&& usage && exit 1
