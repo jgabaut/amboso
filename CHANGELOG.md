@@ -2,6 +2,10 @@
 
 ## [2.0.7-dev] - Unreleased
 
+### Added
+
+- Parse global conf at $HOME/.anvil/anvil.toml
+
 ### Changed
 
 - Handle long options with the "-:" getopt trick
