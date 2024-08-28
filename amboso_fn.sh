@@ -1616,138 +1616,30 @@ amboso_parse_args() {
     case $opt in
       -)
         case "${OPTARG}" in
-          anvil-version)
-            val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-            handle_anvil_arg "$val"
-            ;;
-          anvil-version=*)
-            val=${OPTARG#*=}; opt=${OPTARG%=$val}
-            handle_anvil_arg "$val"
-            ;;
-          anvil-kern)
-            val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-            handle_kern_arg "$val"
-            ;;
-          anvil-kern=*)
-            val=${OPTARG#*=}; opt=${OPTARG%=$val}
-            handle_kern_arg "$val"
-            ;;
-          amboso-dir)
-            val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-            dir_flag=1
-            scripts_dir="$val"
-            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
-            ;;
-          amboso-dir=*)
-            val=${OPTARG#*=}; opt=${OPTARG%=$val}
-            dir_flag=1
-            scripts_dir="$val"
-            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
-            ;;
-          stego-dir)
-            val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-            stego_dir_flag=1
-            stego_dir="$val"
-            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
-            ;;
-          stego-dir=*)
-            val=${OPTARG#*=}; opt=${OPTARG%=$val}
-            stego_dir_flag=1
-            stego_dir="$val"
-            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
-            ;;
-          kazoj-dir)
-            val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-            testdir_flag=1
-            kazoj_dir="$val"
-            test_info_was_set=1
-            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
-            ;;
-          kazoj-dir=*)
-            val=${OPTARG#*=}; opt=${OPTARG%=$val}
-            testdir_flag=1
-            kazoj_dir="$val"
-            test_info_was_set=1
-            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
-            ;;
-          source)
-            val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-            source_name="$val"
-            sourcename_was_set=1
-            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
-            ;;
-          source=*)
-            val=${OPTARG#*=}; opt=${OPTARG%=$val}
-            source_name="$val"
-            sourcename_was_set=1
-            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
-            ;;
-          execname)
-            val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-            exec_entrypoint="$val"
-            exec_was_set=1
-            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
-            ;;
-          execname=*)
-            val=${OPTARG#*=}; opt=${OPTARG%=$val}
-            exec_entrypoint="$val"
-            exec_was_set=1
-            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
-            ;;
-          maketag)
-            val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-            vers_make_flag=1
-            makefile_version="$val"
-            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
-            ;;
-          maketag=*)
-            val=${OPTARG#*=}; opt=${OPTARG%=$val}
-            vers_make_flag=1
-            makefile_version="$val"
-            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
-            ;;
-          gen-c-header)
-            val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-            handle_genC_arg "$val"
-            ;;
-          gen-c-header=*)
-            val=${OPTARG#*=}; opt=${OPTARG%=$val}
-            handle_genC_arg "$val"
-            ;;
-          linter)
-            val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-            be_stego_parser_flag=1
-            queried_stego_filepath="$val"
-            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
-            ;;
-          linter=*)
-            val=${OPTARG#*=}; opt=${OPTARG%=$val}
-            be_stego_parser_flag=1
-            queried_stego_filepath="$val"
-            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
-            ;;
-          verbose)
-            val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-            handle_verbose_arg "$val"
-            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
-            ;;
-          verbose=*)
-            val=${OPTARG#*=}; opt=${OPTARG%=$val}
-            handle_verbose_arg "$val"
-            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
-            ;;
-          config)
-            val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-            pass_autoconf_arg_flag=1
-            autoconf_arg_file="$val"
-            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
-            ;;
-          config=*)
-            val=${OPTARG#*=}; opt=${OPTARG%=$val}
-            pass_autoconf_arg_flag=1
-            autoconf_arg_file="$val"
-            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
-            ;;
+          anvil-version) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); handle_anvil_arg "$val";;
+          anvil-version=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; handle_anvil_arg "$val";;
+          anvil-kern) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); handle_kern_arg "$val";;
+          anvil-kern=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; handle_kern_arg "$val";;
+          amboso-dir) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); dir_flag=1; scripts_dir="$val";;
+          amboso-dir=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; dir_flag=1; scripts_dir="$val";;
+          stego-dir) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); stego_dir_flag=1; stego_dir="$val";;
+          stego-dir=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; stego_dir_flag=1; stego_dir="$val";;
+          kazoj-dir) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); testdir_flag=1; kazoj_dir="$val"; test_info_was_set=1;;
+          kazoj-dir=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; testdir_flag=1; kazoj_dir="$val"; test_info_was_set=1;;
+          source) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); source_name="$val"; sourcename_was_set=1;;
+          source=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; source_name="$val"; sourcename_was_set=1;;
+          execname) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); exec_entrypoint="$val"; exec_was_set=1;;
+          execname=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; exec_entrypoint="$val"; exec_was_set=1;;
+          maketag) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); vers_make_flag=1; makefile_version="$val";;
+          maketag=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; vers_make_flag=1; makefile_version="$val";;
+          gen-c-header) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); handle_genC_arg "$val";;
+          gen-c-header=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; handle_genC_arg "$val";;
+          linter) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); be_stego_parser_flag=1; queried_stego_filepath="$val";;
+          linter=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; be_stego_parser_flag=1; queried_stego_filepath="$val";;
+          verbose) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); handle_verbose_arg "$val";;
+          verbose=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; handle_verbose_arg "$val";;
+          config) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); pass_autoconf_arg_flag=1; autoconf_arg_file="$val";;
+          config=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; pass_autoconf_arg_flag=1; autoconf_arg_file="$val";;
           test) test_mode_flag=1;;
           base) base_mode_flag=1;;
           git) git_mode_flag=1;;
@@ -1773,7 +1665,10 @@ amboso_parse_args() {
           help) smallhelp_flag=1;;
         *)
           if [ "$OPTERR" = 1 ] && [ "${optspec:0:1}" != ":" ]; then
-            echo "Unknown option --${OPTARG}" >&2
+            log_cl "Unknown option --${OPTARG}" error
+            amboso_usage
+            log_cl "Run with -h, --help to see available long options" info
+            exit 1
           fi
           ;;
         esac;;
