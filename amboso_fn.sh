@@ -1681,143 +1681,47 @@ amboso_parse_args() {
         }
         fi
         ;;
-      k )
-        handle_kern_arg "$OPTARG"
-        ;;
-      a )
-        handle_anvil_arg "$OPTARG"
-        ;;
-      e )
-        extensions_flag=0
-        ;;
-      F )
-        force_build_flag=1
-        ;;
-      R )
-        enable_make_rebuild_flag=0
-        ;;
-      P )
-        allow_color_flag=0
-        ;;
-      J )
-        do_filelog_flag=1
-        ;;
-      C )
-        pass_autoconf_arg_flag=1
-        autoconf_arg_file="$OPTARG"
-        ;;
-      x )
-        be_stego_parser_flag=1
-        queried_stego_filepath="$OPTARG"
-        ;;
-      W )
-        show_warranty_flag=1
-        ;;
-      X )
-        ignore_git_check_flag=1
-        ;;
-      G )
-        handle_genC_arg "$OPTARG"
-        ;;
-      U )
-        tell_uname_flag=1
-        ;;
-      z )
-        pack_flag=1
-        ;;
-      s )
-        silent_flag=1
-        ;;
-      S )
-        source_name="$OPTARG"
-        sourcename_was_set=1
-        ;;
-      w )
-        show_time_flag=1
-        ;;
-      Y )
-        start_time_val="$OPTARG"
-        amboso_start_time="$start_time_val"
-        start_time_set=1
-        start_time_flag=1
-        ;;
-      E )
-        exec_entrypoint="$OPTARG"
-        exec_was_set=1
-        ;;
-      D )
-        dir_flag=1
-        scripts_dir="$OPTARG"
-        ;;
-      K )
-        testdir_flag=1
-        kazoj_dir="$OPTARG"
-        test_info_was_set=1
-        ;;
-      M )
-        vers_make_flag=1
-        makefile_version="$OPTARG"
-        ;;
-      A )
-        vers_autoconf_flag=1
-        use_autoconf_version="$OPTARG"
-        ;;
-      L )
-        big_list_flag=1
-        ;;
-      l )
-        small_list_flag=1
-        ;;
-      H )
-        bighelp_flag=1
-        ;;
-      h )
-        smallhelp_flag=1
-        ;;
-      B )
-        base_mode_flag=1
-        ;;
-      g )
-        git_mode_flag=1
-        ;;
-      t )
-        small_test_mode_flag=1
-        ;;
-      T )
-        test_mode_flag=1
-        ;;
-      V )
-        handle_verbose_arg "$OPTARG"
-        ;;
-      q )
-        quiet_flag=1
-        ;;
-      v )
-        version_flag=$(($version_flag+1))
-        ;;
-      p )
-        purge_flag=1
-        ;;
-      r )
-        run_flag=1
-        ;;
-      b )
-        build_flag=1
-        ;;
-      d )
-        delete_flag=1
-        ;;
-      i )
-        init_flag=1
-        ;;
-      \? )
-        log_cl "Invalid option: -$OPTARG. Run with -h for help." error >&2
-        exit 1
-        ;;
-      : )
-        log_cl "Option -$OPTARG requires an argument. Run with -h for help." error >&2
-        exit 1
-        ;;
+      k ) handle_kern_arg "$OPTARG";;
+      a ) handle_anvil_arg "$OPTARG";;
+      e ) extensions_flag=0;;
+      F ) force_build_flag=1;;
+      R ) enable_make_rebuild_flag=0;;
+      P ) allow_color_flag=0;;
+      J ) do_filelog_flag=1;;
+      C ) pass_autoconf_arg_flag=1; autoconf_arg_file="$OPTARG";;
+      x ) be_stego_parser_flag=1; queried_stego_filepath="$OPTARG";;
+      W ) show_warranty_flag=1;;
+      X ) ignore_git_check_flag=1;;
+      G ) handle_genC_arg "$OPTARG";;
+      U )tell_uname_flag=1;;
+      z ) pack_flag=1;;
+      s ) silent_flag=1;;
+      S ) source_name="$OPTARG"; sourcename_was_set=1;;
+      w ) show_time_flag=1;;
+      Y ) start_time_val="$OPTARG"; amboso_start_time="$start_time_val"; start_time_set=1; start_time_flag=1;;
+      E ) exec_entrypoint="$OPTARG"; exec_was_set=1;;
+      D ) dir_flag=1; scripts_dir="$OPTARG";;
+      K ) testdir_flag=1; kazoj_dir="$OPTARG"; test_info_was_set=1;;
+      M ) vers_make_flag=1; makefile_version="$OPTARG";;
+      A ) vers_autoconf_flag=1; use_autoconf_version="$OPTARG";;
+      L ) big_list_flag=1;;
+      l ) small_list_flag=1;;
+      H ) bighelp_flag=1;;
+      h ) smallhelp_flag=1;;
+      B ) base_mode_flag=1;;
+      g ) git_mode_flag=1;;
+      t ) small_test_mode_flag=1;;
+      T ) test_mode_flag=1;;
+      V ) handle_verbose_arg "$OPTARG";;
+      q ) quiet_flag=1;;
+      v ) version_flag=$(($version_flag+1));;
+      p ) purge_flag=1;;
+      r ) run_flag=1;;
+      b ) build_flag=1;;
+      d ) delete_flag=1 ;;
+      i ) init_flag=1;;
+      \? ) log_cl "Invalid option: -$OPTARG. Run with -h for help." error >&2; exit 1;;
+      : ) log_cl "Option -$OPTARG requires an argument. Run with -h for help." error >&2; exit 1;;
     esac
   tot_opts=$OPTIND
   done

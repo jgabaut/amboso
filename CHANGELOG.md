@@ -7,6 +7,9 @@
 - Handle long options with the "-:" getopt trick
 - Handle help flag earlier
 - Improved help message
+- Fix init subcommand bug introduced by 2.0.6
+- Fix a shellcheck error in reporting unused arguments
+- Compacted getopt code since it's a couple expressions in each case anyway
 
 ## [2.0.6] - 2024-04-19
 
