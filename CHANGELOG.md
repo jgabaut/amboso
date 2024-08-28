@@ -1,5 +1,103 @@
 # Changelog
 
+## [2.0.7-dev] - Unreleased
+
+### Changed
+
+- Handle long options with the "-:" getopt trick
+- Handle help flag earlier
+- Improved help message
+
+## [2.0.6] - 2024-04-19
+
+### Changed
+- Update `amboso_init_proj()` to use passed dir basename
+  - This is a minor breaking change from `2.0.0`
+  - At the moment there's no way to pass `-e` with `init` to be backwards-compatible and still generate projects with `hello_world` as target name (old behaviour)
+
+## [2.0.5] - 2024-03-25
+
+### Changed
+
+- Use `/usr/bin/bash` instead of `/bin/bash` in shebangs
+  - Should help with #102
+- Fix generated `Makefile.am`
+  - Should solve the failing build when passing `--enable-debug` to the generated configure script
+- Print "unsupported" error message and quit when finding `anvilPy` kern in `stego.lock`
+
+## [2.0.4] - 2024-02-16
+
+### Added
+
+- Add `ANVIL__HEADERGEN_TIME` to generated C header
+
+### Changed
+
+- Fix check for `gawk`
+  - Closes #100
+- Try to `mkdir` missing directories (`scripts_dir`, `script_path`)
+  - Drop `bin` checkout and won't need it anymore
+- Drop resorting to `./stego.lock` when `scripts_dir` is not a valid directory
+- Drop `app()` and `-c` flag
+- Bump embedded `najlo` to `0.0.4`
+- Update `backtrace()`, `at()`
+- Move `try-anvil/` under `utils/`
+
+## [2.0.3] - 2024-02-05
+
+### Added
+
+- Add `min_amboso_v_` consts to better wrap extensions to `2.0`
+- Add interpreter branch for when the queried tag ends with `stego.lock`
+  - ATM the interpretation ends up going to `try_make()`
+- Add `stego_dir` logic to set a different location for `stego.lock` than `scripts_dir`
+  - The new default is `../.`, but a fallback to `scripts_dir` should ensure backwards compatibility
+- Add legacy lex for `1.x` `stego.lock` files, available by using `-a <VERSIONlessThan2.0>` when calling the script
+- Add forced global source
+  - When passing `-a` as first argument, the sourcing will be forced from global `amboso_fn.sh` instead of local.
+  - Could be useful for breaking changes that may need a newer API than the repo one.
+- Add `-Xx` option to run as `najlo`, to parse Makefiles
+  - Uses a copypaste of [najlo.sh](https://github.com/jgabaut/najlo)
+  - Experimental
+
+### Changed
+
+- Read `amboso_kern` from `stego.lock`, backwards compatible
+  - Should need `2.0.3` min to be used
+- Fix: try using `gawk` when `awk` seems to be `mawk`
+- Avoid passing extended flags to patches below their introduction
+
+### Known issues
+
+- Since this version was naively testing for local `awk` version with -W version, it hangs early as `nawk` ignores the option.
+- This makes the script not work on `macOS`.
+
+## [2.0.2] - 2024-01-09
+
+### Added
+
+- Add -a to set `std_amboso_version`
+  - Closes #96
+- Add -k to set `std_amboso_kern`
+- Add `min_amboso_v_kern` to ignore valid `-k` arg when running as below `2.0.2`
+- Use globs for generated `configure.ac`
+  - Closes #95
+
+### Changed
+
+- Improved git info for `gen_C_header()`
+
+## [2.0.1] - 2024-01-04
+
+### Added
+
+- Add `-e` to turn off extensions to `2.0`
+
+### Changed
+
+- Try `.` if `$scripts_dir` is not a directory (just after it's reset to `./bin`)
+- `git_mode_check()` returns success when no repo is found
+
 ## [2.0.0] - 2023-12-26
 
 ### Added
