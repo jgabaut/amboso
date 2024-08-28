@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="2.0.6"
+AMBOSO_API_LVL="2.0.7-dev"
 at () {
     #printf -- "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] -> {\n"
     log_cl "{ call: [" debug white
@@ -714,50 +714,50 @@ function git_mode_check {
 function amboso_help {
     amboso_usage
     amboso_help_string="Options:
-  -O <STEGO_DIR>             Specify the directory to host stego.lock file [default: wd, BIN_DIR]
-  -D <BIN_DIR>               Specify the directory to host tags [default: ./bin]
-  -K <TESTS_DIR>             Specify the directory to host tests
-  -S <SOURCE_NAME>           Specify the source name
-  -E <EXEC_NAME>             Specify the target executable name
-  -M <MAKE_MINTAG>           Specify min tag using make as build/clean step
-  -G <C_HEADER_DIR>          Generate anvil C header for passed dir
-  -x <LINT_TARGET>           Act as stego linter for passed file
-  -T        (test)           Specify test mode
-  -B        (base)           Specify base mode
-  -g        (git)            Specify git mode
-  -t        (testmacro)      Specify test macro mode
-  -i        (init)           Build all tags for current mode
-  -p        (purge)          Delete binaries for all tags for current mode
-  -d        (delete)         Delete binary for passed tag
-  -b        (build)          Build binary for passed tag
-  -r        (run)            Run binary for passed tag
-  -l        (list)           Print supported tags for current mode
-  -L        (list-all)       Print supported tags for all modes
-  -q        (quiet)          Less output
-  -s        (silent)         Almost no output
-  -V <VERBOSE>               More output [default: 3]
-  -w        (watch)          Report timer
-  -v        (version)        Print current version and quit
-  -W        (warranty)       Print warranty info and quit
-  -X        (no-gitcheck)    Ignore git mode checks
-  -J        (logged)         Output to log file
-  -P        (no-color)       Disable color output
-  -F        (force)          Enable force build
-  -R        (no-rebuild)     Disable calling make rebuild
-  -C <CONFIG_FILE>           Pass configuration file for ./configure arguments
-  -h        (help)           Print help
-  -Y <START_TIME>            Set start time of the program
-  -z        (pack)           Run \"make pack\"
-  -H        (bighelp)        Print more help
-  -e        (extensions)     Turn off extensions to 2.0
-  -a <AMBOSO_VERS>           Specify amboso version to use
-  -k <AMBOSO_KERN>           Specify amboso kern to use"
+  -D, --amboso-dir <BIN_DIR>         Specify the directory to host tags [default: ./bin]
+  -O, --stego-dir <STEGO_DIR>        Specify the directory to host stego.lock file [default: wd, BIN_DIR]
+  -K, --kazoj-dir <TESTS_DIR>        Specify the directory to host tests
+  -S, --source <SOURCE_NAME>         Specify the source name
+  -E, --execname <EXEC_NAME>         Specify the target executable name
+  -M, --maketag <MAKE_MINTAG>        Specify min tag using make as build/clean step
+  -a, --anvil-version <AMBOSO_VERS>  Specify amboso version to use
+  -k, --anvil-kern <AMBOSO_KERN>     Specify amboso kern to use
+  -G, --gen-c-header <C_HEADER_DIR>  Generate anvil C header for passed dir
+  -x, --linter <LINT_TARGET>         Act as stego linter for passed file
+  -T, --test                         Specify test mode
+  -B, --base                         Specify base mode
+  -g, --git                          Specify git mode
+  -t, --testmacro                    Specify test macro mode
+  -i, --init                         Build all tags for current mode
+  -p, --purge                        Delete binaries for all tags for current mode
+  -d, --delete                       Delete binary for passed tag
+  -b, --build                        Build binary for passed tag
+  -r, --run                          Run binary for passed tag
+  -l, --list                         Print supported tags for current mode
+  -L, --list-all                     Print supported tags for all modes
+  -q, --quiet                        Less output
+  -s, --silent                       Almost no output
+  -V, --verbose <VERBOSE>            More output [default: 3]
+  -w, --watch                        Report timer
+  -v, --version                      Print current version and quit
+  -W, --warranty                     Print warranty info and quit
+  -X, --no-gitcheck                  Ignore git mode checks
+  -J, --logged                       Output to log file
+  -P, --no-color                     Disable color output
+  -F, --force                        Enable force build
+  -R, --no-rebuild                   Disable calling make rebuild
+  -C, --config <CONFIG_FILE>         Pass configuration file for ./configure arguments
+  -e, --strict                       Turn off extensions to 2.0
+  -h, --help                         Print help
+  -Y <START_TIME>                    Set start time of the program
+  -z        (pack)                   Run \"make pack\"
+  -H        (bighelp)                Print more help"
   printf "%s\n" "$amboso_help_string"
 }
 
 function amboso_usage {
+  printf "amboso - Build tool wrapping make and git tags\n"
   printf "Usage: amboso [OPTIONS] [TAG] [COMMAND]\n"
-  printf "    Build tool wrapping make and git tags\n"
   printf "    Run with -H for more info about options.\n\n"
   printf "Commands:
   test     does testing things
@@ -1418,6 +1418,118 @@ set_amboso_stego_info() {
   return 0
 }
 
+handle_anvil_arg() {
+  local arg="$1"
+  if [[ "$arg" =~ $std_amboso_regex ]] ; then {
+     case "$arg" in
+       1.*)
+           log_cl "${FUNCNAME[0]}():    Turning off extensions flag" info
+           extensions_flag=0
+           std_amboso_version="$arg"
+           log_cl "Using {$std_amboso_version} version standard" info
+           ;;
+       2.0.0)
+           log_cl "${FUNCNAME[0]}():    Turning off extensions flag" info
+           extensions_flag=0
+           std_amboso_version="$arg"
+           log_cl "Using {$std_amboso_version} version standard" info
+           ;;
+       2.0.*)
+           std_amboso_version="$OPTARG"
+           log_cl "Using {$std_amboso_version} version standard" info
+           ;;
+       *)
+           log_cl "Invalid version arg --> {$arg}" error
+           log_cl "Hint: Use one of these: --> {" error
+           for v in "${std_amboso_version_list[@]}"; do
+               log_cl "    $v" info
+           done
+           log_cl "}" error
+           exit 1
+           ;;
+     esac
+   } elif [[ "$arg" =~ $std_amboso_short_regex ]] ; then {
+     case "$arg" in
+       1.[0-9])
+           log_cl "${FUNCNAME[0]}():    Turning off extensions flag" info
+           extensions_flag=0
+           std_amboso_version="${arg}.0"
+           log_cl "Using {$std_amboso_version} version standard" info
+           ;;
+       2.0)
+           log_cl "${FUNCNAME[0]}():    Turning off extensions flag" info
+           #We don't update the std_amboso_version yet, since this version is current and we can use the latest patch.
+           extensions_flag=0
+           log_cl "Using {$std_amboso_version} version standard (patch level: $(cut -f3 -d'.' <<< "$std_amboso_version"))" info
+           ;;
+       2.1)
+           #We don't update the std_amboso_version yet, since this version is in development
+           log_cl "Using {$std_amboso_version} version standard" info
+           ;;
+       *)
+           log_cl "Invalid version arg --> {$arg}" error
+           log_cl "Hint: Use one of these: --> {" error
+           for v in "${std_amboso_short_version_list[@]}"; do
+               log_cl "    $v" info
+           done
+           log_cl "}" error
+           exit 1
+           ;;
+     esac
+
+       :
+   } else {
+     log_cl "Invalid version standard --> {$arg}" error
+     log_cl "Not matching regex --> \'$std_amboso_regex\'" error
+     exit 1
+   }
+   fi
+}
+
+handle_kern_arg() {
+  local arg="$1"
+  case "$arg" in
+   "amboso-C")
+       queried_amboso_kern="$OPTARG"
+       log_cl "Queried {$queried_amboso_kern} kern" info
+       ;;
+   *)
+       log_cl "Invalid kern argument --> {$OPTARG}" error
+       log_cl "Hint: Use one of these: --> {" error
+       for v in "${std_amboso_kern_list[@]}"; do
+           log_cl "    $v" info
+       done
+       log_cl "}" error
+       exit 1
+       ;;
+  esac
+}
+
+handle_genC_arg() {
+  gen_C_headers_flag=1
+  gen_C_headers_destdir="$1"
+  if [[ ! -d $gen_C_headers_destdir ]] ; then {
+      log_cl "($gen_C_headers_destdir) was not a valid directory." warn
+      gen_C_headers_set=1 #TODO: this reads horribly. It's a patch to allow the called function to still be called, since now it will try to make the directory
+  } else {
+      gen_C_headers_set=1
+  }
+  fi
+}
+
+handle_verbose_arg() {
+  requested_lvl="$1"
+  verbose_lvl_re='^[0-5]$'
+  if ! [[ "$requested_lvl" =~ $verbose_lvl_re ]]; then {
+      log_cl "Invalid verbose lvl: {$requested_lvl}" error
+      amboso_help
+      exit 1
+  } else {
+  verbose_flag="$( printf "$requested_lvl\n" | awk -F" " '{print $1}')"
+  }
+  fi
+}
+
 amboso_parse_args() {
   export AMBOSO_LVL_REC="${AMBOSO_LVL_REC:-0}"
   #Increment depth counter
@@ -1499,9 +1611,259 @@ amboso_parse_args() {
   min_amboso_v_stegodir="2.0.3"
   min_amboso_v_treegen="2.0.4"
   target_awk="awk"
-
-  while getopts "O:A:M:S:E:D:K:G:Y:x:V:C:a:k:wBgbpHhrivdlLtTqszUXWPJRFe" opt; do
+  long_options_hack="-:" # From https://stackoverflow.com/questions/402377/using-getopts-to-process-long-and-short-command-line-options/7680682#7680682
+  while getopts "O:A:M:S:E:D:K:G:Y:x:V:C:a:k:${long_options_hack}wBgbpHhrivdlLtTqszUXWPJRFe" opt; do
     case $opt in
+      -)
+        case "${OPTARG}" in
+          anvil-version)
+            val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+            handle_anvil_arg "$val"
+            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
+            ;;
+          anvil-version=*)
+            val=${OPTARG#*=}
+            opt=${OPTARG%=$val}
+            handle_anvil_arg "$val"
+            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
+            ;;
+          anvil-kern)
+            val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+            handle_kern_arg "$val"
+            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
+            ;;
+          anvil-kern=*)
+            val=${OPTARG#*=}
+            opt=${OPTARG%=$val}
+            handle_kern_arg "$val"
+            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
+            ;;
+          amboso-dir)
+            val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+            dir_flag=1
+            scripts_dir="$val"
+            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
+            ;;
+          amboso-dir=*)
+            val=${OPTARG#*=}
+            opt=${OPTARG%=$val}
+            dir_flag=1
+            scripts_dir="$val"
+            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
+            ;;
+          stego-dir)
+            val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+            stego_dir_flag=1
+            stego_dir="$val"
+            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
+            ;;
+          stego-dir=*)
+            val=${OPTARG#*=}
+            opt=${OPTARG%=$val}
+            stego_dir_flag=1
+            stego_dir="$val"
+            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
+            ;;
+          kazoj-dir)
+            val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+            testdir_flag=1
+            kazoj_dir="$val"
+            test_info_was_set=1
+            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
+            ;;
+          kazoj-dir=*)
+            val=${OPTARG#*=}
+            opt=${OPTARG%=$val}
+            testdir_flag=1
+            kazoj_dir="$val"
+            test_info_was_set=1
+            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
+            ;;
+          source)
+            val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+            source_name="$val"
+            sourcename_was_set=1
+            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
+            ;;
+          source=*)
+            val=${OPTARG#*=}
+            opt=${OPTARG%=$val}
+            source_name="$val"
+            sourcename_was_set=1
+            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
+            ;;
+          execname)
+            val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+            exec_entrypoint="$val"
+            exec_was_set=1
+            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
+            ;;
+          execname=*)
+            val=${OPTARG#*=}
+            opt=${OPTARG%=$val}
+            exec_entrypoint="$val"
+            exec_was_set=1
+            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
+            ;;
+          maketag)
+            val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+            vers_make_flag=1
+            makefile_version="$val"
+            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
+            ;;
+          maketag=*)
+            val=${OPTARG#*=}
+            opt=${OPTARG%=$val}
+            vers_make_flag=1
+            makefile_version="$val"
+            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
+            ;;
+          gen-c-header)
+            val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+            handle_genC_arg "$val"
+            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
+            ;;
+          gen-c-header=*)
+            val=${OPTARG#*=}
+            opt=${OPTARG%=$val}
+            handle_genC_arg "$val"
+            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
+            ;;
+          linter)
+            val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+            be_stego_parser_flag=1
+            queried_stego_filepath="$val"
+            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
+            ;;
+          linter=*)
+            val=${OPTARG#*=}
+            opt=${OPTARG%=$val}
+            be_stego_parser_flag=1
+            queried_stego_filepath="$val"
+            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
+            ;;
+          verbose)
+            val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+            handle_verbose_arg "$val"
+            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
+            ;;
+          verbose=*)
+            val=${OPTARG#*=}
+            opt=${OPTARG%=$val}
+            handle_verbose_arg "$val"
+            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
+            ;;
+          config)
+            val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+            pass_autoconf_arg_flag=1
+            autoconf_arg_file="$val"
+            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
+            ;;
+          config=*)
+            val=${OPTARG#*=}
+            opt=${OPTARG%=$val}
+            pass_autoconf_arg_flag=1
+            autoconf_arg_file="$val"
+            #log_cl "Parsing option: '--${OPTARG}', value: '${val}'" debug;
+            ;;
+          test)
+            test_mode_flag=1
+            #log_cl "Parsing option: '--${OPTARG}'" debug;
+            ;;
+          base)
+            base_mode_flag=1
+            #log_cl "Parsing option: '--${OPTARG}'" debug;
+            ;;
+          git)
+            git_mode_flag=1
+            #log_cl "Parsing option: '--${OPTARG}'" debug;
+            ;;
+          testmacro)
+            small_test_mode_flag=1
+            #log_cl "Parsing option: '--${OPTARG}'" debug;
+            ;;
+          init)
+            init_flag=1
+            #log_cl "Parsing option: '--${OPTARG}'" debug;
+            ;;
+          purge)
+            purge_flag=1
+            #log_cl "Parsing option: '--${OPTARG}'" debug;
+            ;;
+          build)
+            build_flag=1
+            #log_cl "Parsing option: '--${OPTARG}'" debug;
+            ;;
+          delete)
+            delete_flag=1
+            #log_cl "Parsing option: '--${OPTARG}'" debug;
+            ;;
+          run)
+            run_flag=1
+            #log_cl "Parsing option: '--${OPTARG}'" debug;
+            ;;
+          list)
+            small_list_flag=1
+            #log_cl "Parsing option: '--${OPTARG}'" debug;
+            ;;
+          list-all)
+            big_list_flag=1
+            #log_cl "Parsing option: '--${OPTARG}'" debug;
+            ;;
+          quiet)
+            quiet_flag=1
+            #log_cl "Parsing option: '--${OPTARG}'" debug;
+            ;;
+          silent)
+            silent_flag=1
+            #log_cl "Parsing option: '--${OPTARG}'" debug;
+            ;;
+          watch)
+            show_time_flag=1
+            #log_cl "Parsing option: '--${OPTARG}'" debug;
+            ;;
+          version)
+            version_flag=$(($version_flag+1))
+            #log_cl "Parsing option: '--${OPTARG}'" debug;
+            ;;
+          warranty)
+            show_warranty_flag=1
+            #log_cl "Parsing option: '--${OPTARG}'" debug;
+            ;;
+          ignore-gitcheck)
+            ignore_git_check_flag=1
+            #log_cl "Parsing option: '--${OPTARG}'" debug;
+            ;;
+          logged)
+            do_filelog_flag=1
+            #log_cl "Parsing option: '--${OPTARG}'" debug;
+            ;;
+          no-color)
+            allow_color_flag=0
+            #log_cl "Parsing option: '--${OPTARG}'" debug;
+            ;;
+          force)
+            force_build_flag=1
+            #log_cl "Parsing option: '--${OPTARG}'" debug;
+            ;;
+          no-rebuild)
+            enable_make_rebuild_flag=0
+            #log_cl "Parsing option: '--${OPTARG}'" debug;
+            ;;
+          strict)
+            extensions_flag=0
+            #log_cl "Parsing option: '--${OPTARG}'" debug;
+            ;;
+          help)
+            smallhelp_flag=1
+            #log_cl "Parsing option: '--${OPTARG}'" debug;
+            ;;
+        *)
+          if [ "$OPTERR" = 1 ] && [ "${optspec:0:1}" != ":" ]; then
+            echo "Unknown option --${OPTARG}" >&2
+          fi
+          ;;
+        esac;;
       O )
         if [[ "$std_amboso_version" > "$min_amboso_v_stegodir" || "$std_amboso_version" = "$min_amboso_v_stegodir" ]] ; then {
           stego_dir="$OPTARG"
@@ -1512,87 +1874,10 @@ amboso_parse_args() {
         fi
         ;;
       k )
-        case "$OPTARG" in
-            "amboso-C")
-                queried_amboso_kern="$OPTARG"
-                log_cl "Queried {$queried_amboso_kern} kern" info
-                ;;
-            *)
-                log_cl "Invalid kern argument --> {$OPTARG}" error
-                log_cl "Hint: Use one of these: --> {" error
-                for v in "${std_amboso_kern_list[@]}"; do
-                    log_cl "    $v" info
-                done
-                log_cl "}" error
-                exit 1
-                ;;
-        esac
+        handle_kern_arg "$OPTARG"
         ;;
       a )
-        if [[ "$OPTARG" =~ $std_amboso_regex ]] ; then {
-          case "$OPTARG" in
-            1.*)
-                log_cl "${FUNCNAME[0]}():    Turning off extensions flag" info
-                extensions_flag=0
-                std_amboso_version="$OPTARG"
-                log_cl "Using {$std_amboso_version} version standard" info
-                ;;
-            2.0.0)
-                log_cl "${FUNCNAME[0]}():    Turning off extensions flag" info
-                extensions_flag=0
-                std_amboso_version="$OPTARG"
-                log_cl "Using {$std_amboso_version} version standard" info
-                ;;
-            2.0.*)
-                std_amboso_version="$OPTARG"
-                log_cl "Using {$std_amboso_version} version standard" info
-                ;;
-            *)
-                log_cl "Invalid version arg --> {$OPTARG}" error
-                log_cl "Hint: Use one of these: --> {" error
-                for v in "${std_amboso_version_list[@]}"; do
-                    log_cl "    $v" info
-                done
-                log_cl "}" error
-                exit 1
-                ;;
-          esac
-        } elif [[ "$OPTARG" =~ $std_amboso_short_regex ]] ; then {
-          case "$OPTARG" in
-            1.[0-9])
-                log_cl "${FUNCNAME[0]}():    Turning off extensions flag" info
-                extensions_flag=0
-                std_amboso_version="${OPTARG}.0"
-                log_cl "Using {$std_amboso_version} version standard" info
-                ;;
-            2.0)
-                log_cl "${FUNCNAME[0]}():    Turning off extensions flag" info
-                #We don't update the std_amboso_version yet, since this version is current and we can use the latest patch.
-                extensions_flag=0
-                log_cl "Using {$std_amboso_version} version standard (patch level: $(cut -f3 -d'.' <<< "$std_amboso_version"))" info
-                ;;
-            2.1)
-                #We don't update the std_amboso_version yet, since this version is in development
-                log_cl "Using {$std_amboso_version} version standard" info
-                ;;
-            *)
-                log_cl "Invalid version arg --> {$OPTARG}" error
-                log_cl "Hint: Use one of these: --> {" error
-                for v in "${std_amboso_short_version_list[@]}"; do
-                    log_cl "    $v" info
-                done
-                log_cl "}" error
-                exit 1
-                ;;
-          esac
-
-            :
-        } else {
-          log_cl "Invalid version standard --> {$OPTARG}" error
-          log_cl "Not matching regex --> \'$std_amboso_regex\'" error
-          exit 1
-        }
-        fi
+        handle_anvil_arg "$OPTARG"
         ;;
       e )
         extensions_flag=0
@@ -1624,15 +1909,7 @@ amboso_parse_args() {
         ignore_git_check_flag=1
         ;;
       G )
-        gen_C_headers_flag=1
-        gen_C_headers_destdir="$OPTARG"
-        if [[ ! -d $gen_C_headers_destdir ]] ; then {
-            log_cl "($gen_C_headers_destdir) was not a valid directory." warn
-            gen_C_headers_set=1 #TODO: this reads horribly. It's a patch to allow the called function to still be called, since now it will try to make the directory
-        } else {
-                gen_C_headers_set=1
-        }
-        fi
+        handle_genC_arg "$OPTARG"
         ;;
       U )
         tell_uname_flag=1
@@ -1702,16 +1979,7 @@ amboso_parse_args() {
         test_mode_flag=1
         ;;
       V )
-        requested_lvl="$OPTARG"
-        verbose_lvl_re='^[0-5]$'
-        if ! [[ "$requested_lvl" =~ $verbose_lvl_re ]]; then {
-            log_cl "Invalid verbose lvl: {$requested_lvl}" error
-            amboso_help
-            return 1
-        } else {
-        verbose_flag="$( printf "$requested_lvl\n" | awk -F" " '{print $1}')"
-        }
-        fi
+        handle_verbose_arg "$OPTARG"
         ;;
       q )
         quiet_flag=1
