@@ -16,7 +16,7 @@
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 AMBOSO_API_LVL="2.0.7"
-at () {
+at() {
     #printf -- "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] -> {\n"
     log_cl "{ call: [" debug white
     for ((i=${#BASH_LINENO[@]}-1;i>1;i--)); do # i>1 is needed to avoid printing "backtrace" and its little number
@@ -39,7 +39,7 @@ at () {
     #printf "<line: %s>\n" "$LINENO"
 }
 
-backtrace () {
+backtrace() {
    #[[ $tracing -eq 0 ]] && echo -n "{ [MAIN] at: $trace_line } -> {"
    if [[ $trace_line -eq 0 ]] ; then {
      printf "\n\n\n\n{ [$(( $trace_line ))] [ trace at) \n"
@@ -59,7 +59,7 @@ backtrace () {
    done
 }
 
-trace () {
+trace() {
   if [[ $trace_flag -gt 0 ]] ; then {
    backtrace
   } else {
@@ -68,7 +68,7 @@ trace () {
   fi
 }
 
-function log_cl {
+log_cl() {
     local has_color="${AMBOSO_COLOR:-0}"
     local do_filelog="${AMBOSO_LOGGED:-0}"
     local tk_bold="bold"
@@ -216,19 +216,19 @@ function log_cl {
     fi
 }
 
-function echo_amboso_splash {
+echo_amboso_splash() {
     local amboso_version="$1"
     prog="$2"
     printf "amboso, v$amboso_version\nCopyright (C) 2023-2024  jgabaut\n\n  This program comes with ABSOLUTELY NO WARRANTY; for details type \`$prog -W\`.\n  This is free software, and you are welcome to redistribute it\n  under certain conditions; see file \`LICENSE\` for details.\n\n  Full source is available at https://github.com/jgabaut/amboso\n\n"
 }
 
-function echo_invil_notice {
+echo_invil_notice() {
   log_cl "The bash implementation of amboso is being ported to Rust." info
   log_cl "amboso v2.x is going to try to maintain compatibility with \"invil\", the new reference implementation, but it may fail to do so proptly." warn
   log_cl "You can find the new version at https://github.com/jgabaut/invil" info
 }
 
-function try_doing_make {
+try_doing_make() {
   if [[ -f "./Makefile" ]] ; then {
     log_cl "Found Makefile." info
     make
@@ -260,7 +260,7 @@ function try_doing_make {
   fi
 }
 
-function echo_active_flags {
+echo_active_flags () {
   printf "[ENV]      Args:\n\n"
   printf "           CC \"%s\"\n" "$CC"
   printf "           CFLAGS \"%s\"\n\n" "$CFLAGS"
@@ -328,17 +328,17 @@ print_sysinfo () {
   printf "            [ os_name ]    [ $os_name ]\n"
 }
 
-function echo_amboso_version {
+echo_amboso_version() {
   local curr_v="$1"
   local api_v="$2"
   local amboso_version="amboso, v$curr_v (Compat: v$api_v)"
   printf "$amboso_version\n"
 }
-function echo_amboso_version_short {
+echo_amboso_version_short() {
   printf "$amboso_currvers\n"
 }
 
-function echo_timer {
+echo_timer() {
   if [[ $show_time_flag -eq 0 ]] ; then {
     [[ $verbose_flag -le 3 || $quiet_flag -gt 0 ]] && return
   }
@@ -359,7 +359,7 @@ function echo_timer {
   return
 }
 
-function check_tags {
+check_tags() {
 	git fetch --tags
     repo_tags=()
     # From: https://www.shellcheck.net/wiki/SC2207
@@ -385,7 +385,7 @@ function check_tags {
   done
 }
 
-function echo_tag_info {
+echo_tag_info() {
 	tag=$1
 	tag_date="$(git show -q --clear-decorations --format="%at" "$tag" 2>/dev/null)"
 	tag_author="$(git show -q --clear-decorations "$tag" 2>/dev/null | grep Author | cut -f2 -d':' | awk -F" " '{print $1}')"
@@ -395,7 +395,7 @@ function echo_tag_info {
 	log_cl "[AMBOSO]    Tag date was:  [$tag_date]" info
 }
 
-function amboso_init_proj {
+amboso_init_proj() {
     target_dir="$1"
     local is_strict="$2"
     if [[ ! -d "$target_dir" ]] ; then {
@@ -488,7 +488,7 @@ function amboso_init_proj {
     [[ $quiet_flag -eq 0 ]] && log_cl "Done init for {$target_dir}" info
 }
 
-function gen_C_headers {
+gen_C_headers() {
 	target_dir="$1"
 	tag="$2"
 	execname="$3"
@@ -532,7 +532,7 @@ function gen_C_headers {
 
 }
 
-function set_supported_tests {
+set_supported_tests() {
   kazoj_dir=$1
   tests_filecount=0
   errors_filecount=0
@@ -620,7 +620,7 @@ function set_supported_tests {
   #echo "tot tests: $tot_tests"
 }
 
-function echo_tests_info {
+echo_tests_info() {
   kazoj_dir="$1"
   set_supported_tests "$kazoj_dir" 2>/dev/null
   echoed_cases_dir="${tests_info[0]}"
@@ -649,7 +649,7 @@ function echo_tests_info {
   #echo "test info array contents are: ( ${tests_info[@]} )" >&2
 }
 
-function echo_othermode_tags {
+echo_othermode_tags() {
   #Print remaining read versions not available in current mode
   if [[ $base_mode_flag -gt 0 ]] ; then {
     mode_txt="git"
@@ -674,7 +674,7 @@ function echo_othermode_tags {
   printf "\n"
 }
 
-function echo_supported_tags {
+echo_supported_tags() {
   mode_txt="git"
   [[ $base_mode_flag -gt 0 ]] && mode_txt="base"
   printf "  ( $tot_vers ) supported tags for current mode ( $mode_txt ).\n"
@@ -686,7 +686,7 @@ function echo_supported_tags {
   printf "\n"
 }
 
-function git_mode_check {
+git_mode_check() {
   is_git_repo=0
   #Check if we're inside a repo
   git rev-parse --is-inside-work-tree 2>/dev/null 1>&2
@@ -711,7 +711,7 @@ function git_mode_check {
   fi
 }
 
-function amboso_help {
+amboso_help() {
     amboso_usage
     amboso_help_string="Options:
   -D, --amboso-dir <BIN_DIR>         Specify the directory to host tags [default: ./bin]
@@ -755,7 +755,7 @@ function amboso_help {
   printf "%s\n" "$amboso_help_string"
 }
 
-function amboso_usage {
+amboso_usage() {
   printf "amboso - Build tool wrapping make and git tags\n"
   printf "Usage: amboso [OPTIONS] [TAG] [COMMAND]\n"
   printf "    Run with -H for more info about options.\n\n"
@@ -771,7 +771,7 @@ function amboso_usage {
   printf "Example usage:  $(basename "$prog_name") [(-O|-D|-K|-M|-S|-E|-G|-C|-x|-V|-Y|-a|-k) <ARG>] [-TBtg] [-bripd] [-hHvlLsqwXWPJRFe] [TAG]\n"
 }
 
-function escape_colorcodes_tee {
+escape_colorcodes_tee() {
   file="$1"
   outfile="$2"
   printf "" >"$outfile"
@@ -781,7 +781,7 @@ function escape_colorcodes_tee {
   cat "$file" | tee "$outfile"
 }
 
-function escape_colorcodes {
+escape_colorcodes() {
   file="$1"
   outfile="$2"
   printf "" >"$outfile"
@@ -791,7 +791,7 @@ function escape_colorcodes {
   cat -e "$file" >"$outfile"
 }
 
-function record_test {
+record_test() {
   tfp="$1" # test_file_path
   printf "" > "$tfp.stdout"
   printf "" > "$tfp.stderr"
@@ -808,7 +808,7 @@ function record_test {
   [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Removed tempfile \"$tmp_stderr\"." info >&2
 }
 
-function run_test {
+run_test() {
   tfp="$1" # test_file_path
   #echo -en "\033[1;36m"
   "$tfp"
@@ -818,7 +818,7 @@ function run_test {
 
 }
 
-function delete_test {
+delete_test() {
   #WIP
   tfp="$1" # test_file_path
   (
@@ -3346,7 +3346,7 @@ amboso_lgcy_bone_pos=0
 amboso_lgcy_kulpo_pos=2
 amboso_dashline="------------------------"
 
-function int_to_anvilname() {
+int_to_anvilname() {
     n="$1"
     case "$n" in
         "$amboso_source_lgcy_pos")
@@ -3685,21 +3685,21 @@ ruleline_mark_char=$'\t'
 # Build the regex with the tab character variable
 ruleline_rgx="^$ruleline_mark_char"
 
-function echo_najlo_version_short() {
+echo_najlo_version_short() {
   printf "%s\n" "$najlo_version"
 }
 
-function echo_najlo_version() {
+echo_najlo_version() {
   printf "najlo, v%s\n" "$najlo_version"
 }
 
-function echo_najlo_splash {
+echo_najlo_splash() {
     local njl_version="$1"
     local prog="$2"
     printf "najlo, v{%s}\nCopyright (C) 2024  jgabaut\n\n  This program comes with ABSOLUTELY NO WARRANTY; for details type \`%s -W\`.\n  This is free software, and you are welcome to redistribute it\n  under certain conditions; see file \`LICENSE\` for details.\n\n  Full source is available at https://github.com/jgabaut/najlo\n\n" "$njl_version" "$prog"
 }
 
-function lex_makefile() {
+lex_makefile() {
     local lvl_regex='^[0-9]+$'
     local input="$1"
     [[ -f "$input" ]] || { printf "{%s} was not a valid file.\n" "$input"; exit 1 ; }
@@ -3929,7 +3929,7 @@ function lex_makefile() {
     return "$tot_warns"
 }
 
-function najlo_main() {
+najlo_main() {
 #TODO: add real option handling
 local prog_name="$(readlink -f "$0")"
 local base_prog_name="$(basename "$prog_name")"
