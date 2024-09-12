@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="2.0.7"
+AMBOSO_API_LVL="2.0.8"
 at() {
     #printf -- "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] -> {\n"
     log_cl "{ call: [" debug white
@@ -555,14 +555,14 @@ set_supported_tests() {
   for FILE in "$cases_path"/* ; do {
     [[ -e "$FILE" ]] || { log_cl "{$FILE} did not exist." warn ; continue ;}
       test_fp="$cases_path/$(basename "$FILE")"
-      extens=$(printf "$(realpath "$(basename "$FILE")")\n" | awk -F"." '{print $2}')
+      extens=$(printf "${cases_path}/${FILE}\n" | awk -F"." '{print $2}')
       if [[ "$extens" != "k" ]] ; then {
         [[ "${AMBOSO_LVL_REC}" -eq 1 || $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] && log_cl "{$test_fp} does not have .k extension." warn
         skipped=$((skipped+1))
         continue
       }
       fi
-      double_extens=$(printf "$(realpath "$(basename "$FILE")")\n" | awk -F"." '{print $3}')
+      double_extens=$(printf "${cases_path}/${FILE}\n" | awk -F"." '{print $3}')
     if [[ "$double_extens" = "stderr" || "$double_extens" = "stdout" ]] ; then {
       skipped=$((skipped+1))
       [[ $verbose_flag -ge 4 && $quiet_flag -eq 0 ]] && log_cl "[PREP-TEST]    Skip record $FILE (at $(dirname "$test_fp"))." debug >&2
@@ -583,14 +583,14 @@ set_supported_tests() {
   for FILE in "$errorcases_path"/* ; do {
     [[ -e "$FILE" ]] || { log_cl "{$FILE} did not exist." warn ; continue ;}
     test_fp="$errorcases_path/$(basename "$FILE")"
-    extens=$(printf "$(realpath "$(basename "$FILE")")\n" | awk -F"." '{print $2}')
+    extens=$(printf "${errorcases_path}/${FILE}\n" | awk -F"." '{print $2}')
     if [[ "$extens" != "k" ]] ; then {
       [[ $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] && log_cl "{$test_fp} does not have .k extension." warn
       skipped=$((skipped+1))
       continue
     }
     fi
-    double_extens=$(printf "$(realpath "$(basename "$FILE")")\n" | awk -F"." '{print $3}')
+    double_extens=$(printf "${errorcases_path}/${FILE}\n" | awk -F"." '{print $3}')
     if [[ "$double_extens" = "stderr" || "$double_extens" = "stdout" ]] ; then {
       skipped=$((skipped+1))
       [[ $verbose_flag -ge 4 && $quiet_flag -eq 0 ]] && log_cl "[PREP-TEST]    Skip record $FILE (at $(dirname "$test_fp"))." debug >&2
@@ -862,12 +862,12 @@ lex_stego_file() {
     fi
     input_file="$1"
     # Check if awk is available
-    if ! command -v awk > /dev/null; then
-        log_cl "[CRITICAL]    Error: awk is not installed. Please install awk before running this script." error
+    if ! command -v "${AMBOSO_AWK_NAME}" > /dev/null; then
+        log_cl "[CRITICAL]    Error: ${AMBOSO_AWK_NAME} is not installed. Please install ${AMBOSO_AWK_NAME} before running this script." error
         exit 9
     fi
 
-    "${target_awk:-awk}" '{
+    "${AMBOSO_AWK_NAME}" '{
         # Remove leading and trailing whitespaces
         gsub(/^[ \t]+|[ \t]+$/, "")
 
@@ -1688,7 +1688,6 @@ amboso_parse_args() {
   stego_dir_flag=0
   min_amboso_v_stegodir="2.0.3"
   min_amboso_v_treegen="2.0.4"
-  target_awk="awk"
   long_options_hack="-:" # From https://stackoverflow.com/questions/402377/using-getopts-to-process-long-and-short-command-line-options/7680682#7680682
   while getopts "O:A:M:S:E:D:K:G:Y:x:V:C:a:k:${long_options_hack}wBgbpHhrivdlLtTqszUXWPJRFe" opt; do
     case $opt in
@@ -1884,9 +1883,10 @@ amboso_parse_args() {
   AMBOSO_LOGGED="$do_filelog_flag"
   export AMBOSO_COLOR="${AMBOSO_COLOR:-0}"
   export AMBOSO_LOGGED="${AMBOSO_LOGGED:-0}"
-  if [[ $quiet_flag -eq 0 && "${AMBOSO_LVL_REC}" -lt 2 ]]; then {
+  export AMBOSO_AWK_NAME="${AMBOSO_AWK_NAME:-awk}"
+  if [[ "${AMBOSO_LVL_REC}" -lt 2 ]]; then {
     echo_amboso_splash "$amboso_currvers" "$(basename "$prog_name")"
-    awk_check="$("$target_awk" --version 2>/dev/null)"
+    awk_check="$("${AMBOSO_AWK_NAME}" --version 2>/dev/null)"
     local awk_check_res="$?"
     local is_gawk="$(grep "GNU" <<< "$awk_check")"
     local is_mawk="$(grep "mawk" <<< "$awk_check")"
@@ -1915,7 +1915,7 @@ amboso_parse_args() {
         log_cl "awk seems to be mawk. The script may fail unexpectedly. See issue: https://github.com/jgabaut/amboso/issues/58" warn
         if [[ "$std_amboso_version" > "$min_amboso_v_fix_awk" || "$std_amboso_version" = "$min_amboso_v_fix_awk" ]]; then {
             log_cl "Trying to use gawk instead.\n" warn magenta
-            target_awk="gawk"
+            AMBOSO_AWK_NAME="gawk"
         }
         fi
       } elif [[ "$is_nawk" = "yes" ]] ; then {
@@ -1924,7 +1924,7 @@ amboso_parse_args() {
         log_cl "https://github.com/jgabaut/amboso/issues/100" warn
         if [[ "$std_amboso_version" > "$min_amboso_v_fix_awk" || "$std_amboso_version" = "$min_amboso_v_fix_awk" ]]; then {
             log_cl "Trying to use gawk instead.\n" warn magenta
-            target_awk="gawk"
+            AMBOSO_AWK_NAME="gawk"
         }
         fi
       }
@@ -3214,7 +3214,7 @@ amboso_parse_args() {
         has_bin=1 && [[ $verbose_flag -gt 3 ]] && log_cl "[DELETE]    ( $version ) has an executable." debug >&2
       }
       fi
-      rm "$(realpath "$scripts_dir"/"v$version/$exec_entrypoint")" #2>/dev/null
+      rm "$(realpath "$scripts_dir"/"v${version}/${exec_entrypoint}")" #2>/dev/null
       clean_res=$?
       if [[ $clean_res -eq 0 ]] ; then {
         log_cl "[DELETE]    Success on ( $version )." info
