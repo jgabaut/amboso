@@ -16,6 +16,7 @@
 [LINT]    Invalid line:    - 
 [LINT]    Invalid line:    test 
 [LINT]    Invalid line:    " = try 
+[LINT]    Invalid line:    "stuff  " =    { my thing! = "dood", cnowmp k èp wpm mpd      } 
 [LINT]    Invalid line:    [ NO SPACES_ALLOWED ]
 [LINT]    Invalid line:    [ no_missing_square_bracket
 [LINT]    Invalid line:    [-NO-DASHES]

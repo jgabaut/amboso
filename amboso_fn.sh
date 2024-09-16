@@ -913,21 +913,70 @@ lex_stego_file() {
             if (!(current_scope in scopes)) {
                 scopes[current_scope]++
             }
-        } else if ($0 ~ /^[^-A-Z_\[\]\$\\\/{}]+ *= *{[^}A-Z\\\$#\]\[]+ *}$/) {
+        } else if ($0 ~ /^[^-A-Z_\[\]\$\\\/{}]+ *= *{ *(" *[^}A-Z\\\$#\]\[]+ *" *= *" *[^}A-Z\\\$#\]\[]+ *" *)(, *" *[^}A-Z\\\$#\]\[]+ *" *= *" *[^}A-Z\\\$#\]\[]+ *" *)+ *,? *}$/) {
             # Check if line has a curly bracket rightval
             # Extract variable
             variable = gensub(/^ *"?([^{="]+)"? *=.*$/, "\\1", "g", $0)
-            value = gensub(/^.*= *{ *([^}A-Z\\\$]+) *}$/, "\\1", "g", $0)
+            value = gensub(/^.*= *{ *([^}A-Z]+) *}$/, "\\1", "g", $0)
             # Trim trailing whitespaces from variable and value
             gsub(/[ \t]+$/, "", variable)
             gsub(/[ \t]+$/, "", value)
             if (current_scope == "main") {
                 variable = "main_" variable
             }
-            values[current_scope "_" variable]=value
-            if (!(current_scope in scopes)) {
-                scopes[current_scope]++
+            split(value, struct_tokens, ",");
+            for (struct_decl in struct_tokens) {
+                split(struct_tokens[struct_decl], parts, "=")
+                var=gensub(/^ *"?([^"]+)"? *$/, "\\1", "g", parts[1])
+                val=gensub(/^ *"?([^"]*)"? *$/, "\\1", "g", parts[2])
+                # Trim trailing whitespaces from variable and value
+                gsub(/[ \t]+$/, "", var)
+                gsub(/[ \t]+$/, "", val)
+
+                # Check if left side contains disallowed characters
+                if (index(var, " ") > 0 || (index(var, "#") > 0 && index(var, "\"") == 0)) {
+                    print "[LINT]    Invalid left side (contains spaces or disallowed characters):    " var "" > "/dev/stderr"
+                    error_flag=1
+                    next
+                }
+                if (!(current_scope in scopes)) {
+                    scopes[current_scope]++
+                }
+                struct_values[current_scope "_" variable "_" var]=val
             }
+            struct_names[current_scope "_" variable ]=variable
+        } else if ($0 ~ /^[^-A-Z_\[\]\$\\\/{}]+ *= *\[ *(" *[^\]A-Z\\\$#\]\[]+ *" *)(, *" *[^\]A-Z\\\$#\]\[]+ *")+ *,? *\]$/) {
+            # Check if line has a square bracket rightval
+            # Extract variable
+            variable = gensub(/^ *"?([^\[="]+)"? *=.*$/, "\\1", "g", $0)
+            value = gensub(/^.*= *\[ *([^\[A-Z\\\$]+) *\]$/, "\\1", "g", $0)
+
+            # Trim trailing whitespaces from variable and value
+            gsub(/[ \t]+$/, "", variable)
+            gsub(/[ \t]+$/, "", value)
+
+            if (current_scope == "main") {
+                variable = "main_" variable
+            }
+
+            arr_idx=0;
+            split(value, arr_tokens, ",");
+            for (arr_value in arr_tokens) {
+                val = gensub(/^ *"([^"=,\\\]]+)" *$/, "\\1", "g", arr_tokens[arr_value])
+                if (val != "") {
+                    array_values[current_scope "_" variable "[" arr_idx "]" ]=val
+                    if (!(current_scope in scopes)) {
+                        scopes[current_scope]++
+                    }
+                    arr_idx++
+                }
+            }
+            if (arr_idx > 0) {
+                array_names[current_scope "_" variable ]=variable
+            }
+            # This would output an additional variable holding the array length.
+            # Omitted for now.
+            #values[current_scope "_" variable "$len"]=arr_idx
         } else {
                 if ($0 ~ /^$/) {
                     # This is a comment-only line and we can ignore it
@@ -947,6 +996,26 @@ lex_stego_file() {
                 for (var in values) {
                     if (index(var, scope "_") == 1 || (scope == "main" && index(var, "main_") == 1)) {
                         print "Variable: " var ", Value: " values[var]
+                    }
+                }
+                for (arr_name in array_names) {
+                    if (index(arr_name, scope "_") == 1 || (scope == "main" && index(arr_name, "main_") == 1)) {
+                        print "Array: " arr_name ", Name: " array_names[arr_name]
+                        for (arr_value in array_values) {
+                            if (index(arr_value, scope "_" array_names[arr_name]) == 1 || (scope == "main" && index(arr_value, "main_" array_names[arr_name]) == 1)) {
+                                print "Arrvalue: " arr_value ", Value: " array_values[arr_value]
+                            }
+                        }
+                    }
+                }
+                for (struct_name in struct_names) {
+                    if (index(struct_name, scope "_") == 1 || (scope == "main" && index(struct_name, "main_") == 1)) {
+                        print "Struct: " struct_name ", Name: " struct_names[struct_name]
+                        for (struct_value in struct_values) {
+                            if (index(struct_value, scope "_" struct_names[struct_name]) == 1 || (scope == "main" && index(struct_value, "main_" struct_names[struct_name]) == 1)) {
+                                print "Structvalue: " struct_value ", Value: " struct_values[struct_value]
+                            }
+                        }
                     }
                 }
                 print "------------------------"
@@ -970,6 +1039,42 @@ parse_lexed_stego() {
           scopes+=("$current_scope")
           variables+=("$variable")
           values+=("$value")
+      elif [[ $line =~ ^Array:\ (.+),\ Name:\ (.*)$ ]]; then
+          arr_scoped_name="${BASH_REMATCH[1]}"
+          arr_name="${BASH_REMATCH[2]}"
+          #printf "Array: {$arr_scoped_name} Name: {$arr_name}\n"
+          declare -a "$arr_scoped_name"
+      elif [[ $line =~ ^Arrvalue:\ (.+)\[(.*)\],\ Value:\ (.*)$ ]]; then
+          arr_var="${BASH_REMATCH[1]}"
+          arr_val_idx="${BASH_REMATCH[2]}"
+          arr_val="${BASH_REMATCH[3]}"
+          #printf "Arrvar: {$arr_var} arrval: {$arr_val} arrval_idx: {$arr_val_idx}\n"
+          if [[ "$arr_var" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]] && [[ "$arr_val_idx" =~ ^[0-9]+$ ]]; then
+            # Safe assignment using eval after validation
+            eval "${arr_var}[$arr_val_idx]=\"$(printf '%q' "$arr_val")\""
+            #"${arr_var}"["$arr_val_idx"]=\""$arr_val"\"
+          else
+            echo "Invalid array variable or index."
+            return 1;
+          fi
+      elif [[ $line =~ ^Struct:\ (.+),\ Name:\ (.*)$ ]]; then
+          struct_scoped_name="${BASH_REMATCH[1]}"
+          struct_name="${BASH_REMATCH[2]}"
+          #printf "Struct: {$struct_scoped_name} Name: {$struct_name}\n"
+          declare -A "$struct_scoped_name"
+      elif [[ $line =~ ^Structvalue:\ (.+)_([^_]+),\ Value:\ (.*)$ ]]; then
+          struct_name="${BASH_REMATCH[1]}"
+          struct_var_name="${BASH_REMATCH[2]}"
+          struct_val="${BASH_REMATCH[3]}"
+          #printf "Structvar: {$struct_var_name} struct_val: {$struct_val}\n"
+          if [[ "$struct_name" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]] && [[ "$struct_var_name" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+            # Safe assignment using eval after validation
+            eval "${struct_name}[$struct_var_name]=\"$(printf '%q' "$struct_val")\""
+            #"${struct_name}"["$struct_var_name"]=\""$struct_val"\"
+          else
+            echo "Invalid struct name or variable."
+            return 1
+          fi
       fi
   done <<< "$input"
 }
