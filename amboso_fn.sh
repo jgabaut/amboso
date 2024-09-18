@@ -913,7 +913,7 @@ lex_stego_file() {
             if (!(current_scope in scopes)) {
                 scopes[current_scope]++
             }
-        } else if ($0 ~ /^[^-A-Z_\[\]\$\\\/{}]+ *= *{ *(" *[^}A-Z\\\$#\]\[]+ *" *= *" *[^}A-Z\\\$#\]\[]+ *" *)(, *" *[^}A-Z\\\$#\]\[]+ *" *= *" *[^}A-Z\\\$#\]\[]+ *" *)+ *,? *}$/) {
+        } else if ($0 ~ /^[^-A-Z_\[\]\$\\\/{}]+ *= *{ *(" *[^}A-Z\\\$#\]\[]+ *" *= *" *[^}A-Z\\\$#\]\[]+ *" *)(, *" *[^}A-Z\\\$#\]\[]+ *" *= *" *[^}A-Z\\\$#\]\[]+ *" *)* *,? *}$/) {
             # Check if line has a curly bracket rightval
             # Extract variable
             variable = gensub(/^ *"?([^{="]+)"? *=.*$/, "\\1", "g", $0)
@@ -945,7 +945,7 @@ lex_stego_file() {
                 struct_values[current_scope "_" variable "_" var]=val
             }
             struct_names[current_scope "_" variable ]=variable
-        } else if ($0 ~ /^[^-A-Z_\[\]\$\\\/{}]+ *= *\[ *(" *[^\]A-Z\\\$#\]\[]+ *" *)(, *" *[^\]A-Z\\\$#\]\[]+ *")+ *,? *\]$/) {
+        } else if ($0 ~ /^[^-A-Z_\[\]\$\\\/{}]+ *= *\[ *(" *[^\]A-Z\\\$#\]\[]+ *" *)(, *" *[^\]A-Z\\\$#\]\[]+ *")* *,? *\]$/) {
             # Check if line has a square bracket rightval
             # Extract variable
             variable = gensub(/^ *"?([^\[="]+)"? *=.*$/, "\\1", "g", $0)
@@ -1043,7 +1043,8 @@ parse_lexed_stego() {
           arr_scoped_name="${BASH_REMATCH[1]}"
           arr_name="${BASH_REMATCH[2]}"
           #printf "Array: {$arr_scoped_name} Name: {$arr_name}\n"
-          declare -a "$arr_scoped_name"
+          # We avoid the declare since it act as "local" inside a function
+          #declare -a "$arr_scoped_name"
       elif [[ $line =~ ^Arrvalue:\ (.+)\[(.*)\],\ Value:\ (.*)$ ]]; then
           arr_var="${BASH_REMATCH[1]}"
           arr_val_idx="${BASH_REMATCH[2]}"
@@ -1061,7 +1062,8 @@ parse_lexed_stego() {
           struct_scoped_name="${BASH_REMATCH[1]}"
           struct_name="${BASH_REMATCH[2]}"
           #printf "Struct: {$struct_scoped_name} Name: {$struct_name}\n"
-          declare -A "$struct_scoped_name"
+          # We avoid the declare since it act as "local" inside a function
+          #declare -A "$struct_scoped_name"
       elif [[ $line =~ ^Structvalue:\ (.+)_([^_]+),\ Value:\ (.*)$ ]]; then
           struct_name="${BASH_REMATCH[1]}"
           struct_var_name="${BASH_REMATCH[2]}"

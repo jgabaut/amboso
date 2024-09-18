@@ -22,7 +22,9 @@ val = "myval#" #error14
 - #error16
 test #error17
 " = try #error18
+# These are structure errors
 "stuff  " =    { my thing! = "dood", cnowmp k èp wpm mpd      } #error19
+ehi = { mustquote = "keys" } #error20
 
 
   # These are header errors
