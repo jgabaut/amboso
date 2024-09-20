@@ -1040,12 +1040,22 @@ parse_lexed_stego() {
           variables+=("$variable")
           values+=("$value")
       elif [[ $line =~ ^Array:\ (.+),\ Name:\ (.*)$ ]]; then
+          if [[ "$std_amboso_version" < "$min_amboso_v_stegostruct" ]]; then {
+              # We ignore the line
+              continue;
+          }
+          fi
           arr_scoped_name="${BASH_REMATCH[1]}"
           arr_name="${BASH_REMATCH[2]}"
           #printf "Array: {$arr_scoped_name} Name: {$arr_name}\n"
           # We avoid the declare since it act as "local" inside a function
           #declare -a "$arr_scoped_name"
       elif [[ $line =~ ^Arrvalue:\ (.+)\[(.*)\],\ Value:\ (.*)$ ]]; then
+          if [[ "$std_amboso_version" < "$min_amboso_v_stegostruct" ]]; then {
+              # We ignore the line
+              continue;
+          }
+          fi
           arr_var="${BASH_REMATCH[1]}"
           arr_val_idx="${BASH_REMATCH[2]}"
           arr_val="${BASH_REMATCH[3]}"
@@ -1059,12 +1069,22 @@ parse_lexed_stego() {
             return 1;
           fi
       elif [[ $line =~ ^Struct:\ (.+),\ Name:\ (.*)$ ]]; then
+          if [[ "$std_amboso_version" < "$min_amboso_v_stegostruct" ]]; then {
+              # We ignore the line
+              continue;
+          }
+          fi
           struct_scoped_name="${BASH_REMATCH[1]}"
           struct_name="${BASH_REMATCH[2]}"
           #printf "Struct: {$struct_scoped_name} Name: {$struct_name}\n"
           # We avoid the declare since it act as "local" inside a function
           #declare -A "$struct_scoped_name"
       elif [[ $line =~ ^Structvalue:\ (.+)_([^_]+),\ Value:\ (.*)$ ]]; then
+          if [[ "$std_amboso_version" < "$min_amboso_v_stegostruct" ]]; then {
+              # We ignore the line
+              continue;
+          }
+          fi
           struct_name="${BASH_REMATCH[1]}"
           struct_var_name="${BASH_REMATCH[2]}"
           struct_val="${BASH_REMATCH[3]}"
@@ -1795,6 +1815,7 @@ amboso_parse_args() {
   stego_dir_flag=0
   min_amboso_v_stegodir="2.0.3"
   min_amboso_v_treegen="2.0.4"
+  min_amboso_v_stegostruct="2.0.8"
   long_options_hack="-:" # From https://stackoverflow.com/questions/402377/using-getopts-to-process-long-and-short-command-line-options/7680682#7680682
   while getopts "O:A:M:S:E:D:K:G:Y:x:V:C:a:k:${long_options_hack}wBgbpHhrivdlLtTqszUXWPJRFe" opt; do
     case $opt in
