@@ -1258,7 +1258,7 @@ print_amboso_stego_scopes() {
       fi
     } elif [[ $scope = "versions" ]] ; then {
         tag="$(printf -- "$variable\n" | cut -f2 -d'_')"
-        if [[ $tag == -* ]] ; then {
+        if [[ $tag == B* ]] ; then {
           printf -- "ANVIL_BASE_VERSION: {$tag}\n"
         } else {
           printf "ANVIL_GIT_VERSION: {$tag}\n"
