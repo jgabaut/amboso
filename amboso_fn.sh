@@ -835,26 +835,108 @@ delete_test() {
   fi
 }
 
-lex_stego_file() {
-    #
-    # Lex "scopes", "variables", "values" from stego file.
-    # For each error detected in the file, prints a notice to stderr.
-    # If any error is detected, it returns before printing to stdout.
-    # Otherwise, prints the parsed tokens to stdout, using this format:
-    #
-    ############################################################################
-    #                          #                                               #
-    #   Format notes           #            Actual Output                      #
-    #                          #                                               #
-    ############################################################################
-    #   main scope, named ""   #Variable: _dog, Value: bar                     #
-    #                          #------------------------                       #
-    #   other scope            #Scope: hi                                      #
-    #                          #Variable: hi_foo, Value: fib                   #
-    #                          #Variable: hi_man, Value: bar                   #
-    #                          #------------------------                       #
-    ############################################################################
-    #
+lex_stego_file_no_arrays() {
+    if [[ ! -f $1 ]] ; then {
+      log_cl "${FUNCNAME[0]}(): \"$1\" is not a valid file." error
+      exit 8
+    }
+    fi
+    input_file="$1"
+    # Check if awk is available
+    if ! command -v "${AMBOSO_AWK_NAME}" > /dev/null; then
+        log_cl "[CRITICAL]    Error: ${AMBOSO_AWK_NAME} is not installed. Please install ${AMBOSO_AWK_NAME} before running this script." error
+        exit 9
+    fi
+
+    "${AMBOSO_AWK_NAME}" '{
+        # Remove leading and trailing whitespaces
+        gsub(/^[ \t]+|[ \t]+$/, "")
+
+        # Remove trailing comments outside quotes
+        gsub(/#[^\n"]*$/, "")
+
+        # Skip empty lines
+        if ($0 == "") {
+            next
+        }
+
+        if ($0 ~ /^\s*\[[^-A-Z\[\]\\\/\$]+\]\s*$/) {
+            # Extract and set the current scope
+            if (match($0, /^\s*\[\s*([^-A-Z\[\]]+)\s*\]\s*$/, a)) {
+                current_scope=gensub(/\s*$/, "", "g", a[1])
+                scopes[current_scope]++
+            } else {
+                print "[LINT]    Invalid header:    " $0 "" > "/dev/stderr"
+                error_flag=1
+            }
+        } else if ($0 ~ /^"?[^"=\[\]_\$\\\/{}]+"? *= *"[^=\[\]\${}]+"$/) {
+            # Check if the line is a valid variable assignment
+
+            split($0, parts, "=")
+            variable=gensub(/^ *"?([^"]+)"? *$/, "\\1", "g", parts[1])
+            value=gensub(/^ *"?([^"]*)"? *$/, "\\1", "g", parts[2])
+
+            # Trim trailing whitespaces from variable and value
+            gsub(/[ \t]+$/, "", variable)
+            gsub(/[ \t]+$/, "", value)
+
+            # Check if left side contains disallowed characters
+            if (index(variable, " ") > 0 || (index(variable, "#") > 0 && index(variable, "\"") == 0)) {
+                print "[LINT]    Invalid left side (contains spaces or disallowed characters):    " variable "" > "/dev/stderr"
+                error_flag=1
+                next
+            }
+
+            if (current_scope == "main") {
+                variable = "main_" variable
+            }
+            values[current_scope "_" variable]=value
+            if (!(current_scope in scopes)) {
+                scopes[current_scope]++
+            }
+        } else if ($0 ~ /^[^-A-Z_\[\]\$\\\/{}]+ *= *{[^}A-Z\\\$#\]\[]+ *}$/) {
+            # Check if line has a curly bracket rightval
+            # Extract variable
+            variable = gensub(/^ *"?([^{="]+)"? *=.*$/, "\\1", "g", $0)
+            value = gensub(/^.*= *{ *([^}A-Z\\\$]+) *}$/, "\\1", "g", $0)
+            # Trim trailing whitespaces from variable and value
+            gsub(/[ \t]+$/, "", variable)
+            gsub(/[ \t]+$/, "", value)
+            if (current_scope == "main") {
+                variable = "main_" variable
+            }
+            values[current_scope "_" variable]=value
+            if (!(current_scope in scopes)) {
+                scopes[current_scope]++
+            }
+        } else {
+                if ($0 ~ /^$/) {
+                    # This is a comment-only line and we can ignore it
+                    next
+                } else {
+                    print "[LINT]    Invalid line:    " $0 "" > "/dev/stderr"
+                    error_flag=1
+                }
+        }
+    } END {
+        if (error_flag == 1) {
+                print "[LEX]    Errors while lexing." > "/dev/stderr"
+        } else {
+            # Print each scope and its variable-value pairs
+            for (scope in scopes) {
+                print "Scope: " scope
+                for (var in values) {
+                    if (index(var, scope "_") == 1 || (scope == "main" && index(var, "main_") == 1)) {
+                        print "Variable: " var ", Value: " values[var]
+                    }
+                }
+                print "------------------------"
+            }
+        }
+    }' "$input_file"
+}
+
+lex_stego_file_w_arrays() {
     if [[ ! -f $1 ]] ; then {
       log_cl "${FUNCNAME[0]}(): \"$1\" is not a valid file." error
       exit 8
@@ -1024,6 +1106,35 @@ lex_stego_file() {
     }' "$input_file"
 }
 
+lex_stego_file() {
+    #
+    # Lex "scopes", "variables", "values" from stego file.
+    # For each error detected in the file, prints a notice to stderr.
+    # If any error is detected, it returns before printing to stdout.
+    # Otherwise, prints the parsed tokens to stdout, using this format:
+    #
+    ############################################################################
+    #                          #                                               #
+    #   Format notes           #            Actual Output                      #
+    #                          #                                               #
+    ############################################################################
+    #   main scope, named ""   #Variable: _dog, Value: bar                     #
+    #                          #------------------------                       #
+    #   other scope            #Scope: hi                                      #
+    #                          #Variable: hi_foo, Value: fib                   #
+    #                          #Variable: hi_man, Value: bar                   #
+    #                          #------------------------                       #
+    ############################################################################
+    #
+    input="$1"
+    if [[ "$std_amboso_version" < "$min_amboso_v_stegostruct" ]] ; then {
+        lex_stego_file_no_arrays "$input"
+    } else {
+        lex_stego_file_w_arrays "$input"
+    }
+    fi
+}
+
 parse_lexed_stego() {
   # Parse "scopes", "variables", "values" from stego lexed tokens
   # Expects format described in lex_stego_file()
@@ -1039,23 +1150,14 @@ parse_lexed_stego() {
           scopes+=("$current_scope")
           variables+=("$variable")
           values+=("$value")
-      elif [[ $line =~ ^Array:\ (.+),\ Name:\ (.*)$ ]]; then
-          if [[ "$std_amboso_version" < "$min_amboso_v_stegostruct" ]]; then {
-              # We ignore the line
-              continue;
-          }
-          fi
+      elif [[ ! "$std_amboso_version" < "$min_amboso_v_stegostruct" ]] ; then {
+        if [[ $line =~ ^Array:\ (.+),\ Name:\ (.*)$ ]]; then {
           arr_scoped_name="${BASH_REMATCH[1]}"
           arr_name="${BASH_REMATCH[2]}"
           #printf "Array: {$arr_scoped_name} Name: {$arr_name}\n"
           # We avoid the declare since it act as "local" inside a function
           #declare -a "$arr_scoped_name"
-      elif [[ $line =~ ^Arrvalue:\ (.+)\[(.*)\],\ Value:\ (.*)$ ]]; then
-          if [[ "$std_amboso_version" < "$min_amboso_v_stegostruct" ]]; then {
-              # We ignore the line
-              continue;
-          }
-          fi
+        } elif [[ $line =~ ^Arrvalue:\ (.+)\[(.*)\],\ Value:\ (.*)$ ]]; then {
           arr_var="${BASH_REMATCH[1]}"
           arr_val_idx="${BASH_REMATCH[2]}"
           arr_val="${BASH_REMATCH[3]}"
@@ -1068,23 +1170,13 @@ parse_lexed_stego() {
             echo "Invalid array variable or index."
             return 1;
           fi
-      elif [[ $line =~ ^Struct:\ (.+),\ Name:\ (.*)$ ]]; then
-          if [[ "$std_amboso_version" < "$min_amboso_v_stegostruct" ]]; then {
-              # We ignore the line
-              continue;
-          }
-          fi
+        } elif [[ $line =~ ^Struct:\ (.+),\ Name:\ (.*)$ ]]; then {
           struct_scoped_name="${BASH_REMATCH[1]}"
           struct_name="${BASH_REMATCH[2]}"
           #printf "Struct: {$struct_scoped_name} Name: {$struct_name}\n"
           # We avoid the declare since it act as "local" inside a function
           #declare -A "$struct_scoped_name"
-      elif [[ $line =~ ^Structvalue:\ (.+)_([^_]+),\ Value:\ (.*)$ ]]; then
-          if [[ "$std_amboso_version" < "$min_amboso_v_stegostruct" ]]; then {
-              # We ignore the line
-              continue;
-          }
-          fi
+        } elif [[ $line =~ ^Structvalue:\ (.+)_([^_]+),\ Value:\ (.*)$ ]]; then {
           struct_name="${BASH_REMATCH[1]}"
           struct_var_name="${BASH_REMATCH[2]}"
           struct_val="${BASH_REMATCH[3]}"
@@ -1097,6 +1189,9 @@ parse_lexed_stego() {
             echo "Invalid struct name or variable."
             return 1
           fi
+        }
+        fi
+      }
       fi
   done <<< "$input"
 }
