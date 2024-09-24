@@ -1035,8 +1035,7 @@ lex_stego_file_w_arrays() {
                 for (arr_value in arr_tokens) {
                     val = gensub(/^ *"([^"=,\\\]]+)" *$/, "\\1", "g", arr_tokens[arr_value])
                     if (val != "") {
-                        print "[LINT]    { " current_scope "_" variable "_" arrname "[" arr_idx "] } = { " val " }"
-                        struct_array_values[current_scope "_" variable "_" arrname "_" arr_idx]=val
+                        struct_array_values[current_scope "_" variable "_" arrname "[" arr_idx "]" ]=val
                         if (!(current_scope in scopes)) {
                             scopes[current_scope]++
                         }
