@@ -995,7 +995,7 @@ lex_stego_file_w_arrays() {
             if (!(current_scope in scopes)) {
                 scopes[current_scope]++
             }
-        } else if ($0 ~ /^[^-A-Z_\[\]\$\\\/{}]+ *= *{ *(" *[^}A-Z\\\$#\]\[]+ *" *= *" *[^}A-Z\\\$#\]\[]+ *" *)(, *" *[^}A-Z\\\$#\]\[]+ *" *= *" *[^}A-Z\\\$#\]\[]+ *" *)* *,? *}$/) {
+        } else if ($0 ~ /^[^-A-Z_\[\]\$\\\/{}]+ *= *{ *(" *[^}A-Z\\\$#\]\[]+ *" *= *" *[^}A-Z\\\$#\]\[]+ *" *)(, *" *[^}A-Z\\\$#\]\[]+ *" *= *" *[^}A-Z\\\$#\]\[]+ *" *)* *}$/) {
             # Check if line has a curly bracket rightval
             # Extract variable
             variable = gensub(/^ *"?([^{="]+)"? *=.*$/, "\\1", "g", $0)
