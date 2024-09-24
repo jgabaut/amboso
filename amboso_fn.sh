@@ -995,6 +995,61 @@ lex_stego_file_w_arrays() {
             if (!(current_scope in scopes)) {
                 scopes[current_scope]++
             }
+        } else if ($0 ~ /^[^-A-Z_\[\]\$\\\/{}]+ *= *{ *(([^-A-Z_\[\]\$\\\/{}]+) *= *\[ *(" *[^\]A-Z\\\$#\]\[]+ *" *)(, *" *[^\]A-Z\\\$#\]\[]+ *")* *,? *\] *)(, ([^-A-Z_\[\]\$\\\/{}]+) *= *\[ *(" *[^\]A-Z\\\$#\]\[]+ *" *)(, *" *[^\]A-Z\\\$#\]\[]+ *")* *,? *\] *)* *}$/) {
+            # Check if line has a curly bracket array rightval
+            # Extract variable
+            variable = gensub(/^ *"?([^{="]+)"? *=.*$/, "\\1", "g", $0)
+            value = gensub(/^.*= *{ *([^}A-Z]+) *}$/, "\\1", "g", $0)
+            # Trim trailing whitespaces from variable and value
+            gsub(/[ \t]+$/, "", variable)
+            gsub(/[ \t]+$/, "", value)
+            if (current_scope == "main") {
+                variable = "main_" variable
+            }
+
+            #struct_values[current_scope "_" variable]=value
+            #struct_names[current_scope "_" variable ]=variable
+
+            while (match(value, /^ *,? *"?([^\]A-Z\\\$#\]\["]+)"? *= *\[ *([^\]A-Z\\\$#\]\[]+) *\] */, parts)) {
+                # Trim trailing whitespaces from variable and value
+                gsub(/[ \t]+$/, "", parts[0])
+                gsub(/[ \t]+$/, "", parts[1])
+                # Trim leading whitespaces from variable and value
+                gsub(/^[ \t]+/, "", parts[0])
+                gsub(/^[ \t]+/, "", parts[1])
+                #print "[LINT]    Parts[0]: { " parts[0] " }"
+                #print "[LINT]    Parts[1]: { " parts[1] " }"
+                # Extract val
+                arrname = parts[1]
+                arrval = gensub(/^.*= *\[ *([^\[A-Z\\\$]+) *\]$/, "\\1", "g", parts[0])
+
+                # Trim trailing whitespaces from arrname, arrval
+                gsub(/[ \t]+$/, "", arrname)
+                gsub(/[ \t]+$/, "", arrval)
+
+                #print "[LINT]    Arrname: { " arrname " }"
+                #print "[LINT]    Arrval: { " arrval " }"
+
+                arr_idx=0;
+                split(arrval, arr_tokens, ",");
+                for (arr_value in arr_tokens) {
+                    val = gensub(/^ *"([^"=,\\\]]+)" *$/, "\\1", "g", arr_tokens[arr_value])
+                    if (val != "") {
+                        print "[LINT]    { " current_scope "_" variable "_" arrname "[" arr_idx "] } = { " val " }"
+                        struct_array_values[current_scope "_" variable "_" arrname "_" arr_idx]=val
+                        if (!(current_scope in scopes)) {
+                            scopes[current_scope]++
+                        }
+                        arr_idx++
+                    }
+                }
+                if (arr_idx > 0) {
+                    struct_array_names[current_scope "_" variable "_" arrname ]=arrname
+                }
+
+                sub(/^[^\]A-Z\\\$#\]\[]+ *= *\[ *[^\]A-Z\\\$#\]\[]+ *\] *,?/,"",value)
+            }
+
         } else if ($0 ~ /^[^-A-Z_\[\]\$\\\/{}]+ *= *{ *(" *[^}A-Z\\\$#\]\[]+ *" *= *" *[^}A-Z\\\$#\]\[]+ *" *)(, *" *[^}A-Z\\\$#\]\[]+ *" *= *" *[^}A-Z\\\$#\]\[]+ *" *)* *}$/) {
             # Check if line has a curly bracket rightval
             # Extract variable
@@ -1098,6 +1153,16 @@ lex_stego_file_w_arrays() {
                                 print "Structvalue: " struct_value ", Value: " struct_values[struct_value]
                             }
                         }
+                    }
+                }
+                for (struct_arr_name in struct_array_names) {
+                    if (index(struct_arr_name, scope "_") == 1 || (scope == "main" && index(struct_arr_name, "main_") == 1)) {
+                        print "In-Struct Array: " struct_arr_name ", Name: " struct_array_names[struct_arr_name]
+                    }
+                }
+                for (struct_arr_value in struct_array_values) {
+                    if (index(struct_arr_value, scope "_") == 1 || (scope == "main" && index(struct_arr_value, "main_") == 1)) {
+                        print "In-Struct Arrvalue: " struct_arr_value ", Value: " struct_array_values[struct_arr_value]
                     }
                 }
                 print "------------------------"
