@@ -1789,7 +1789,7 @@ handle_anvil_arg() {
 handle_kern_arg() {
   local arg="$1"
   case "$arg" in
-   "amboso-C" | "anvilPy")
+   "amboso-C" | "anvilPy" | "customC")
        queried_amboso_kern="$arg"
        [[ "$verbose_flag" -gt 3 ]] && log_cl "Queried {$queried_amboso_kern} kern" info
        ;;
@@ -1900,7 +1900,7 @@ amboso_parse_args() {
   std_amboso_version_list=("2.0.0" "2.0.*" "1.*")
   std_amboso_short_version_list=("2.0" "2.1" "1.*")
   std_amboso_kern="amboso-C"
-  std_amboso_kern_list=("amboso-C" "anvilPy")
+  std_amboso_kern_list=("amboso-C" "anvilPy" "customC")
   queried_amboso_kern=""
   min_amboso_v_kern="2.0.2"
   min_amboso_v_extensions="2.0.1"
@@ -2517,7 +2517,7 @@ amboso_parse_args() {
   #TODO: Why is this checked before determining if we're doing build mode or test mode?
   if [[ $init_flag -gt 0 && $test_mode_flag -eq 0 && $small_test_mode_flag -eq 0 ]] ; then {
     if [[ ! "$std_amboso_kern" = "amboso-C" ]] ; then { # Can't init outside of amboso-C kern yet
-        log_cl "[INIT]    Todo: Implement init op for {$std_amboso_kern}" info
+        log_cl "[INIT]    Todo: Implement init op for { $std_amboso_kern }" info
         exit 1
     }
     fi
@@ -3344,6 +3344,16 @@ amboso_parse_args() {
             runtime=$( printf "$end_t - $start_t\n" | bc -l )
           }
           fi
+      } elif [[ "$std_amboso_kern" = "customC" ]]; then {
+        tools_builder="${anvil_tools[builder]}"
+        if [[ -z "$tools_builder" ]]; then {
+            log_cl "Could not get anvil_tools.builder. Check your stego file." error
+            exit 1
+        } else {
+            log_cl "[BUILD]    Todo: Implement build op for builder { $tools_builder }" error
+            exit 1
+        }
+        fi
       } else {
         log_cl "[BUILD]    Todo: Implement build op for { $std_amboso_kern }" info
         exit 1
@@ -3465,7 +3475,7 @@ amboso_parse_args() {
         }
         fi
     } else {
-        log_cl "[DELETE]    Todo: Implement delete op for {$std_amboso_kern}" info
+        log_cl "[DELETE]    Todo: Implement delete op for { $std_amboso_kern }" info
         exit 1
     }
     fi
@@ -3475,7 +3485,7 @@ amboso_parse_args() {
   #Check if we are purging
   if [[ purge_flag -gt 0 ]]; then
     if [[ ! "$std_amboso_kern" = "amboso-C" ]] ; then { # Can't purge outside of amboso-C kern yet
-        log_cl "[INIT]    Todo: Implement purge op for {$std_amboso_kern}" info
+        log_cl "[INIT]    Todo: Implement purge op for { $std_amboso_kern }" info
         exit 1
     }
     fi
