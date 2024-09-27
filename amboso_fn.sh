@@ -964,7 +964,7 @@ lex_stego_file_w_arrays() {
             # Check if the line is a valid variable assignment
 
             variable = gensub(/^ *"?([^="]+)"? *=.*$/, "\\1", "g", $0)
-            value = gensub(/^.*= *([^}A-Z]+) *$/, "\\1", "g", $0)
+            value = gensub(/^.*= *"?([^"]+)"? *$/, "\\1", "g", $0)
 
             # Trim trailing whitespaces from variable and value
             gsub(/[ \t]+$/, "", variable)
