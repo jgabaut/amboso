@@ -1244,6 +1244,7 @@ lex_stego_file() {
     flat_input="$(flatten_stego "$input")"
     [[ $? -eq 0 ]] || {
         log_cl "Failed flattening {$input}" error
+        log_cl "Partial result was: {$flat_input}" error
         return 1
     }
     if [[ "$std_amboso_version" < "$min_amboso_v_stegostruct" ]] ; then {
@@ -1350,6 +1351,10 @@ lint_stego_file() {
   verbose="$2"
 
   lex_output="$(lex_stego_file "$input")"
+  [[ $? -eq 0 ]] || {
+    log_cl "[CHECK]    Errors occurred during lexing." error
+    return 1
+  }
   [[ $verbose -eq 1 ]] && printf "$lex_output\n"
   if [[ -z "$lex_output" ]]; then
     log_cl "[CHECK]    Errors occurred during lexing." error
