@@ -960,12 +960,11 @@ lex_stego_file_w_arrays() {
                 print "[LINT]    Invalid header:    " $0 "" > "/dev/stderr"
                 error_flag=1
             }
-        } else if ($0 ~ /^"?[^"=\[\]_\$\\\/{}]+"? *= *"[^=\[\]\${}]+"$/) {
+        } else if ($0 ~ /^"?[^"=\[\]_\$\\\/{}]+"? *= *"[^\[\]\${}]+"$/) {
             # Check if the line is a valid variable assignment
 
-            split($0, parts, "=")
-            variable=gensub(/^ *"?([^"]+)"? *$/, "\\1", "g", parts[1])
-            value=gensub(/^ *"?([^"]*)"? *$/, "\\1", "g", parts[2])
+            variable = gensub(/^ *"?([^="]+)"? *=.*$/, "\\1", "g", $0)
+            value = gensub(/^.*= *([^}A-Z]+) *$/, "\\1", "g", $0)
 
             # Trim trailing whitespaces from variable and value
             gsub(/[ \t]+$/, "", variable)
@@ -993,6 +992,14 @@ lex_stego_file_w_arrays() {
             # Trim trailing whitespaces from variable and value
             gsub(/[ \t]+$/, "", variable)
             gsub(/[ \t]+$/, "", value)
+
+            # Check if left side contains disallowed characters
+            if (index(variable, " ") > 0 || (index(variable, "#") > 0 && index(variable, "\"") == 0)) {
+                print "[LINT]    Invalid left side (contains spaces or disallowed characters):    " variable "" > "/dev/stderr"
+                error_flag=1
+                next
+            }
+
             if (current_scope == "main") {
                 variable = "main_" variable
             }
@@ -1047,6 +1054,12 @@ lex_stego_file_w_arrays() {
             # Trim trailing whitespaces from variable and value
             gsub(/[ \t]+$/, "", variable)
             gsub(/[ \t]+$/, "", value)
+            # Check if left side contains disallowed characters
+            if (index(variable, " ") > 0 || (index(variable, "#") > 0 && index(variable, "\"") == 0)) {
+                print "[LINT]    Invalid left side (contains spaces or disallowed characters):    " variable "" > "/dev/stderr"
+                error_flag=1
+                next
+            }
             if (current_scope == "main") {
                 variable = "main_" variable
             }
@@ -1071,15 +1084,29 @@ lex_stego_file_w_arrays() {
                 struct_values[current_scope "_" variable "_" var]=val
             }
             struct_names[current_scope "_" variable ]=variable
-        } else if ($0 ~ /^[^-A-Z_\[\]\$\\\/{}]+ *= *\[ *(" *[^\]A-Z\\\$#\]\[]+ *" *)(, *" *[^\]A-Z\\\$#\]\[]+ *")* *,? *\]$/) {
+        } else if ($0 ~ /^[^-A-Z_\[\]\$\\\/{}]+ *= *\[ *({ *("? *[^}A-Z\\\$#\]\[]+ *"? *= *" *[^}A-Z\\\$#\[\]]+ *" *)(, *"? *[^}A-Z\\\$#\]\[]+ *"? *= *" *[^}A-Z\\\$#\]\[]+ *" *)* *})(, *{ *("? *[^}A-Z\\\$#\]\[]+ *"? *= *" *[^}A-Z\\\$#\]\[]+ *" *)(, *"? *[^}A-Z\\\$#\]\[]+ *"? *= *" *[^}A-Z\\\$#\]\[]+ *" *)* *})* *,? *\]$/) {
+            # Check if line has a square bracket struct rightval
+            print "[ERROR]    Array of structures are not currently supported: { "
+            print "    " $0
+            print "}"
+            error_flag=1
+            next
+        } else if ($0 ~ /^[^-A-Z_\[\]\$\\\/{}]+ *= *\[ *(" *[^\]\\\$#\]\[]+ *" *)(, *" *[^\]\\\$#\]\[]+ *")* *,? *\]$/) {
             # Check if line has a square bracket rightval
             # Extract variable
             variable = gensub(/^ *"?([^\[="]+)"? *=.*$/, "\\1", "g", $0)
-            value = gensub(/^.*= *\[ *([^\[A-Z\\\$]+) *\]$/, "\\1", "g", $0)
+            value = gensub(/^.*= *\[ *([^\[\\\$]+) *\]$/, "\\1", "g", $0)
 
             # Trim trailing whitespaces from variable and value
             gsub(/[ \t]+$/, "", variable)
             gsub(/[ \t]+$/, "", value)
+
+            # Check if left side contains disallowed characters
+            if (index(variable, " ") > 0 || (index(variable, "#") > 0 && index(variable, "\"") == 0)) {
+                print "[LINT]    Invalid left side (contains spaces or disallowed characters):    " variable "" > "/dev/stderr"
+                error_flag=1
+                next
+            }
 
             if (current_scope == "main") {
                 variable = "main_" variable
