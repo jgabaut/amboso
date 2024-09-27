@@ -956,10 +956,12 @@ lex_stego_file_w_arrays() {
             next
         }
 
-        if ($0 ~ /^\s*\[[^-A-Z\[\]\\\/\$]+\]\s*$/) {
+        if ($0 ~ /^\s*\[[^A-Z\[\]\\\/\$]+\]\s*$/) {
             # Extract and set the current scope
-            if (match($0, /^\s*\[\s*([^-A-Z\[\]]+)\s*\]\s*$/, a)) {
+            if (match($0, /^\s*\[\s*([^A-Z\[\]]+)\s*\]\s*$/, a)) {
                 current_scope=gensub(/\s*$/, "", "g", a[1])
+                # Replace dashes with underscores
+                gsub(/[-]/, "_", current_scope)
                 scopes[current_scope]++
             } else {
                 print "[LINT]    Invalid header:    " $0 "" > "/dev/stderr"
