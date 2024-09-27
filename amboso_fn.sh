@@ -836,7 +836,12 @@ delete_test() {
 }
 
 lex_stego_file_no_arrays() {
-    input_txt="$1"
+    if [[ ! -f $1 ]] ; then {
+      log_cl "${FUNCNAME[0]}(): \"$1\" is not a valid file." error
+      exit 8
+    }
+    fi
+    input_file="$1"
     # Check if awk is available
     if ! command -v "${AMBOSO_AWK_NAME}" > /dev/null; then
         log_cl "[CRITICAL]    Error: ${AMBOSO_AWK_NAME} is not installed. Please install ${AMBOSO_AWK_NAME} before running this script." error
@@ -928,7 +933,7 @@ lex_stego_file_no_arrays() {
                 print "------------------------"
             }
         }
-    }' <<<"$input_txt"
+    }' "$input_file"
 }
 
 lex_stego_file_w_arrays() {
@@ -1268,15 +1273,15 @@ lex_stego_file() {
     ############################################################################
     #
     input="$1"
-    flat_input="$(flatten_stego "$input")"
-    [[ $? -eq 0 ]] || {
-        log_cl "Failed flattening {$input}" error
-        log_cl "Partial result was: {$flat_input}" error
-        return 1
-    }
     if [[ "$std_amboso_version" < "$min_amboso_v_stegostruct" ]] ; then {
-        lex_stego_file_no_arrays "$flat_input"
+        lex_stego_file_no_arrays "$input"
     } else {
+        flat_input="$(flatten_stego "$input")"
+        [[ $? -eq 0 ]] || {
+            log_cl "Failed flattening {$input}" error
+            log_cl "Partial result was: {$flat_input}" error
+            return 1
+        }
         lex_stego_file_w_arrays "$flat_input"
     }
     fi
