@@ -836,12 +836,7 @@ delete_test() {
 }
 
 lex_stego_file_no_arrays() {
-    if [[ ! -f $1 ]] ; then {
-      log_cl "${FUNCNAME[0]}(): \"$1\" is not a valid file." error
-      exit 8
-    }
-    fi
-    input_file="$1"
+    input_txt="$1"
     # Check if awk is available
     if ! command -v "${AMBOSO_AWK_NAME}" > /dev/null; then
         log_cl "[CRITICAL]    Error: ${AMBOSO_AWK_NAME} is not installed. Please install ${AMBOSO_AWK_NAME} before running this script." error
@@ -933,16 +928,11 @@ lex_stego_file_no_arrays() {
                 print "------------------------"
             }
         }
-    }' "$input_file"
+    }' <<<"$input_txt"
 }
 
 lex_stego_file_w_arrays() {
-    if [[ ! -f $1 ]] ; then {
-      log_cl "${FUNCNAME[0]}(): \"$1\" is not a valid file." error
-      exit 8
-    }
-    fi
-    input_file="$1"
+    input_txt="$1"
     # Check if awk is available
     if ! command -v "${AMBOSO_AWK_NAME}" > /dev/null; then
         log_cl "[CRITICAL]    Error: ${AMBOSO_AWK_NAME} is not installed. Please install ${AMBOSO_AWK_NAME} before running this script." error
@@ -1167,6 +1157,66 @@ lex_stego_file_w_arrays() {
                 print "------------------------"
             }
         }
+    }' <<<"$input_txt"
+}
+
+flatten_stego() {
+    if [[ ! -f $1 ]] ; then {
+      log_cl "${FUNCNAME[0]}(): \"$1\" is not a valid file." error
+      exit 8
+    }
+    fi
+    input_file="$1"
+    # Check if awk is available
+    if ! command -v "${AMBOSO_AWK_NAME}" > /dev/null; then
+        log_cl "[CRITICAL]    Error: ${AMBOSO_AWK_NAME} is not installed. Please install ${AMBOSO_AWK_NAME} before running this script." error
+        exit 9
+    fi
+
+    "${AMBOSO_AWK_NAME}" 'BEGIN {
+        buffer = "";
+        open_brackets = 0;
+        open_curly = 0;
+    }
+
+    {
+        # Add the current line to the buffer
+        buffer = buffer $0;
+
+        # Count the opening and closing brackets/braces in the current line
+        num_open_brackets = gsub(/\[/, "[", $0);
+        num_close_brackets = gsub(/\]/, "]", $0);
+        num_open_curly = gsub(/\{/, "{", $0);
+        num_close_curly = gsub(/\}/, "}", $0);
+
+        # Update the counters
+        open_brackets += num_open_brackets - num_close_brackets;
+        open_curly += num_open_curly - num_close_curly;
+
+        # Check for negative counts (more closing than opening brackets/braces)
+        if (open_brackets < 0 || open_curly < 0) {
+            print "Error: Unmatched closing bracket or brace detected at line " NR
+            exit 1
+        }
+
+        # Check if all brackets and curly braces are closed
+        if (open_brackets == 0 && open_curly == 0) {
+            # We ve reached the end of a multi-line structure, print the complete declaration
+            print buffer;
+            # Reset buffer for the next structure
+            buffer = "";
+        } else {
+            # Continue accumulating lines (add space if needed)
+            buffer = buffer " ";
+        }
+    }
+
+    END {
+        # At the end of input, check for unmatched opening brackets/braces
+        if (open_brackets > 0 || open_curly > 0) {
+            print "Error: Unmatched opening bracket or brace detected at end of file"
+            exit 1
+        }
     }' "$input_file"
 }
 
@@ -1191,10 +1241,15 @@ lex_stego_file() {
     ############################################################################
     #
     input="$1"
+    flat_input="$(flatten_stego "$input")"
+    [[ $? -eq 0 ]] || {
+        log_cl "Failed flattening {$input}" error
+        return 1
+    }
     if [[ "$std_amboso_version" < "$min_amboso_v_stegostruct" ]] ; then {
-        lex_stego_file_no_arrays "$input"
+        lex_stego_file_no_arrays "$flat_input"
     } else {
-        lex_stego_file_w_arrays "$input"
+        lex_stego_file_w_arrays "$flat_input"
     }
     fi
 }
