@@ -32,7 +32,7 @@ At the moment, a complementary implementation in Rust is being worked on [at thi
 
 Having to rely on the Rust compiler is less flexible than a shell script, but the runtime alone can have such better results it's worth the move.
 
-Since version 1.8, a steady stream of patches have been included to ease the transition, with 2.0, to the Rust implementation as the refence one.
+Since version 1.8, a steady stream of patches have been included to ease the transition, with 2.0, to the Rust implementation as the reference one.
 
 Notably, version 1.9.x is highly unstable (in the sense that breaking changes have been made at patch level), and as such, should be considered deprecated once 2.0 is reached.
 
