@@ -962,6 +962,8 @@ lex_stego_file_w_arrays() {
                 current_scope=gensub(/\s*$/, "", "g", a[1])
                 # Replace dashes with underscores
                 gsub(/[-]/, "_", current_scope)
+                # Replace dots with underscores
+                gsub(/[.]/, "_", current_scope)
                 scopes[current_scope]++
             } else {
                 print "[LINT]    Invalid header:    " $0 "" > "/dev/stderr"
@@ -972,6 +974,9 @@ lex_stego_file_w_arrays() {
 
             variable = gensub(/^ *"?([^="]+)"? *=.*$/, "\\1", "g", $0)
             value = gensub(/^.*= *"?([^"]+)"? *$/, "\\1", "g", $0)
+
+            # Replace dashes with underscores
+            gsub(/[-]/, "_", variable)
 
             # Trim trailing whitespaces from variable and value
             gsub(/[ \t]+$/, "", variable)
@@ -991,11 +996,13 @@ lex_stego_file_w_arrays() {
             if (!(current_scope in scopes)) {
                 scopes[current_scope]++
             }
-        } else if ($0 ~ /^[^-A-Z_\[\]\$\\\/{}]+ *= *{ *(([^-A-Z_\[\]\$\\\/{}]+) *= *\[ *(" *[^\]A-Z\\\$#\]\[]+ *" *)(, *" *[^\]A-Z\\\$#\]\[]+ *")* *,? *\] *)(, ([^-A-Z_\[\]\$\\\/{}]+) *= *\[ *(" *[^\]A-Z\\\$#\]\[]+ *" *)(, *" *[^\]A-Z\\\$#\]\[]+ *")* *,? *\] *)* *}$/) {
+        } else if ($0 ~ /^[^-A-Z_\[\]\$\\\/{}]+ *= *{ *(([^-A-Z_\[\]\$\\\/{}]+) *= *\[ *(" *[^\]A-Z\\\$#\]\[,]+ *" *)(, *" *[^\]A-Z\\\$#\]\[,]+ *")* *,? *\] *)(, *([^-A-Z_\[\]\$\\\/{},]+) *= *\[ *(" *[^\]A-Z\\\$#\]\[,]+ *" *)(, *" *[^\]A-Z\\\$#\]\[,]+ *")* *,? *\] *)* *}$/) {
             # Check if line has a curly bracket array rightval
             # Extract variable
             variable = gensub(/^ *"?([^{="]+)"? *=.*$/, "\\1", "g", $0)
             value = gensub(/^.*= *{ *([^}A-Z]+) *}$/, "\\1", "g", $0)
+            # Replace dashes with underscores
+            gsub(/[-]/, "_", variable)
             # Trim trailing whitespaces from variable and value
             gsub(/[ \t]+$/, "", variable)
             gsub(/[ \t]+$/, "", value)
@@ -1027,6 +1034,8 @@ lex_stego_file_w_arrays() {
                 arrname = parts[1]
                 arrval = gensub(/^.*= *\[ *([^\[A-Z\\\$]+) *\]$/, "\\1", "g", parts[0])
 
+                # Replace dashes with underscores
+                gsub(/[-]/, "_", arrname)
                 # Trim trailing whitespaces from arrname, arrval
                 gsub(/[ \t]+$/, "", arrname)
                 gsub(/[ \t]+$/, "", arrval)
@@ -1053,11 +1062,13 @@ lex_stego_file_w_arrays() {
                 sub(/^[^\]A-Z\\\$#\]\[]+ *= *\[ *[^\]A-Z\\\$#\]\[]+ *\] *,?/,"",value)
             }
 
-        } else if ($0 ~ /^[^-A-Z_\[\]\$\\\/{}]+ *= *{ *(" *[^}A-Z\\\$#\]\[]+ *" *= *" *[^}A-Z\\\$#\]\[]+ *" *)(, *" *[^}A-Z\\\$#\]\[]+ *" *= *" *[^}A-Z\\\$#\]\[]+ *" *)* *}$/) {
+        } else if ($0 ~ /^[^-A-Z_\[\]\$\\\/{}]+ *= *{ *(" *[^}A-Z\\\$#\]\[]+ *" *= *" *[^}A-Z\\\$#\]\[,]+ *" *)(, *" *[^}A-Z\\\$#\]\[,]+ *" *= *" *[^}A-Z\\\$#\]\[,]+ *" *)* *}$/) {
             # Check if line has a curly bracket rightval
             # Extract variable
             variable = gensub(/^ *"?([^{="]+)"? *=.*$/, "\\1", "g", $0)
             value = gensub(/^.*= *{ *([^}A-Z]+) *}$/, "\\1", "g", $0)
+            # Replace dashes with underscores
+            gsub(/[-]/, "_", variable)
             # Trim trailing whitespaces from variable and value
             gsub(/[ \t]+$/, "", variable)
             gsub(/[ \t]+$/, "", value)
@@ -1091,18 +1102,83 @@ lex_stego_file_w_arrays() {
                 struct_values[current_scope "_" variable "_" var]=val
             }
             struct_names[current_scope "_" variable ]=variable
-        } else if ($0 ~ /^[^-A-Z_\[\]\$\\\/{}]+ *= *\[ *({ *("? *[^}A-Z\\\$#\]\[]+ *"? *= *" *[^}A-Z\\\$#\[\]]+ *" *)(, *"? *[^}A-Z\\\$#\]\[]+ *"? *= *" *[^}A-Z\\\$#\]\[]+ *" *)* *})(, *{ *("? *[^}A-Z\\\$#\]\[]+ *"? *= *" *[^}A-Z\\\$#\]\[]+ *" *)(, *"? *[^}A-Z\\\$#\]\[]+ *"? *= *" *[^}A-Z\\\$#\]\[]+ *" *)* *})* *,? *\]$/) {
+        } else if ($0 ~ /^[^-A-Z_\[\]\$\\\/{}]+ *= *\[ *({ *("? *[^}A-Z\\\$#\]\[,]+ *"? *= *" *[^}A-Z\\\$#\[\],]+ *" *)(, *"? *[^}A-Z\\\$#\]\[,]+ *"? *= *" *[^}A-Z\\\$#\]\[,]+ *" *)* *})(, *{ *("? *[^}A-Z\\\$#\]\[,]+ *"? *= *" *[^}A-Z\\\$#\]\[,]+ *" *)(, *"? *[^}A-Z\\\$#\]\[,]+ *"? *= *" *[^}A-Z\\\$#\]\[,]+ *" *)* *})* *,? *\]$/) {
             # Check if line has a square bracket struct rightval
-            print "[ERROR]    Array of structures are not currently supported: { "
-            print "    " $0
-            print "}"
-            error_flag=1
-            next
-        } else if ($0 ~ /^[^-A-Z_\[\]\$\\\/{}]+ *= *\[ *(" *[^\]\\\$#\]\[]+ *" *)(, *" *[^\]\\\$#\]\[]+ *")* *,? *\]$/) {
+
+            # Extract variable
+            variable = gensub(/^ *"?([^\{\[="]+)"? *=.*$/, "\\1", "g", $0)
+            value = gensub(/^.*= *\[ *([^\]A-Z]+) *\] *$/, "\\1", "g", $0)
+            # Replace dashes with underscores
+            gsub(/[-]/, "_", variable)
+            # Trim trailing whitespaces from variable and value
+            gsub(/[ \t]+$/, "", variable)
+            gsub(/[ \t]+$/, "", value)
+
+            # Check if left side contains disallowed characters
+            if (index(variable, " ") > 0 || (index(variable, "#") > 0 && index(variable, "\"") == 0)) {
+                print "[LINT]    Invalid left side (contains spaces or disallowed characters):    " variable "" > "/dev/stderr"
+                error_flag=1
+                next
+            }
+
+            if (current_scope == "main") {
+                variable = "main_" variable
+            }
+
+            #struct_values[current_scope "_" variable]=value
+            #struct_names[current_scope "_" variable ]=variable
+
+            curr_idx=0
+            while (match(value,/^ *({ *[^{}A-Z\\\$#\]\[]+ *} *,? *)+ *$/, parts)) {
+                current_decl = gensub(/^ *{ *([^{}A-Z\\\$#\]\[]+) *}.*$/, "\\1", 1, value)
+
+                # Extract variable
+                struct_variable = gensub(/^ *"?([^{="]+)"? *=.*$/, "\\1", "g", current_decl)
+                struct_value = gensub(/^.*= *{ *([^}A-Z]+) *}$/, "\\1", "g", current_decl)
+                # Replace dashes with underscores
+                gsub(/[-]/, "_", struct_variable)
+                # Trim trailing whitespaces from variable and value
+                gsub(/[ \t]+$/, "", struct_variable)
+                gsub(/[ \t]+$/, "", struct_value)
+                # Check if left side contains disallowed characters
+                if (index(struct_variable, " ") > 0 || (index(struct_variable, "#") > 0 && index(struct_variable, "\"") == 0)) {
+                    print "[LINT]    Invalid left side (contains spaces or disallowed characters):    " struct_variable "" > "/dev/stderr"
+                    error_flag=1
+                    next
+                }
+                split(struct_value, struct_tokens, ",");
+                for (struct_decl in struct_tokens) {
+                    split(struct_tokens[struct_decl], struct_parts, "=")
+                    var=gensub(/^ *"?([^"]+)"? *$/, "\\1", "g", struct_parts[1])
+                    val=gensub(/^ *"?([^"]*)"? *$/, "\\1", "g", struct_parts[2])
+                    # Trim trailing whitespaces from variable and value
+                    gsub(/[ \t]+$/, "", var)
+                    gsub(/[ \t]+$/, "", val)
+
+                    # Check if left side contains disallowed characters
+                    if (index(var, " ") > 0 || (index(var, "#") > 0 && index(var, "\"") == 0)) {
+                        print "[LINT]    Invalid left side (contains spaces or disallowed characters):    " var "" > "/dev/stderr"
+                        error_flag=1
+                        next
+                    }
+                    if (!(current_scope in scopes)) {
+                        scopes[current_scope]++
+                    }
+                    arr_struct_values[current_scope "_" variable "_" curr_idx "[" var "]"]=val
+                }
+                arr_struct_names[current_scope "_" variable "_" curr_idx ]=variable
+
+                sub(/^ *{ *[^}A-Z\\\$#\]\[]+ *} *,?/,"",value)
+                curr_idx++
+            }
+        } else if ($0 ~ /^[^-A-Z_\[\]\$\\\/{}]+ *= *\[ *(" *[^\]\\\$#\]\[,]+ *" *)(, *" *[^\]\\\$#\]\[,]+ *")* *,? *\]$/) {
             # Check if line has a square bracket rightval
             # Extract variable
             variable = gensub(/^ *"?([^\[="]+)"? *=.*$/, "\\1", "g", $0)
             value = gensub(/^.*= *\[ *([^\[\\\$]+) *\]$/, "\\1", "g", $0)
+
+            # Replace dashes with underscores
+            gsub(/[-]/, "_", variable)
 
             # Trim trailing whitespaces from variable and value
             gsub(/[ \t]+$/, "", variable)
@@ -1122,7 +1198,7 @@ lex_stego_file_w_arrays() {
             arr_idx=0;
             split(value, arr_tokens, ",");
             for (arr_value in arr_tokens) {
-                val = gensub(/^ *"([^"=,\\\]]+)" *$/, "\\1", "g", arr_tokens[arr_value])
+                val = gensub(/^ *"([^",\\\]]+)" *$/, "\\1", "g", arr_tokens[arr_value])
                 if (val != "") {
                     array_values[current_scope "_" variable "[" arr_idx "]" ]=val
                     if (!(current_scope in scopes)) {
@@ -1186,6 +1262,16 @@ lex_stego_file_w_arrays() {
                 for (struct_arr_value in struct_array_values) {
                     if (index(struct_arr_value, scope "_") == 1 || (scope == "main" && index(struct_arr_value, "main_") == 1)) {
                         print "In-Struct Arrvalue: " struct_arr_value ", Value: " struct_array_values[struct_arr_value]
+                    }
+                }
+                for (arr_struct_name in arr_struct_names) {
+                    if (index(arr_struct_name, scope "_") == 1 || (scope == "main" && index(arr_struct_name, "main_") == 1)) {
+                        print "In-Arr Struct: " arr_struct_name ", Name: " arr_struct_names[arr_struct_name]
+                    }
+                }
+                for (arr_struct_value in arr_struct_values) {
+                    if (index(arr_struct_value, scope "_") == 1 || (scope == "main" && index(arr_struct_value, "main_") == 1)) {
+                        print "In-Arr Structvalue: " arr_struct_value ", Value: " arr_struct_values[arr_struct_value]
                     }
                 }
                 print "------------------------"
