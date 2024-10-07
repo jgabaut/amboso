@@ -30,7 +30,7 @@ foo = "bar"
 "foo" = "bar"
 man = "bar"
               [    hi ]
-"stuff  " =    { my thing! = "dood", cnowmp k èp wpm mpd      }
+"stuff  " =    { "my_thing!" = "dood", "cnowmp" = "k èp wpm mpd  "    }
 foo = "fib"
 man = "bar"
 [tight]

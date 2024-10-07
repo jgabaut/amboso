@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="2.0.7"
+AMBOSO_API_LVL="2.0.8"
 at() {
     #printf -- "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] -> {\n"
     log_cl "{ call: [" debug white
@@ -555,14 +555,14 @@ set_supported_tests() {
   for FILE in "$cases_path"/* ; do {
     [[ -e "$FILE" ]] || { log_cl "{$FILE} did not exist." warn ; continue ;}
       test_fp="$cases_path/$(basename "$FILE")"
-      extens=$(printf "$(realpath "$(basename "$FILE")")\n" | awk -F"." '{print $2}')
+      extens=$(printf "${cases_path}/${FILE}\n" | awk -F"." '{print $2}')
       if [[ "$extens" != "k" ]] ; then {
         [[ "${AMBOSO_LVL_REC}" -eq 1 || $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] && log_cl "{$test_fp} does not have .k extension." warn
         skipped=$((skipped+1))
         continue
       }
       fi
-      double_extens=$(printf "$(realpath "$(basename "$FILE")")\n" | awk -F"." '{print $3}')
+      double_extens=$(printf "${cases_path}/${FILE}\n" | awk -F"." '{print $3}')
     if [[ "$double_extens" = "stderr" || "$double_extens" = "stdout" ]] ; then {
       skipped=$((skipped+1))
       [[ $verbose_flag -ge 4 && $quiet_flag -eq 0 ]] && log_cl "[PREP-TEST]    Skip record $FILE (at $(dirname "$test_fp"))." debug >&2
@@ -583,14 +583,14 @@ set_supported_tests() {
   for FILE in "$errorcases_path"/* ; do {
     [[ -e "$FILE" ]] || { log_cl "{$FILE} did not exist." warn ; continue ;}
     test_fp="$errorcases_path/$(basename "$FILE")"
-    extens=$(printf "$(realpath "$(basename "$FILE")")\n" | awk -F"." '{print $2}')
+    extens=$(printf "${errorcases_path}/${FILE}\n" | awk -F"." '{print $2}')
     if [[ "$extens" != "k" ]] ; then {
       [[ $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] && log_cl "{$test_fp} does not have .k extension." warn
       skipped=$((skipped+1))
       continue
     }
     fi
-    double_extens=$(printf "$(realpath "$(basename "$FILE")")\n" | awk -F"." '{print $3}')
+    double_extens=$(printf "${errorcases_path}/${FILE}\n" | awk -F"." '{print $3}')
     if [[ "$double_extens" = "stderr" || "$double_extens" = "stdout" ]] ; then {
       skipped=$((skipped+1))
       [[ $verbose_flag -ge 4 && $quiet_flag -eq 0 ]] && log_cl "[PREP-TEST]    Skip record $FILE (at $(dirname "$test_fp"))." debug >&2
@@ -835,26 +835,7 @@ delete_test() {
   fi
 }
 
-lex_stego_file() {
-    #
-    # Lex "scopes", "variables", "values" from stego file.
-    # For each error detected in the file, prints a notice to stderr.
-    # If any error is detected, it returns before printing to stdout.
-    # Otherwise, prints the parsed tokens to stdout, using this format:
-    #
-    ############################################################################
-    #                          #                                               #
-    #   Format notes           #            Actual Output                      #
-    #                          #                                               #
-    ############################################################################
-    #   main scope, named ""   #Variable: _dog, Value: bar                     #
-    #                          #------------------------                       #
-    #   other scope            #Scope: hi                                      #
-    #                          #Variable: hi_foo, Value: fib                   #
-    #                          #Variable: hi_man, Value: bar                   #
-    #                          #------------------------                       #
-    ############################################################################
-    #
+lex_stego_file_no_arrays() {
     if [[ ! -f $1 ]] ; then {
       log_cl "${FUNCNAME[0]}(): \"$1\" is not a valid file." error
       exit 8
@@ -862,12 +843,12 @@ lex_stego_file() {
     fi
     input_file="$1"
     # Check if awk is available
-    if ! command -v awk > /dev/null; then
-        log_cl "[CRITICAL]    Error: awk is not installed. Please install awk before running this script." error
+    if ! command -v "${AMBOSO_AWK_NAME}" > /dev/null; then
+        log_cl "[CRITICAL]    Error: ${AMBOSO_AWK_NAME} is not installed. Please install ${AMBOSO_AWK_NAME} before running this script." error
         exit 9
     fi
 
-    "${target_awk:-awk}" '{
+    "${AMBOSO_AWK_NAME}" '{
         # Remove leading and trailing whitespaces
         gsub(/^[ \t]+|[ \t]+$/, "")
 
@@ -955,6 +936,445 @@ lex_stego_file() {
     }' "$input_file"
 }
 
+lex_stego_file_w_arrays() {
+    input_txt="$1"
+    # Check if awk is available
+    if ! command -v "${AMBOSO_AWK_NAME}" > /dev/null; then
+        log_cl "[CRITICAL]    Error: ${AMBOSO_AWK_NAME} is not installed. Please install ${AMBOSO_AWK_NAME} before running this script." error
+        exit 9
+    fi
+
+    "${AMBOSO_AWK_NAME}" '{
+        # Remove leading and trailing whitespaces
+        gsub(/^[ \t]+|[ \t]+$/, "")
+
+        # Remove trailing comments outside quotes
+        gsub(/#[^\n"]*$/, "")
+
+        # Skip empty lines
+        if ($0 == "") {
+            next
+        }
+
+        if ($0 ~ /^\s*\[[^A-Z\[\]\\\/\$]+\]\s*$/) {
+            # Extract and set the current scope
+            if (match($0, /^\s*\[\s*([^A-Z\[\]]+)\s*\]\s*$/, a)) {
+                current_scope=gensub(/\s*$/, "", "g", a[1])
+                # Replace dashes with underscores
+                gsub(/[-]/, "_", current_scope)
+                # Replace dots with underscores
+                gsub(/[.]/, "_", current_scope)
+                scopes[current_scope]++
+            } else {
+                print "[LINT]    Invalid header:    " $0 "" > "/dev/stderr"
+                error_flag=1
+            }
+        } else if ($0 ~ /^"?[^"=\[\]\$\\\/{}]+"? *= *"[^\[\]\${}]+"$/) {
+            # Check if the line is a valid variable assignment
+
+            variable = gensub(/^ *"?([^="]+)"? *=.*$/, "\\1", "g", $0)
+            value = gensub(/^.*= *"?([^"]+)"? *$/, "\\1", "g", $0)
+
+            # Replace dashes with underscores
+            gsub(/[-]/, "_", variable)
+
+            # Trim trailing whitespaces from variable and value
+            gsub(/[ \t]+$/, "", variable)
+            gsub(/[ \t]+$/, "", value)
+
+            # Check if left side contains disallowed characters
+            if (index(variable, " ") > 0 || (index(variable, "#") > 0 && index(variable, "\"") == 0)) {
+                print "[LINT]    Invalid left side (contains spaces or disallowed characters):    " variable "" > "/dev/stderr"
+                error_flag=1
+                next
+            }
+
+            if (current_scope == "main") {
+                variable = "main_" variable
+            }
+            values[current_scope "_" variable]=value
+            if (!(current_scope in scopes)) {
+                scopes[current_scope]++
+            }
+        } else if ($0 ~ /^[^-_\[\]\$\\\/{}]+ *= *{ *(([^-_\[\]\$\\\/{}]+) *= *\[ *(" *[^\\\$#\]\[,]+ *" *)(, *" *[^\\\$#\]\[,]+ *")* *,? *\] *)(, *([^-_\[\]\$\\\/{},]+) *= *\[ *(" *[^\\\$#\]\[,]+ *" *)(, *" *[^\\\$#\]\[,]+ *")* *,? *\] *)* *}$/) {
+            # Check if line has a curly bracket array rightval
+            # Extract variable
+            variable = gensub(/^ *"?([^{="]+)"? *=.*$/, "\\1", "g", $0)
+            value = gensub(/^.*= *{ *([^}A-Z]+) *}$/, "\\1", "g", $0)
+            # Replace dashes with underscores
+            gsub(/[-]/, "_", variable)
+            # Trim trailing whitespaces from variable and value
+            gsub(/[ \t]+$/, "", variable)
+            gsub(/[ \t]+$/, "", value)
+
+            # Check if left side contains disallowed characters
+            if (index(variable, " ") > 0 || (index(variable, "#") > 0 && index(variable, "\"") == 0)) {
+                print "[LINT]    Invalid left side (contains spaces or disallowed characters):    " variable "" > "/dev/stderr"
+                error_flag=1
+                next
+            }
+
+            if (current_scope == "main") {
+                variable = "main_" variable
+            }
+
+            #struct_values[current_scope "_" variable]=value
+            #struct_names[current_scope "_" variable ]=variable
+
+            while (match(value, /^ *,? *"?([^\\\$#\]\["]+)"? *= *\[ *([^\\\$#\]\[]+) *\] */, parts)) {
+                # Trim trailing whitespaces from variable and value
+                gsub(/[ \t]+$/, "", parts[0])
+                gsub(/[ \t]+$/, "", parts[1])
+                # Trim leading whitespaces from variable and value
+                gsub(/^[ \t]+/, "", parts[0])
+                gsub(/^[ \t]+/, "", parts[1])
+                #print "[LINT]    Parts[0]: { " parts[0] " }"
+                #print "[LINT]    Parts[1]: { " parts[1] " }"
+                # Extract val
+                arrname = parts[1]
+                arrval = gensub(/^.*= *\[ *([^\[\\\$]+) *\]$/, "\\1", "g", parts[0])
+
+                # Replace dashes with underscores
+                gsub(/[-]/, "_", arrname)
+                # Trim trailing whitespaces from arrname, arrval
+                gsub(/[ \t]+$/, "", arrname)
+                gsub(/[ \t]+$/, "", arrval)
+
+                #print "[LINT]    Arrname: { " arrname " }"
+                #print "[LINT]    Arrval: { " arrval " }"
+
+                arr_idx=0;
+                split(arrval, arr_tokens, ",");
+                for (arr_value in arr_tokens) {
+                    val = gensub(/^ *"([^"=,\\\]]+)" *$/, "\\1", "g", arr_tokens[arr_value])
+                    if (val != "") {
+                        struct_array_values[current_scope "_" variable "_" arrname "[" arr_idx "]" ]=val
+                        if (!(current_scope in scopes)) {
+                            scopes[current_scope]++
+                        }
+                        arr_idx++
+                    }
+                }
+                if (arr_idx > 0) {
+                    struct_array_names[current_scope "_" variable "_" arrname ]=arrname
+                }
+
+                sub(/^[^\]A-Z\\\$#\]\[]+ *= *\[ *[^\]A-Z\\\$#\]\[]+ *\] *,?/,"",value)
+            }
+
+        } else if ($0 ~ /^[^-_\[\]\$\\\/{}]+ *= *{ *("? *[^}\\\$#\]\[]+ *"? *= *"? *[^}\\\$#\]\[,]+ *"? *)(, *"? *[^}\\\$#\]\[,]+ *"? *= *"? *[^}\\\$#\]\[,]+ *"? *)* *}$/) {
+            # Check if line has a curly bracket rightval
+            # Extract variable
+            variable = gensub(/^ *"?([^{="]+)"? *=.*$/, "\\1", "g", $0)
+            value = gensub(/^.*= *{ *([^}]+) *}$/, "\\1", "g", $0)
+            # Replace dashes with underscores
+            gsub(/[-]/, "_", variable)
+            # Trim trailing whitespaces from variable and value
+            gsub(/[ \t]+$/, "", variable)
+            gsub(/[ \t]+$/, "", value)
+            # Check if left side contains disallowed characters
+            if (index(variable, " ") > 0 || (index(variable, "#") > 0 && index(variable, "\"") == 0)) {
+                print "[LINT]    Invalid left side (contains spaces or disallowed characters):    " variable "" > "/dev/stderr"
+                error_flag=1
+                next
+            }
+            if (current_scope == "main") {
+                variable = "main_" variable
+            }
+            split(value, struct_tokens, ",");
+            for (struct_decl in struct_tokens) {
+                split(struct_tokens[struct_decl], parts, "=")
+                var=gensub(/^ *"?([^"]+)"? *$/, "\\1", "g", parts[1])
+                val=gensub(/^ *"?([^"]*)"? *$/, "\\1", "g", parts[2])
+                # Trim trailing whitespaces from variable and value
+                gsub(/[ \t]+$/, "", var)
+                gsub(/[ \t]+$/, "", val)
+
+                # Check if left side contains disallowed characters
+                if (index(var, " ") > 0 || (index(var, "#") > 0 && index(var, "\"") == 0)) {
+                    print "[LINT]    Invalid left side (contains spaces or disallowed characters):    " var "" > "/dev/stderr"
+                    error_flag=1
+                    next
+                }
+                if (!(current_scope in scopes)) {
+                    scopes[current_scope]++
+                }
+                struct_values[current_scope "_" variable "_" var]=val
+            }
+            struct_names[current_scope "_" variable ]=variable
+        } else if ($0 ~ /^[^-_\[\]\$\\\/{}]+ *= *\[ *({ *("? *[^}\\\$#\]\[,]+ *"? *= *"? *[^}\\\$#\[\],]+ *"? *)(, *"? *[^}\\\$#\]\[,]+ *"? *= *"? *[^}\\\$#\]\[,]+ *"? *)* *})(, *{ *("? *[^}\\\$#\]\[,]+ *"? *= *"? *[^}\\\$#\]\[,]+ *"? *)(, *"? *[^}\\\$#\]\[,]+ *"? *= *"? *[^}\\\$#\]\[,]+ *"? *)* *})* *,? *\]$/) {
+            # Check if line has a square bracket struct rightval
+
+            # Extract variable
+            variable = gensub(/^ *"?([^\{\[="]+)"? *=.*$/, "\\1", "g", $0)
+            value = gensub(/^.*= *\[ *([^\]]+) *\] *$/, "\\1", "g", $0)
+            # Replace dashes with underscores
+            gsub(/[-]/, "_", variable)
+            # Trim trailing whitespaces from variable and value
+            gsub(/[ \t]+$/, "", variable)
+            gsub(/[ \t]+$/, "", value)
+
+            # Check if left side contains disallowed characters
+            if (index(variable, " ") > 0 || (index(variable, "#") > 0 && index(variable, "\"") == 0)) {
+                print "[LINT]    Invalid left side (contains spaces or disallowed characters):    " variable "" > "/dev/stderr"
+                error_flag=1
+                next
+            }
+
+            if (current_scope == "main") {
+                variable = "main_" variable
+            }
+
+            #struct_values[current_scope "_" variable]=value
+            #struct_names[current_scope "_" variable ]=variable
+
+            curr_idx=0
+            while (match(value,/^ *({ *[^{}\\\$#\]\[]+ *} *,? *)+ *$/, parts)) {
+                current_decl = gensub(/^ *{ *([^{}\\\$#\]\[]+) *}.*$/, "\\1", 1, value)
+
+                # Extract variable
+                struct_variable = gensub(/^ *"?([^{="]+)"? *=.*$/, "\\1", "g", current_decl)
+                struct_value = gensub(/^.*= *{ *([^}]+) *}$/, "\\1", "g", current_decl)
+                # Replace dashes with underscores
+                gsub(/[-]/, "_", struct_variable)
+                # Trim trailing whitespaces from variable and value
+                gsub(/[ \t]+$/, "", struct_variable)
+                gsub(/[ \t]+$/, "", struct_value)
+                # Check if left side contains disallowed characters
+                if (index(struct_variable, " ") > 0 || (index(struct_variable, "#") > 0 && index(struct_variable, "\"") == 0)) {
+                    print "[LINT]    Invalid left side (contains spaces or disallowed characters):    " struct_variable "" > "/dev/stderr"
+                    error_flag=1
+                    next
+                }
+                split(struct_value, struct_tokens, ",");
+                for (struct_decl in struct_tokens) {
+                    split(struct_tokens[struct_decl], struct_parts, "=")
+                    var=gensub(/^ *"?([^"]+)"? *$/, "\\1", "g", struct_parts[1])
+                    val=gensub(/^ *"?([^"]*)"? *$/, "\\1", "g", struct_parts[2])
+                    # Trim trailing whitespaces from variable and value
+                    gsub(/[ \t]+$/, "", var)
+                    gsub(/[ \t]+$/, "", val)
+
+                    # Check if left side contains disallowed characters
+                    if (index(var, " ") > 0 || (index(var, "#") > 0 && index(var, "\"") == 0)) {
+                        print "[LINT]    Invalid left side (contains spaces or disallowed characters):    " var "" > "/dev/stderr"
+                        error_flag=1
+                        next
+                    }
+                    if (!(current_scope in scopes)) {
+                        scopes[current_scope]++
+                    }
+                    arr_struct_values[current_scope "_" variable "_" curr_idx "[" var "]"]=val
+                }
+                arr_struct_names[current_scope "_" variable "_" curr_idx ]=variable
+
+                sub(/^ *{ *[^}A-Z\\\$#\]\[]+ *} *,?/,"",value)
+                curr_idx++
+            }
+        } else if ($0 ~ /^[^-_\[\]\$\\\/{}]+ *= *\[ *(" *[^\\\$#\]\[,]+ *" *)(, *" *[^\\\$#\]\[,]+ *")* *,? *\]$/) {
+            # Check if line has a square bracket rightval
+            # Extract variable
+            variable = gensub(/^ *"?([^\[="]+)"? *=.*$/, "\\1", "g", $0)
+            value = gensub(/^.*= *\[ *([^\[\\\$]+) *\]$/, "\\1", "g", $0)
+
+            # Replace dashes with underscores
+            gsub(/[-]/, "_", variable)
+
+            # Trim trailing whitespaces from variable and value
+            gsub(/[ \t]+$/, "", variable)
+            gsub(/[ \t]+$/, "", value)
+
+            # Check if left side contains disallowed characters
+            if (index(variable, " ") > 0 || (index(variable, "#") > 0 && index(variable, "\"") == 0)) {
+                print "[LINT]    Invalid left side (contains spaces or disallowed characters):    " variable "" > "/dev/stderr"
+                error_flag=1
+                next
+            }
+
+            if (current_scope == "main") {
+                variable = "main_" variable
+            }
+
+            arr_idx=0;
+            split(value, arr_tokens, ",");
+            for (arr_value in arr_tokens) {
+                val = gensub(/^ *"([^",\\\]]+)" *$/, "\\1", "g", arr_tokens[arr_value])
+                if (val != "") {
+                    array_values[current_scope "_" variable "[" arr_idx "]" ]=val
+                    if (!(current_scope in scopes)) {
+                        scopes[current_scope]++
+                    }
+                    arr_idx++
+                }
+            }
+            if (arr_idx > 0) {
+                array_names[current_scope "_" variable ]=variable
+            }
+            # This would output an additional variable holding the array length.
+            # Omitted for now.
+            #values[current_scope "_" variable "$len"]=arr_idx
+        } else {
+                if ($0 ~ /^$/) {
+                    # This is a comment-only line and we can ignore it
+                    next
+                } else {
+                    print "[LINT]    Invalid line:    " $0 "" > "/dev/stderr"
+                    error_flag=1
+                }
+        }
+    } END {
+        if (error_flag == 1) {
+                print "[LEX]    Errors while lexing." > "/dev/stderr"
+        } else {
+            # Print each scope and its variable-value pairs
+            for (scope in scopes) {
+                print "Scope: " scope
+                for (var in values) {
+                    if (index(var, scope "_") == 1 || (scope == "main" && index(var, "main_") == 1)) {
+                        print "Variable: " var ", Value: " values[var]
+                    }
+                }
+                for (arr_name in array_names) {
+                    if (index(arr_name, scope "_") == 1 || (scope == "main" && index(arr_name, "main_") == 1)) {
+                        print "Array: " arr_name ", Name: " array_names[arr_name]
+                        for (arr_value in array_values) {
+                            if (index(arr_value, scope "_" array_names[arr_name]) == 1 || (scope == "main" && index(arr_value, "main_" array_names[arr_name]) == 1)) {
+                                print "Arrvalue: " arr_value ", Value: " array_values[arr_value]
+                            }
+                        }
+                    }
+                }
+                for (struct_name in struct_names) {
+                    if (index(struct_name, scope "_") == 1 || (scope == "main" && index(struct_name, "main_") == 1)) {
+                        print "Struct: " struct_name ", Name: " struct_names[struct_name]
+                        for (struct_value in struct_values) {
+                            if (index(struct_value, scope "_" struct_names[struct_name]) == 1 || (scope == "main" && index(struct_value, "main_" struct_names[struct_name]) == 1)) {
+                                print "Structvalue: " struct_value ", Value: " struct_values[struct_value]
+                            }
+                        }
+                    }
+                }
+                for (struct_arr_name in struct_array_names) {
+                    if (index(struct_arr_name, scope "_") == 1 || (scope == "main" && index(struct_arr_name, "main_") == 1)) {
+                        print "In-Struct Array: " struct_arr_name ", Name: " struct_array_names[struct_arr_name]
+                    }
+                }
+                for (struct_arr_value in struct_array_values) {
+                    if (index(struct_arr_value, scope "_") == 1 || (scope == "main" && index(struct_arr_value, "main_") == 1)) {
+                        print "In-Struct Arrvalue: " struct_arr_value ", Value: " struct_array_values[struct_arr_value]
+                    }
+                }
+                for (arr_struct_name in arr_struct_names) {
+                    if (index(arr_struct_name, scope "_") == 1 || (scope == "main" && index(arr_struct_name, "main_") == 1)) {
+                        print "In-Arr Struct: " arr_struct_name ", Name: " arr_struct_names[arr_struct_name]
+                    }
+                }
+                for (arr_struct_value in arr_struct_values) {
+                    if (index(arr_struct_value, scope "_") == 1 || (scope == "main" && index(arr_struct_value, "main_") == 1)) {
+                        print "In-Arr Structvalue: " arr_struct_value ", Value: " arr_struct_values[arr_struct_value]
+                    }
+                }
+                print "------------------------"
+            }
+        }
+    }' <<<"$input_txt"
+}
+
+flatten_stego() {
+    if [[ ! -f $1 ]] ; then {
+      log_cl "${FUNCNAME[0]}(): \"$1\" is not a valid file." error
+      exit 8
+    }
+    fi
+    input_file="$1"
+    # Check if awk is available
+    if ! command -v "${AMBOSO_AWK_NAME}" > /dev/null; then
+        log_cl "[CRITICAL]    Error: ${AMBOSO_AWK_NAME} is not installed. Please install ${AMBOSO_AWK_NAME} before running this script." error
+        exit 9
+    fi
+
+    "${AMBOSO_AWK_NAME}" 'BEGIN {
+        buffer = "";
+        open_brackets = 0;
+        open_curly = 0;
+    }
+
+    {
+        # Add the current line to the buffer
+        buffer = buffer $0;
+
+        # Count the opening and closing brackets/braces in the current line
+        num_open_brackets = gsub(/\[/, "[", $0);
+        num_close_brackets = gsub(/\]/, "]", $0);
+        num_open_curly = gsub(/\{/, "{", $0);
+        num_close_curly = gsub(/\}/, "}", $0);
+
+        # Update the counters
+        open_brackets += num_open_brackets - num_close_brackets;
+        open_curly += num_open_curly - num_close_curly;
+
+        # Check for negative counts (more closing than opening brackets/braces)
+        if (open_brackets < 0 || open_curly < 0) {
+            print "Error: Unmatched closing bracket or brace detected at line " NR
+            exit 1
+        }
+
+        # Check if all brackets and curly braces are closed
+        if (open_brackets == 0 && open_curly == 0) {
+            # We ve reached the end of a multi-line structure, print the complete declaration
+            print buffer;
+            # Reset buffer for the next structure
+            buffer = "";
+        } else {
+            # Continue accumulating lines (add space if needed)
+            buffer = buffer " ";
+        }
+    }
+
+    END {
+        # At the end of input, check for unmatched opening brackets/braces
+        if (open_brackets > 0 || open_curly > 0) {
+            print "Error: Unmatched opening bracket or brace detected at end of file"
+            exit 1
+        }
+    }' "$input_file"
+}
+
+lex_stego_file() {
+    #
+    # Lex "scopes", "variables", "values" from stego file.
+    # For each error detected in the file, prints a notice to stderr.
+    # If any error is detected, it returns before printing to stdout.
+    # Otherwise, prints the parsed tokens to stdout, using this format:
+    #
+    ############################################################################
+    #                          #                                               #
+    #   Format notes           #            Actual Output                      #
+    #                          #                                               #
+    ############################################################################
+    #   main scope, named ""   #Variable: _dog, Value: bar                     #
+    #                          #------------------------                       #
+    #   other scope            #Scope: hi                                      #
+    #                          #Variable: hi_foo, Value: fib                   #
+    #                          #Variable: hi_man, Value: bar                   #
+    #                          #------------------------                       #
+    ############################################################################
+    #
+    input="$1"
+    if [[ "$std_amboso_version" < "$min_amboso_v_stegostruct" ]] ; then {
+        lex_stego_file_no_arrays "$input"
+    } else {
+        flat_input="$(flatten_stego "$input")"
+        [[ $? -eq 0 ]] || {
+            log_cl "Failed flattening {$input}" error
+            log_cl "Partial result was: {$flat_input}" error
+            return 1
+        }
+        lex_stego_file_w_arrays "$flat_input"
+    }
+    fi
+}
+
 parse_lexed_stego() {
   # Parse "scopes", "variables", "values" from stego lexed tokens
   # Expects format described in lex_stego_file()
@@ -970,6 +1390,48 @@ parse_lexed_stego() {
           scopes+=("$current_scope")
           variables+=("$variable")
           values+=("$value")
+      elif [[ ! "$std_amboso_version" < "$min_amboso_v_stegostruct" ]] ; then {
+        if [[ $line =~ ^Array:\ (.+),\ Name:\ (.*)$ ]]; then {
+          arr_scoped_name="${BASH_REMATCH[1]}"
+          arr_name="${BASH_REMATCH[2]}"
+          #printf "Array: {$arr_scoped_name} Name: {$arr_name}\n"
+          # We avoid the declare since it act as "local" inside a function
+          #declare -a "$arr_scoped_name"
+        } elif [[ $line =~ ^Arrvalue:\ (.+)\[(.*)\],\ Value:\ (.*)$ ]]; then {
+          arr_var="${BASH_REMATCH[1]}"
+          arr_val_idx="${BASH_REMATCH[2]}"
+          arr_val="${BASH_REMATCH[3]}"
+          #printf "Arrvar: {$arr_var} arrval: {$arr_val} arrval_idx: {$arr_val_idx}\n"
+          if [[ "$arr_var" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]] && [[ "$arr_val_idx" =~ ^[0-9]+$ ]]; then
+            # Safe assignment using eval after validation
+            eval "${arr_var}[$arr_val_idx]=\"$(printf '%q' "$arr_val")\""
+            #"${arr_var}"["$arr_val_idx"]=\""$arr_val"\"
+          else
+            echo "Invalid array variable or index."
+            return 1;
+          fi
+        } elif [[ $line =~ ^Struct:\ (.+),\ Name:\ (.*)$ ]]; then {
+          struct_scoped_name="${BASH_REMATCH[1]}"
+          struct_name="${BASH_REMATCH[2]}"
+          #printf "Struct: {$struct_scoped_name} Name: {$struct_name}\n"
+          # We avoid the declare since it act as "local" inside a function
+          #declare -A "$struct_scoped_name"
+        } elif [[ $line =~ ^Structvalue:\ (.+)_([^_]+),\ Value:\ (.*)$ ]]; then {
+          struct_name="${BASH_REMATCH[1]}"
+          struct_var_name="${BASH_REMATCH[2]}"
+          struct_val="${BASH_REMATCH[3]}"
+          #printf "Structvar: {$struct_var_name} struct_val: {$struct_val}\n"
+          if [[ "$struct_name" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]] && [[ "$struct_var_name" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+            # Safe assignment using eval after validation
+            eval "${struct_name}[$struct_var_name]=\"$(printf '%q' "$struct_val")\""
+            #"${struct_name}"["$struct_var_name"]=\""$struct_val"\"
+          else
+            echo "Invalid struct name or variable."
+            return 1
+          fi
+        }
+        fi
+      }
       fi
   done <<< "$input"
 }
@@ -1009,6 +1471,10 @@ lint_stego_file() {
   verbose="$2"
 
   lex_output="$(lex_stego_file "$input")"
+  [[ $? -eq 0 ]] || {
+    log_cl "[CHECK]    Errors occurred during lexing." error
+    return 1
+  }
   [[ $verbose -eq 1 ]] && printf "$lex_output\n"
   if [[ -z "$lex_output" ]]; then
     log_cl "[CHECK]    Errors occurred during lexing." error
@@ -1258,7 +1724,7 @@ print_amboso_stego_scopes() {
       fi
     } elif [[ $scope = "versions" ]] ; then {
         tag="$(printf -- "$variable\n" | cut -f2 -d'_')"
-        if [[ $tag == -* ]] ; then {
+        if [[ $tag == B* ]] ; then {
           printf -- "ANVIL_BASE_VERSION: {$tag}\n"
         } else {
           printf "ANVIL_GIT_VERSION: {$tag}\n"
@@ -1567,7 +2033,7 @@ handle_anvil_arg() {
 handle_kern_arg() {
   local arg="$1"
   case "$arg" in
-   "amboso-C")
+   "amboso-C" | "anvilPy" | "customC")
        queried_amboso_kern="$arg"
        [[ "$verbose_flag" -gt 3 ]] && log_cl "Queried {$queried_amboso_kern} kern" info
        ;;
@@ -1678,7 +2144,7 @@ amboso_parse_args() {
   std_amboso_version_list=("2.0.0" "2.0.*" "1.*")
   std_amboso_short_version_list=("2.0" "2.1" "1.*")
   std_amboso_kern="amboso-C"
-  std_amboso_kern_list=("amboso-C")
+  std_amboso_kern_list=("amboso-C" "anvilPy" "customC")
   queried_amboso_kern=""
   min_amboso_v_kern="2.0.2"
   min_amboso_v_extensions="2.0.1"
@@ -1688,7 +2154,7 @@ amboso_parse_args() {
   stego_dir_flag=0
   min_amboso_v_stegodir="2.0.3"
   min_amboso_v_treegen="2.0.4"
-  target_awk="awk"
+  min_amboso_v_stegostruct="2.0.8"
   long_options_hack="-:" # From https://stackoverflow.com/questions/402377/using-getopts-to-process-long-and-short-command-line-options/7680682#7680682
   while getopts "O:A:M:S:E:D:K:G:Y:x:V:C:a:k:${long_options_hack}wBgbpHhrivdlLtTqszUXWPJRFe" opt; do
     case $opt in
@@ -1884,9 +2350,10 @@ amboso_parse_args() {
   AMBOSO_LOGGED="$do_filelog_flag"
   export AMBOSO_COLOR="${AMBOSO_COLOR:-0}"
   export AMBOSO_LOGGED="${AMBOSO_LOGGED:-0}"
-  if [[ $quiet_flag -eq 0 && "${AMBOSO_LVL_REC}" -lt 2 ]]; then {
+  export AMBOSO_AWK_NAME="${AMBOSO_AWK_NAME:-awk}"
+  if [[ "${AMBOSO_LVL_REC}" -lt 2 ]]; then {
     echo_amboso_splash "$amboso_currvers" "$(basename "$prog_name")"
-    awk_check="$("$target_awk" --version 2>/dev/null)"
+    awk_check="$("${AMBOSO_AWK_NAME}" --version 2>/dev/null)"
     local awk_check_res="$?"
     local is_gawk="$(grep "GNU" <<< "$awk_check")"
     local is_mawk="$(grep "mawk" <<< "$awk_check")"
@@ -1915,7 +2382,7 @@ amboso_parse_args() {
         log_cl "awk seems to be mawk. The script may fail unexpectedly. See issue: https://github.com/jgabaut/amboso/issues/58" warn
         if [[ "$std_amboso_version" > "$min_amboso_v_fix_awk" || "$std_amboso_version" = "$min_amboso_v_fix_awk" ]]; then {
             log_cl "Trying to use gawk instead.\n" warn magenta
-            target_awk="gawk"
+            AMBOSO_AWK_NAME="gawk"
         }
         fi
       } elif [[ "$is_nawk" = "yes" ]] ; then {
@@ -1924,7 +2391,7 @@ amboso_parse_args() {
         log_cl "https://github.com/jgabaut/amboso/issues/100" warn
         if [[ "$std_amboso_version" > "$min_amboso_v_fix_awk" || "$std_amboso_version" = "$min_amboso_v_fix_awk" ]]; then {
             log_cl "Trying to use gawk instead.\n" warn magenta
-            target_awk="gawk"
+            AMBOSO_AWK_NAME="gawk"
         }
         fi
       }
@@ -2203,6 +2670,18 @@ amboso_parse_args() {
   }
   fi
 
+  #For customC kern, we check all needed names even if the current op does not require them
+  if [[ "$std_amboso_kern" = "customC" ]]; then {
+    if [[ -z "${anvil_tools[builder]}" ]]; then {
+      log_cl "[ERROR]    Could not find anvil_tools.builder. Check your stego.lock" error
+      exit 1
+    } else {
+      log_cl "[INFO]    ANVIL_TOOLS.BUILDER: { ${anvil_tools[builder]} }" debug
+    }
+    fi
+  }
+  fi
+
   set_supported_tests "$kazoj_dir"
 
   if [[ $verbose_flag -ge 4 ]]; then {
@@ -2293,6 +2772,11 @@ amboso_parse_args() {
   #Which means we want to build all tags
   #TODO: Why is this checked before determining if we're doing build mode or test mode?
   if [[ $init_flag -gt 0 && $test_mode_flag -eq 0 && $small_test_mode_flag -eq 0 ]] ; then {
+    if [[ ! "$std_amboso_kern" = "amboso-C" ]] ; then { # Can't init outside of amboso-C kern yet
+        log_cl "[INIT]    Todo: Implement init op for { $std_amboso_kern }" info
+        exit 1
+    }
+    fi
     if [[ $quiet_flag -eq 0 && $verbose_flag -ge 4 ]]; then { #WIP
         log_cl "[VERB]    Init mode (no -tT): build all tags" info >&2
         echo_supported_tags >&2
@@ -2977,142 +3461,158 @@ amboso_parse_args() {
         }
         fi
       fi
-      #we try to build
-      tool_txt="single file gcc"
-      if [[ $has_makefile -gt 0 ]]; then { #Make mode
-        tool_txt="make"
-        if [[ $can_automake -gt 0 ]] ; then { #We support automake by doing autoreconf and ./configure before running make.
-          tool_txt="automake"
-          log_cl "[MODE]    target ( $version ) >= ( $use_autoconf_version ), can autoconf." debug >&2
-          autoreconf
-          if [[ $? -ne 0 ]] ; then {
-            log_cl "autoreconf failed. Doing \"automake --add-missing ; autoreconf\"" warn >&2
-            automake --add-missing
-            autoreconf
-          }
-          fi
-          configure_arg=""
-          if [[ "$pass_autoconf_arg_flag" -eq 1 ]] ; then {
-              configure_arg="$(cat "$autoconf_arg_file")"
-              log_cl "[CONF]    Running \"./configure $configure_arg\"" debug
-          }
-          fi
-          ./configure "$configure_arg"
-          configure_res="$?"
-          if [[ "$configure_res" -ne 0 ]]; then {
-              log_cl "./configure returned {$configure_res}" warn
-          }
-          fi
-          log_cl "Done 'autoreconf' and './configure'." info >&2
-        }
-        fi
-        log_cl "[MODE]    target ( $version ) >= ( $makefile_version ), has Makefile." debug >&2
-        [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Building ( $version ), using make." debug >&2
-        curr_dir=$(realpath .)
-        start_t=$(date +%s.%N)
-        if [[ $git_mode_flag -eq 0 && $base_mode_flag -eq 1 ]] ; then { #Building in base mode, we cd into target directory before make
-          [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Running in base mode, expecting full source in $script_path." debug #>&2
-          cd "$script_path" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4 ; };
-          if [[ "$enable_make_rebuild_flag" -gt 0 ]] ; then {
-            log_cl "Running \"make rebuild\"" debug
-            make rebuild >&2
-            comp_res=$?
-          } else {
-            log_cl "Running \"make\"" debug
-            make >&2
-            comp_res=$?
-          }
-          fi
-        } else { #Building in git mode, we checkout the tag and move the binary after the build
-          [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Running in git mode, checking out ( $version )." debug #>&2
-          git checkout "$version" 2>/dev/null #Repo goes back to tagged state
-          checkout_res=$?
-          if [[ $checkout_res -gt 0 ]] ; then { #Checkout failed, we don't build and we set comp_res
-            log_cl "Checkout of ( $version ) failed, this stego.lock tag does not work for the repo." error #>&2
-            comp_res=1
-          } else { #Checkout successful, we build
-            git submodule update --init --recursive #We set all submodules to commit state
-            #Never try to build if checkout fails
-            if [[ "$enable_make_rebuild_flag" -gt 0 ]] ; then {
-              log_cl "Running \"make rebuild\"" debug
-              make rebuild >&2
-              comp_res=$?
-            } else {
-              log_cl "Running \"make\"" debug
-              make >&2
-              comp_res=$?
+      if [[ "$std_amboso_kern" = "amboso-C" ]] ; then {
+          #we try to build
+          tool_txt="single file gcc"
+          if [[ $has_makefile -gt 0 ]]; then { #Make mode
+            tool_txt="make"
+            if [[ $can_automake -gt 0 ]] ; then { #We support automake by doing autoreconf and ./configure before running make.
+              tool_txt="automake"
+              log_cl "[MODE]    target ( $version ) >= ( $use_autoconf_version ), can autoconf." debug >&2
+              autoreconf
+              if [[ $? -ne 0 ]] ; then {
+                log_cl "autoreconf failed. Doing \"automake --add-missing ; autoreconf\"" warn >&2
+                automake --add-missing
+                autoreconf
+              }
+              fi
+              configure_arg=""
+              if [[ "$pass_autoconf_arg_flag" -eq 1 ]] ; then {
+                  configure_arg="$(cat "$autoconf_arg_file")"
+                  log_cl "[CONF]    Running \"./configure $configure_arg\"" debug
+              }
+              fi
+              ./configure "$configure_arg"
+              configure_res="$?"
+              if [[ "$configure_res" -ne 0 ]]; then {
+                  log_cl "./configure returned {$configure_res}" warn
+              }
+              fi
+              log_cl "Done 'autoreconf' and './configure'." info >&2
             }
             fi
-            #Output is expected to be in the main dir:
-            if [[ ! -e ./$exec_entrypoint ]] ; then {
-              log_cl "$exec_entrypoint not found at $(pwd)." error #>&2
-            } else {
-              mv "./$exec_entrypoint" "$script_path" #All files generated during the build should be ignored by the repo, to avoid conflict when checking out
-              [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Moved $exec_entrypoint to $script_path." debug #>&2
+            log_cl "[MODE]    target ( $version ) >= ( $makefile_version ), has Makefile." debug >&2
+            [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Building ( $version ), using make." debug >&2
+            curr_dir=$(realpath .)
+            start_t=$(date +%s.%N)
+            if [[ $git_mode_flag -eq 0 && $base_mode_flag -eq 1 ]] ; then { #Building in base mode, we cd into target directory before make
+              [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Running in base mode, expecting full source in $script_path." debug #>&2
+              cd "$script_path" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4 ; };
+              if [[ "$enable_make_rebuild_flag" -gt 0 ]] ; then {
+                log_cl "Running \"make rebuild\"" debug
+                make rebuild >&2
+                comp_res=$?
+              } else {
+                log_cl "Running \"make\"" debug
+                make >&2
+                comp_res=$?
+              }
+              fi
+            } else { #Building in git mode, we checkout the tag and move the binary after the build
+              [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Running in git mode, checking out ( $version )." debug #>&2
+              git checkout "$version" 2>/dev/null #Repo goes back to tagged state
+              checkout_res=$?
+              if [[ $checkout_res -gt 0 ]] ; then { #Checkout failed, we don't build and we set comp_res
+                log_cl "Checkout of ( $version ) failed, this stego.lock tag does not work for the repo." error #>&2
+                comp_res=1
+              } else { #Checkout successful, we build
+                git submodule update --init --recursive #We set all submodules to commit state
+                #Never try to build if checkout fails
+                if [[ "$enable_make_rebuild_flag" -gt 0 ]] ; then {
+                  log_cl "Running \"make rebuild\"" debug
+                  make rebuild >&2
+                  comp_res=$?
+                } else {
+                  log_cl "Running \"make\"" debug
+                  make >&2
+                  comp_res=$?
+                }
+                fi
+                #Output is expected to be in the main dir:
+                if [[ ! -e ./$exec_entrypoint ]] ; then {
+                  log_cl "$exec_entrypoint not found at $(pwd)." error #>&2
+                } else {
+                  mv "./$exec_entrypoint" "$script_path" #All files generated during the build should be ignored by the repo, to avoid conflict when checking out
+                  [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Moved $exec_entrypoint to $script_path." debug #>&2
+                }
+                fi
+                git switch - #We get back to starting repo state
+                switch_res="$?"
+                if [[ $switch_res -gt 0 ]]; then {
+                  log_cl "\nCan't finish checking out ($version).\n    You may have a dirty index and may need to run \"git restore .\".\n Quitting.\n" error
+                  echo_timer "$amboso_start_time"  "Failed checkout" "1"
+                  exit 1
+                }
+                fi
+                git submodule update --init --recursive #We set all submodules to commit state
+                [[ $quiet_flag -eq 0 ]] && log_cl "[BUILD]    Switched back to starting commit." info
+              }
+              fi
             }
             fi
-            git switch - #We get back to starting repo state
-            switch_res="$?"
-            if [[ $switch_res -gt 0 ]]; then {
-              log_cl "\nCan't finish checking out ($version).\n    You may have a dirty index and may need to run \"git restore .\".\n Quitting.\n" error
-              echo_timer "$amboso_start_time"  "Failed checkout" "1"
+            end_t=$(date +%s.%N)
+            runtime=$( printf "$end_t - $start_t\n" | bc -l )
+            cd "$curr_dir" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4; };
+          } else { #Straight gcc mode
+            [[ $verbose_flag -gt 3 ]] && log_cl "[MODE]    target ( $version ) < ( $makefile_version ), single file build with gcc." debug >&2
+            [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Building ( $version ), using gcc call." debug >&2
+            #echo "" >&2 #new line for error output
+            if [[ -z $source_name ]]; then {
+              log_cl "[WTF-ERROR]    Missing source file name. ( $version ).\n" error
+              amboso_usage
+              echo_timer "$amboso_start_time"  "Missing source name for [$version]" "1"
               exit 1
             }
             fi
-            git submodule update --init --recursive #We set all submodules to commit state
-            [[ $quiet_flag -eq 0 ]] && log_cl "[BUILD]    Switched back to starting commit." info
-          }
-          fi
-        }
-        fi
-        end_t=$(date +%s.%N)
-        runtime=$( printf "$end_t - $start_t\n" | bc -l )
-        cd "$curr_dir" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4; };
-      } else { #Straight gcc mode
-        [[ $verbose_flag -gt 3 ]] && log_cl "[MODE]    target ( $version ) < ( $makefile_version ), single file build with gcc." debug >&2
-        [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Building ( $version ), using gcc call." debug >&2
-        #echo "" >&2 #new line for error output
-        if [[ -z $source_name ]]; then {
-          log_cl "[WTF-ERROR]    Missing source file name. ( $version ).\n" error
-          amboso_usage
-          echo_timer "$amboso_start_time"  "Missing source name for [$version]" "1"
-          exit 1
-        }
-        fi
-        [[ $pack_flag -gt 0 ]] && log_cl "[PACK]    -z is not supported for ($tool_txt). TAG < ($makefile_version).\n\n    Current: ($version @ $source_name).\n" error
+            [[ $pack_flag -gt 0 ]] && log_cl "[PACK]    -z is not supported for ($tool_txt). TAG < ($makefile_version).\n\n    Current: ($version @ $source_name).\n" error
 
-        start_t=$(date +%s.%N)
-        if [[ $git_mode_flag -eq 0 ]] ; then { #Building in base mode, we cd into target directory before make
-          [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Running in base mode, expecting full source in $script_path." debug #>&2
-          "$CC" "$script_path"/"$source_name" -o "$script_path"/"$exec_entrypoint" -lm "$CFLAGS" 2>&2
-          comp_res=$?
-        } else { #Building in git mode, we checkout the tag and move the binary after the build
-          [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Running in git mode, checking out ( $version )." debug #>&2
-          git checkout "$version" 2>/dev/null #Repo goes back to tagged state
-          checkout_res=$?
-          if [[ $checkout_res -gt 0 ]] ; then { #Checkout failed, we set comp_res and don't build
-            log_cl "Checkout of ( $version ) failed, stego.lock may be listing a tag name not on the repo." error
-            comp_res=1
-          } else {
-            git submodule update --init --recursive 2>/dev/null #We set all submodules to commit state
-            "$CC" "./$source_name" -o "$script_path"/"$exec_entrypoint" -lm "$CFLAGS" 2>&2 #Never try to build if checkout fails
-            comp_res=$?
-            #All files generated during the build should be ignored by the repo, to avoid conflict when checking out
-            git switch - 2>/dev/null #We get back to starting repo state
-            switch_res="$?"
-            if [[ $switch_res -gt 0 ]]; then {
-              log_cl "Can't finish checking out ($version). Quitting." error
-              echo_timer "$amboso_start_time"  "Failed checkout for [$version]" "1"
-              exit 1
+            start_t=$(date +%s.%N)
+            if [[ $git_mode_flag -eq 0 ]] ; then { #Building in base mode, we cd into target directory before make
+              [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Running in base mode, expecting full source in $script_path." debug #>&2
+              "$CC" "$script_path"/"$source_name" -o "$script_path"/"$exec_entrypoint" -lm "$CFLAGS" 2>&2
+              comp_res=$?
+            } else { #Building in git mode, we checkout the tag and move the binary after the build
+              [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Running in git mode, checking out ( $version )." debug #>&2
+              git checkout "$version" 2>/dev/null #Repo goes back to tagged state
+              checkout_res=$?
+              if [[ $checkout_res -gt 0 ]] ; then { #Checkout failed, we set comp_res and don't build
+                log_cl "Checkout of ( $version ) failed, stego.lock may be listing a tag name not on the repo." error
+                comp_res=1
+              } else {
+                git submodule update --init --recursive 2>/dev/null #We set all submodules to commit state
+                "$CC" "./$source_name" -o "$script_path"/"$exec_entrypoint" -lm "$CFLAGS" 2>&2 #Never try to build if checkout fails
+                comp_res=$?
+                #All files generated during the build should be ignored by the repo, to avoid conflict when checking out
+                git switch - 2>/dev/null #We get back to starting repo state
+                switch_res="$?"
+                if [[ $switch_res -gt 0 ]]; then {
+                  log_cl "Can't finish checking out ($version). Quitting." error
+                  echo_timer "$amboso_start_time"  "Failed checkout for [$version]" "1"
+                  exit 1
+                }
+                fi
+                [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Switched back to starting commit." debug >&2
+              }
+              fi
             }
             fi
-            [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Switched back to starting commit." debug >&2
+            end_t=$(date +%s.%N)
+            runtime=$( printf "$end_t - $start_t\n" | bc -l )
           }
           fi
+      } elif [[ "$std_amboso_kern" = "customC" ]]; then {
+        tools_builder="${anvil_tools[builder]}"
+        if [[ -z "$tools_builder" ]]; then {
+            log_cl "Could not get anvil_tools.builder. Check your stego file." error
+            exit 1
+        } else {
+            log_cl "[BUILD]    Todo: Implement build op for builder { $tools_builder }" error
+            exit 1
         }
         fi
-        end_t=$(date +%s.%N)
-        runtime=$( printf "$end_t - $start_t\n" | bc -l )
+      } else {
+        log_cl "[BUILD]    Todo: Implement build op for { $std_amboso_kern }" info
+        exit 1
       }
       fi
       #Check compilation result
@@ -3138,18 +3638,21 @@ amboso_parse_args() {
 
     }
     fi
-    #Check if we're packing the ready version
-    if [[ $pack_flag -gt 0 ]] ; then {
-      #We just leverage make pack and assume it's ready to roll
-      log_cl "[PACK]    Running in base mode, expecting full source in $script_path." warn #>&2
-      make pack
-      pack_res=$?
-      if [[ $pack_res -gt 0 ]] ; then { #make pack failed
-        log_cl "[PACK]    Packing ($version) in base mode, failed.\n    Expected source at ($script_path)." error #>&2
-      } else {
-        log_cl "[PACK]    Packed ($version):\n    from  ($script_path)" info #>&2
-      }
-      fi
+    if [[ "$std_amboso_kern" = "amboso-C" ]] ; then {
+        #Check if we're packing the ready version
+        if [[ $pack_flag -gt 0 ]] ; then {
+          #We just leverage make pack and assume it's ready to roll
+          log_cl "[PACK]    Running in base mode, expecting full source in $script_path." warn #>&2
+          make pack
+          pack_res=$?
+          if [[ $pack_res -gt 0 ]] ; then { #make pack failed
+            log_cl "[PACK]    Packing ($version) in base mode, failed.\n    Expected source at ($script_path)." error #>&2
+          } else {
+            log_cl "[PACK]    Packed ($version):\n    from  ($script_path)" info #>&2
+          }
+          fi
+        }
+        fi
     }
     fi
 
@@ -3185,45 +3688,51 @@ amboso_parse_args() {
   #Check if we are deleting and exiting early
   #We skipped first deletion pass if purge mode is requested, since we will enter here later
   if [[ $delete_flag -gt 0 && $purge_flag -eq 0 ]] ; then {
-    clean_res=1
-    if [[ $has_makeclean -gt 0 && $base_mode_flag -gt 0 ]] ; then { #Running in git mode skips make clean
-      tool_txt="make clean"
-      has_bin=0
-      curr_dir=$(realpath .)
-      delete_path="$scripts_dir""v""$version"
-        if [[ ! -d $delete_path ]] ; then {
-          log_cl "'$delete_path' is not a valid directory.\n    Check your supported versions for details on ( $version ).\n" error #>&2
-        } elif [[ -x $scripts_dir/v$version/$exec_entrypoint ]] ; then { #Executable exists
-          has_bin=1 && log_cl "[DELETE]   ( $version ) has an executable.\n" info >&2
-          cd "$delete_path" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4 ;};
-          make clean 2>/dev/null #1>&2
+    if [[ "$std_amboso_kern" = "ambosoC" ]] ; then { # Check for amboso-C kern
+        clean_res=1
+        if [[ $has_makeclean -gt 0 && $base_mode_flag -gt 0 ]] ; then { #Running in git mode skips make clean
+          tool_txt="make clean"
+          has_bin=0
+          curr_dir=$(realpath .)
+          delete_path="$scripts_dir""v""$version"
+            if [[ ! -d $delete_path ]] ; then {
+              log_cl "'$delete_path' is not a valid directory.\n    Check your supported versions for details on ( $version ).\n" error #>&2
+            } elif [[ -x $scripts_dir/v$version/$exec_entrypoint ]] ; then { #Executable exists
+              has_bin=1 && log_cl "[DELETE]   ( $version ) has an executable.\n" info >&2
+              cd "$delete_path" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4 ;};
+              make clean 2>/dev/null #1>&2
+              clean_res=$?
+              cd "$curr_dir" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4 ;};
+              echo_timer "$amboso_start_time"  "Did delete, res was [$clean_res]" "3"
+              exit "$clean_res"
+            } else {
+              [[ $verbose_flag -gt 3 ]] && log_cl "[DELETE]   ( $version ) does not have an executable at ( $delete_path ).\n" debug # >&2
+              echo_timer "$amboso_start_time"  "Nothing to delete" "1"
+              exit 1
+            }
+            fi
+        } else { #Doesn't have Makefile, build method 2. Running in git mode also skips using make clean
+          tool_txt="rm"
+          has_bin=0
+          if [[ -x $scripts_dir"/v$version"/"$exec_entrypoint" ]] ; then {
+            has_bin=1 && [[ $verbose_flag -gt 3 ]] && log_cl "[DELETE]    ( $version ) has an executable." debug >&2
+          }
+          fi
+          rm "$(realpath "$scripts_dir"/"v${version}/${exec_entrypoint}")" #2>/dev/null
           clean_res=$?
-          cd "$curr_dir" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4 ;};
+          if [[ $clean_res -eq 0 ]] ; then {
+            log_cl "[DELETE]    Success on ( $version )." info
+          } else {
+            log_cl "[DELETE]    Failure on ( $version )." error
+          }
+          fi
           echo_timer "$amboso_start_time"  "Did delete, res was [$clean_res]" "3"
           exit "$clean_res"
-        } else {
-          [[ $verbose_flag -gt 3 ]] && log_cl "[DELETE]   ( $version ) does not have an executable at ( $delete_path ).\n" debug # >&2
-          echo_timer "$amboso_start_time"  "Nothing to delete" "1"
-          exit 1
         }
         fi
-    } else { #Doesn't have Makefile, build method 2. Running in git mode also skips using make clean
-      tool_txt="rm"
-      has_bin=0
-      if [[ -x $scripts_dir"/v$version"/"$exec_entrypoint" ]] ; then {
-        has_bin=1 && [[ $verbose_flag -gt 3 ]] && log_cl "[DELETE]    ( $version ) has an executable." debug >&2
-      }
-      fi
-      rm "$(realpath "$scripts_dir"/"v$version/$exec_entrypoint")" #2>/dev/null
-      clean_res=$?
-      if [[ $clean_res -eq 0 ]] ; then {
-        log_cl "[DELETE]    Success on ( $version )." info
-      } else {
-        log_cl "[DELETE]    Failure on ( $version )." error
-      }
-      fi
-      echo_timer "$amboso_start_time"  "Did delete, res was [$clean_res]" "3"
-      exit "$clean_res"
+    } else {
+        log_cl "[DELETE]    Todo: Implement delete op for { $std_amboso_kern }" info
+        exit 1
     }
     fi
   }
@@ -3231,6 +3740,11 @@ amboso_parse_args() {
 
   #Check if we are purging
   if [[ purge_flag -gt 0 ]]; then
+    if [[ ! "$std_amboso_kern" = "amboso-C" ]] ; then { # Can't purge outside of amboso-C kern yet
+        log_cl "[INIT]    Todo: Implement purge op for { $std_amboso_kern }" info
+        exit 1
+    }
+    fi
     tot_removed=0
     tool_txt="rm"
     has_bin=0

@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.8] - Unreleased
+
+### Added
+
+- Improved logic to handle parsing arrays and structs from stego
+
+### Changed
+
+- Fix print_amboso_stego_scopes() using the wrong char to detect base tags
+- Fix realpath usage problems
+
 ## [2.0.7] - 2024-08-29
 
 ### Added
