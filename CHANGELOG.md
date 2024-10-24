@@ -6,6 +6,7 @@
 
 - Fix print_amboso_stego_scopes() using the wrong char to detect base tags
 - Fix realpath usage problems
+- Ensure usage of gawk
 
 ## [2.0.7] - 2024-08-29
 

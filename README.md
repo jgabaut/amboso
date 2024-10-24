@@ -64,10 +64,9 @@ I did not want to learn how to write nice makefiles or chaining a couple git com
 * You definitely need `bash`, I'm using version `5.1.x` but for now I don't know about incompatible features used here.
   * For macOS users: check this issue for unexpected behaviour on bash `3.x`. [#21](/../../issues/21)
 
-* You need `gawk` to be your `awk` symlink. While work to support `nawk` and `mawk` will be coming, it's not a priority as of now.
+* You need `gawk` installed. While work to support `nawk` and `mawk` will be coming, it's not a priority as of now.
   * macOS ships with `nawk` by default, but if you have `brew` installed, you should be able to run
     `brew install gawk`
-  * After that, it's just a matter of changing the `awk` binary to be a symlink to `gawk`. Maybe copy it to `awk.bkp` first.
 
 * You should test you have `bc` installed, since it's used to calc runtimes.
 
