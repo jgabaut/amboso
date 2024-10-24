@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="2.0.8"
+AMBOSO_API_LVL="2.0.9-dev"
 at() {
     #printf -- "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] -> {\n"
     log_cl "{ call: [" debug white
@@ -491,7 +491,8 @@ amboso_init_proj() {
 gen_C_headers() {
 	target_dir="$1"
 	tag="$2"
-	execname="$3"
+    local tag_str="$3"
+	execname="$4"
 	headername="anvil__$execname.h"
 	c_headername="anvil__$execname.c"
 	tag_date="$(git show -q --clear-decorations --format="%at" "$tag" 2>/dev/null)"
@@ -508,7 +509,7 @@ gen_C_headers() {
 	printf "#ifndef ANVIL__${execname}__\n" >> "$target_dir/$headername"
 	printf "#define ANVIL__${execname}__\n\n" >> "$target_dir/$headername"
 	printf "static const char ANVIL__API_LEVEL__STRING[] = \"$AMBOSO_API_LVL\"; /**< Represents amboso version used for [$headername] generated header.*/\n\n" >> "$target_dir/$headername"
-	printf "static const char ANVIL__${execname}__VERSION_STRING[] = \"$tag\"; /**< Represents current version for [$headername] generated header.*/\n\n" >> "$target_dir/$headername"
+	printf "static const char ANVIL__${execname}__VERSION_STRING[] = \"$tag_str\"; /**< Represents current version for [$headername] generated header.*/\n\n" >> "$target_dir/$headername"
 	printf "static const char ANVIL__${execname}__VERSION_DESC[] = \"$tag_txt\"; /**< Represents current version info for [$headername] generated header.*/\n\n" >> "$target_dir/$headername"
 	printf "static const char ANVIL__${execname}__VERSION_DATE[] = \"$tag_date\"; /**< Represents date for current version for [$headername] generated header.*/\n\n" >> "$target_dir/$headername"
 	printf "static const char ANVIL__${execname}__VERSION_AUTHOR[] = \"$tag_author\"; /**< Represents author for current version for [$headername] generated header.*/\n\n" >> "$target_dir/$headername"
@@ -2911,7 +2912,7 @@ amboso_parse_args() {
 
   if [[ -z $version ]]; then {
     #We only freak out if we don't have test_mode, purge or init flags on
-    if [[ $test_mode_flag -eq 0 && $purge_flag -eq 0 && $init_flag -eq 0 ]] ; then {
+    if [[ $test_mode_flag -eq 0 && $purge_flag -eq 0 && $init_flag -eq 0 && $gen_C_headers_set -eq 0 ]] ; then {
       log_cl "( $query ) is not a supported tag.\n" error
       log_cl "       Run with -h for help.\n" error
       echo_timer "$amboso_start_time"  "Invalid query [$query]" "1"
@@ -2923,6 +2924,9 @@ amboso_parse_args() {
       log_cl "( $query ) is not a supported test. $keep_run_txt." debug >&2
       echo_timer "$amboso_start_time"  "Invalid test query [$query]" "1"
       exit 1;
+    } elif [[ ! -z $query && $gen_C_headers_set -gt 0 ]] ; then { #If we're in C header gen mode, we swap the query for HEAD
+      log_cl "( $query ) is not a supported tag. Retrying using HEAD\n" warn
+      version="HEAD"
     }
     fi
   }
@@ -2931,7 +2935,7 @@ amboso_parse_args() {
 
   if [[ $gen_C_headers_set -gt 0 && $gen_C_headers_flag -gt 0 ]]; then {
       log_cl "[AMBOSO]    Generate C header for [$version]." info >&2
-      gen_C_headers "$gen_C_headers_destdir" "$version" "$exec_entrypoint"
+      gen_C_headers "$gen_C_headers_destdir" "$version" "$query" "$exec_entrypoint"
   }
   fi
 
