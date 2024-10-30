@@ -263,7 +263,7 @@ try_doing_make() {
 echo_active_flags () {
   printf "[ENV]      Args:\n\n"
   printf "           CC \"%s\"\n" "$CC"
-  printf "           CFLAGS \"%s\"\n\n" "$CFLAGS"
+  printf "           CFLAGS \"%s\"\n\n" "$passed_CFLAGS"
 
   printf "[CONFIG]   Amboso config:\n\n"
   printf -- "           -a {%s}\n" "$std_amboso_version"
@@ -748,6 +748,7 @@ amboso_help() {
   -F, --force                        Enable force build
   -R, --no-rebuild                   Disable calling make rebuild
   -C, --config <CONFIG_FILE>         Pass configuration file for ./configure arguments
+  -Z, --cflags <CFLAGS>              Pass CFLAGS for single file mode
   -e, --strict                       Turn off extensions to 2.0
   -h, --help                         Print help
   -Y <START_TIME>                    Set start time of the program
@@ -769,7 +770,7 @@ amboso_usage() {
 
   printf "Arguments:
   [TAG]  Optional tag argument\n\n"
-  printf "Example usage:  $(basename "$prog_name") [(-O|-D|-K|-M|-S|-E|-G|-C|-x|-V|-Y|-a|-k) <ARG>] [-TBtg] [-bripd] [-hHvlLsqwXWPJRFe] [TAG]\n"
+  printf "Example usage:  $(basename "$prog_name") [(-O|-D|-K|-M|-S|-E|-G|-C|-Z|-x|-V|-Y|-a|-k) <ARG>] [-TBtg] [-bripd] [-hHvlLsqwXWPJRFe] [TAG]\n"
 }
 
 escape_colorcodes_tee() {
@@ -1673,6 +1674,8 @@ amboso_parse_args() {
   enable_make_rebuild_flag=1
   force_build_flag=0
   extensions_flag=1
+  CFLAGS_was_passed=0
+  passed_CFLAGS=""
   std_amboso_version="${AMBOSO_API_LVL}"
   std_amboso_regex='^([1-9][0-9]*|0)\.([1-9][0-9]*|0)\.([1-9][0-9]*|0)$'
   std_amboso_short_regex='^([1-9][0-9]*)\.([1-9][0-9]*|0)$'
@@ -1690,7 +1693,7 @@ amboso_parse_args() {
   min_amboso_v_stegodir="2.0.3"
   min_amboso_v_treegen="2.0.4"
   long_options_hack="-:" # From https://stackoverflow.com/questions/402377/using-getopts-to-process-long-and-short-command-line-options/7680682#7680682
-  while getopts "O:A:M:S:E:D:K:G:Y:x:V:C:a:k:${long_options_hack}wBgbpHhrivdlLtTqszUXWPJRFe" opt; do
+  while getopts "Z:O:A:M:S:E:D:K:G:Y:x:V:C:a:k:${long_options_hack}wBgbpHhrivdlLtTqszUXWPJRFe" opt; do
     case $opt in
       -)
         case "${OPTARG}" in
@@ -1718,6 +1721,8 @@ amboso_parse_args() {
           verbose=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; handle_verbose_arg "$val";;
           config) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); pass_autoconf_arg_flag=1; autoconf_arg_file="$val";;
           config=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; pass_autoconf_arg_flag=1; autoconf_arg_file="$val";;
+          cflags) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); CFLAGS_was_passed=1; passed_CFLAGS="$val";;
+          cflags=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; CFLAGS_was_passed=1; passed_CFLAGS="$val";;
           test) test_mode_flag=1;;
           base) base_mode_flag=1;;
           git) git_mode_flag=1;;
@@ -1771,6 +1776,7 @@ amboso_parse_args() {
       W ) show_warranty_flag=1;;
       X ) ignore_git_check_flag=1;;
       G ) handle_genC_arg "$OPTARG";;
+      Z ) CFLAGS_was_passed=1; passed_CFLAGS="$OPTARG";;
       U )tell_uname_flag=1;;
       z ) pack_flag=1;;
       s ) silent_flag=1;;
@@ -1879,7 +1885,6 @@ amboso_parse_args() {
   fi
 
   CC="${CC:-gcc}"
-  CFLAGS="${CFLAGS:-}"
   AMBOSO_COLOR="$allow_color_flag"
   AMBOSO_LOGGED="$do_filelog_flag"
   export AMBOSO_COLOR="${AMBOSO_COLOR:-0}"
@@ -3088,8 +3093,16 @@ amboso_parse_args() {
         start_t=$(date +%s.%N)
         if [[ $git_mode_flag -eq 0 ]] ; then { #Building in base mode, we cd into target directory before make
           [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Running in base mode, expecting full source in $script_path." debug #>&2
-          "$CC" "$script_path"/"$source_name" -o "$script_path"/"$exec_entrypoint" -lm "$CFLAGS" 2>&2
-          comp_res=$?
+          if [[ $CFLAGS_was_passed -gt 0 ]] ; then {
+              log_cl "[BUILD]    Running: {$CC $passed_CFLAGS $script_path/$source_name -o $script_path/$exec_entrypoint -lm}" info
+              "$CC" "$passed_CFLAGS" "$script_path"/"$source_name" -o "$script_path"/"$exec_entrypoint" -lm 2>&2
+              comp_res=$?
+          } else {
+              log_cl "[BUILD]    Running: {$CC $script_path/$source_name -o $script_path/$exec_entrypoint -lm}" info
+              "$CC" "$script_path"/"$source_name" -o "$script_path"/"$exec_entrypoint" -lm 2>&2
+              comp_res=$?
+          }
+          fi
         } else { #Building in git mode, we checkout the tag and move the binary after the build
           [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Running in git mode, checking out ( $version )." debug #>&2
           git checkout "$version" 2>/dev/null #Repo goes back to tagged state
@@ -3099,8 +3112,16 @@ amboso_parse_args() {
             comp_res=1
           } else {
             git submodule update --init --recursive 2>/dev/null #We set all submodules to commit state
-            "$CC" "./$source_name" -o "$script_path"/"$exec_entrypoint" -lm "$CFLAGS" 2>&2 #Never try to build if checkout fails
-            comp_res=$?
+            if [[ $CFLAGS_was_passed -gt 0 ]] ; then {
+                log_cl "[BUILD]    Running: {$CC $passed_CFLAGS $script_path/$source_name -o $script_path/$exec_entrypoint -lm}" info
+                "$CC" "$passed_CFLAGS" "$script_path"/"$source_name" -o "$script_path"/"$exec_entrypoint" -lm 2>&2 #Never try to build if checkout fails
+                comp_res=$?
+            } else {
+                log_cl "[BUILD]    Running: {$CC $script_path/$source_name -o $script_path/$exec_entrypoint -lm}" info
+                "$CC" "$script_path"/"$source_name" -o "$script_path"/"$exec_entrypoint" -lm 2>&2 #Never try to build if checkout fails
+                comp_res=$?
+            }
+            fi
             #All files generated during the build should be ignored by the repo, to avoid conflict when checking out
             git switch - 2>/dev/null #We get back to starting repo state
             switch_res="$?"
