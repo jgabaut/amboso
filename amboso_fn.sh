@@ -1622,7 +1622,7 @@ handle_config_arg() {
     local arg="$1"
     local flag="$2"
     [[ -z "$arg" ]] && { log_cl "Invalid empty arg for flag -$flag" error; amboso_usage; exit 1; }
-    if [[ "${AMBOSO_CONFIG_FLAG_ARG_ISFILE:-0}" -gt 0 ]]; then {
+    if [[ "${AMBOSO_CONFIG_FLAG_ARG_ISFILE:-1}" -ne 0 ]]; then { #Isfile defaults to 1 to start with backwards compatibility
         #We expect the argument to be a filename
         #Note that setting AMBOSO_ALLOW_FLAGS_HYPHEN_ARG >0 is also needed if the filename starts with -
         handle_nohyphen_flags_arg "$arg" "$flag"
@@ -1899,7 +1899,7 @@ amboso_parse_args() {
   }
   fi
 
-  if [[ "${AMBOSO_CONFIG_FLAG_ARG_ISFILE:-0}" -gt 0 && "$pass_autoconf_arg_flag" -gt 0 ]] ; then {
+  if [[ "${AMBOSO_CONFIG_FLAG_ARG_ISFILE:-1}" -ne 0 && "$pass_autoconf_arg_flag" -gt 0 ]] ; then { #Isfile defaults to 1 to start with backwards compatibility
     [[ -f "$passed_autoconf_arg" ]] || { log_cl "Invalid file for configure argument: {$passed_autoconf_arg}" error ; exit 1 ; } ;
   }
   fi
@@ -3022,7 +3022,7 @@ amboso_parse_args() {
           fi
           configure_arg=""
           if [[ "$pass_autoconf_arg_flag" -eq 1 ]] ; then {
-              if [[ "${AMBOSO_CONFIG_FLAG_ARG_ISFILE:-0}" -gt 0 ]]; then {
+              if [[ "${AMBOSO_CONFIG_FLAG_ARG_ISFILE:-1}" -ne 0 ]]; then { #Isfile defaults to 1 to start with backwards compatibility
                 configure_arg="$(cat "$passed_autoconf_arg")"
               } else {
                 configure_arg="$passed_autoconf_arg"
