@@ -13,6 +13,7 @@
   - Pass AMBOSO_ALLOW_FLAGS_HYPHEN_ARG >0 to skip this check
 - Try reading AMBOSO_CONFIG_ARG_ISFILE to use -C with flags directly
   - Setting it to 0 enables the new, backwards incompatible behaviour
+- Fix echo_active_flags() reporting -C incorrectly
 
 ## [2.0.8] - 2024-10-24
 
