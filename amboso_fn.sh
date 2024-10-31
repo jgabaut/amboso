@@ -2955,7 +2955,14 @@ amboso_parse_args() {
       log_cl "( $query ) is not a supported test. $keep_run_txt." debug >&2
       echo_timer "$amboso_start_time"  "Invalid test query [$query]" "1"
       exit 1;
-    } elif [[ ! -z $query && $gen_C_headers_set -gt 0 ]] ; then { #If we're in C header gen mode, we swap the query for HEAD
+    } elif [[ $gen_C_headers_set -gt 0 ]] ; then { #If we're in C header gen mode, we swap the query for HEAD
+      if [[ -z "$query" ]]; then {
+          log_cl "( $query ) is not a supported tag.\n" error
+          log_cl "       Run with -h for help.\n" error
+          echo_timer "$amboso_start_time"  "Invalid query [$query]" "1"
+          exit 1
+      }
+      fi
       log_cl "( $query ) is not a supported tag. Retrying using HEAD\n" warn
       version="HEAD"
     }
