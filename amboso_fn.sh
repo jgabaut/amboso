@@ -279,7 +279,8 @@ echo_active_flags () {
   printf -- "           -S {%s} %s\n" "$source_name" "$sourcename_was_set"
   printf -- "           -E {%s} %s\n" "$exec_entrypoint" "$exec_was_set"
   printf -- "           -M {%s} %s\n" "$makefile_version" "$vers_make_flag"
-  printf -- "           -A {%s} %s\n\n" "$use_autoconf_version" "$vers_autoconf_flag"
+  printf -- "           -A {%s} %s\n" "$use_autoconf_version" "$vers_autoconf_flag"
+  printf -- "           -C {%s} %s\n\n" "$passed_autoconf_arg" "$pass_autoconf_arg_flag"
 
   printf "[DEBUG]    Current flags:\n\n"
 
@@ -305,7 +306,7 @@ echo_active_flags () {
   [[ $gen_C_headers_flag -gt 0 ]] && printf "G"
   [[ $be_stego_parser_flag -gt 0 ]] && printf "x"
   [[ $show_time_flag -gt 0 ]] && printf "w"
-  [[ $start_time_flag -gt 0 ]] && printf "C"
+  [[ $start_time_flag -gt 0 ]] && printf "Y"
   [[ $ignore_git_check_flag -gt 0 ]] && printf "X"
   [[ $show_warranty_flag -gt 0 ]] && printf "W"
   [[ $tell_uname_flag -gt 0 ]] && printf "U"
