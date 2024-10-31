@@ -1615,7 +1615,7 @@ handle_nohyphen_flags_arg() {
     local flag="$2"
     [[ -z "$arg" ]] && { log_cl "Invalid empty arg for flag --$flag" error; amboso_usage; exit 1; }
     [[ "${AMBOSO_ALLOW_FLAGS_HYPHEN_ARG:-0}" -gt 0 ]] && return #If this variable is set we skip the hyphen check. Someone may not want it?
-    [[ "$arg" == -* ]] && { log_cl "Long flag arguments should not start with -:  --$flag $arg" error; amboso_usage; exit 1; }
+    [[ "$arg" == -* ]] && { log_cl "Flag arguments should not start with -:  -$flag $arg" error; amboso_usage; exit 1; }
 }
 
 amboso_parse_args() {
@@ -1709,22 +1709,22 @@ amboso_parse_args() {
           anvil-version=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; handle_anvil_arg "$val";;
           anvil-kern) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); handle_kern_arg "$val";;
           anvil-kern=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; handle_kern_arg "$val";;
-          amboso-dir) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); handle_nohyphen_flags_arg "$val" "amboso-dir"; dir_flag=1; scripts_dir="$val";;
-          amboso-dir=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; handle_nohyphen_flags_arg "$val" "amboso-dir"; dir_flag=1; scripts_dir="$val";;
-          stego-dir) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); handle_nohyphen_flags_arg "$val" "stego-dir"; stego_dir_flag=1; stego_dir="$val";;
-          stego-dir=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; handle_nohyphen_flags_arg "$val" "stego-dir"; stego_dir_flag=1; stego_dir="$val";;
-          kazoj-dir) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); handle_nohyphen_flags_arg "$val" "kazoj-dir"; testdir_flag=1; kazoj_dir="$val"; test_info_was_set=1;;
-          kazoj-dir=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; handle_nohyphen_flags_arg "$val" "kazoj-dir"; testdir_flag=1; kazoj_dir="$val"; test_info_was_set=1;;
-          source) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); handle_nohyphen_flags_arg "$val" "source"; source_name="$val"; sourcename_was_set=1;;
-          source=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; handle_nohyphen_flags_arg "$val" "source"; source_name="$val"; sourcename_was_set=1;;
-          execname) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); handle_nohyphen_flags_arg "$val" "execname"; exec_entrypoint="$val"; exec_was_set=1;;
-          execname=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; handle_nohyphen_flags_arg "$val" "execname"; exec_entrypoint="$val"; exec_was_set=1;;
-          maketag) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); handle_nohyphen_flags_arg "$val" "maketag"; vers_make_flag=1; makefile_version="$val";;
-          maketag=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; handle_nohyphen_flags_arg "$val" "maketag"; vers_make_flag=1; makefile_version="$val";;
+          amboso-dir) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); handle_nohyphen_flags_arg "$val" "-amboso-dir"; dir_flag=1; scripts_dir="$val";;
+          amboso-dir=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; handle_nohyphen_flags_arg "$val" "-amboso-dir"; dir_flag=1; scripts_dir="$val";;
+          stego-dir) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); handle_nohyphen_flags_arg "$val" "-stego-dir"; stego_dir_flag=1; stego_dir="$val";;
+          stego-dir=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; handle_nohyphen_flags_arg "$val" "-stego-dir"; stego_dir_flag=1; stego_dir="$val";;
+          kazoj-dir) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); handle_nohyphen_flags_arg "$val" "-kazoj-dir"; testdir_flag=1; kazoj_dir="$val"; test_info_was_set=1;;
+          kazoj-dir=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; handle_nohyphen_flags_arg "$val" "-kazoj-dir"; testdir_flag=1; kazoj_dir="$val"; test_info_was_set=1;;
+          source) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); handle_nohyphen_flags_arg "$val" "-source"; source_name="$val"; sourcename_was_set=1;;
+          source=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; handle_nohyphen_flags_arg "$val" "-source"; source_name="$val"; sourcename_was_set=1;;
+          execname) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); handle_nohyphen_flags_arg "$val" "-execname"; exec_entrypoint="$val"; exec_was_set=1;;
+          execname=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; handle_nohyphen_flags_arg "$val" "-execname"; exec_entrypoint="$val"; exec_was_set=1;;
+          maketag) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); handle_nohyphen_flags_arg "$val" "-maketag"; vers_make_flag=1; makefile_version="$val";;
+          maketag=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; handle_nohyphen_flags_arg "$val" "-maketag"; vers_make_flag=1; makefile_version="$val";;
           gen-c-header) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); handle_genC_arg "$val";;
           gen-c-header=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; handle_genC_arg "$val";;
-          linter) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); handle_nohyphen_flags_arg "$val" "linter"; be_stego_parser_flag=1; queried_stego_filepath="$val";;
-          linter=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; handle_nohyphen_flags_arg "$val" "linter"; be_stego_parser_flag=1; queried_stego_filepath="$val";;
+          linter) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); handle_nohyphen_flags_arg "$val" "-linter"; be_stego_parser_flag=1; queried_stego_filepath="$val";;
+          linter=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; handle_nohyphen_flags_arg "$val" "-linter"; be_stego_parser_flag=1; queried_stego_filepath="$val";;
           verbose) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); handle_verbose_arg "$val";;
           verbose=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; handle_verbose_arg "$val";;
           config) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); pass_autoconf_arg_flag=1; autoconf_arg_file="$val";;
@@ -1779,8 +1779,8 @@ amboso_parse_args() {
       R ) enable_make_rebuild_flag=0;;
       P ) allow_color_flag=0;;
       J ) do_filelog_flag=1;;
-      C ) pass_autoconf_arg_flag=1; autoconf_arg_file="$OPTARG";;
-      x ) be_stego_parser_flag=1; queried_stego_filepath="$OPTARG";;
+      C ) handle_nohyphen_flags_arg "$OPTARG" "C"; pass_autoconf_arg_flag=1; autoconf_arg_file="$OPTARG";;
+      x ) handle_nohyphen_flags_arg "$OPTARG" "x"; be_stego_parser_flag=1; queried_stego_filepath="$OPTARG";;
       W ) show_warranty_flag=1;;
       X ) ignore_git_check_flag=1;;
       G ) handle_genC_arg "$OPTARG";;
@@ -1788,14 +1788,14 @@ amboso_parse_args() {
       U )tell_uname_flag=1;;
       z ) pack_flag=1;;
       s ) silent_flag=1;;
-      S ) source_name="$OPTARG"; sourcename_was_set=1;;
+      S ) handle_nohyphen_flags_arg "$OPTARG" "S"; source_name="$OPTARG"; sourcename_was_set=1;;
       w ) show_time_flag=1;;
-      Y ) start_time_val="$OPTARG"; amboso_start_time="$start_time_val"; start_time_set=1; start_time_flag=1;;
-      E ) exec_entrypoint="$OPTARG"; exec_was_set=1;;
-      D ) dir_flag=1; scripts_dir="$OPTARG";;
-      K ) testdir_flag=1; kazoj_dir="$OPTARG"; test_info_was_set=1;;
-      M ) vers_make_flag=1; makefile_version="$OPTARG";;
-      A ) vers_autoconf_flag=1; use_autoconf_version="$OPTARG";;
+      Y ) handle_nohyphen_flags_arg "$OPTARG" "Y"; start_time_val="$OPTARG"; amboso_start_time="$start_time_val"; start_time_set=1; start_time_flag=1;;
+      E ) handle_nohyphen_flags_arg "$OPTARG" "E"; exec_entrypoint="$OPTARG"; exec_was_set=1;;
+      D ) handle_nohyphen_flags_arg "$OPTARG" "D"; dir_flag=1; scripts_dir="$OPTARG";;
+      K ) handle_nohyphen_flags_arg "$OPTARG" "K"; testdir_flag=1; kazoj_dir="$OPTARG"; test_info_was_set=1;;
+      M ) handle_nohyphen_flags_arg "$OPTARG" "M"; vers_make_flag=1; makefile_version="$OPTARG";;
+      A ) handle_nohyphen_flags_arg "$OPTARG" "A"; vers_autoconf_flag=1; use_autoconf_version="$OPTARG";;
       L ) big_list_flag=1;;
       l ) small_list_flag=1;;
       H ) bighelp_flag=1;;
