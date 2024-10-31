@@ -263,7 +263,12 @@ try_doing_make() {
 echo_active_flags () {
   printf "[ENV]      Args:\n\n"
   printf "           CC \"%s\"\n" "$CC"
-  printf "           CFLAGS \"%s\"\n\n" "$passed_CFLAGS"
+  if [[ "$CFLAGS_was_passed" -gt 0 ]]; then {
+    printf "           CFLAGS \"%s\"\n\n" "$passed_CFLAGS"
+  } elif [[ ! -z "${CFLAGS:-}" ]]; then {
+    printf "           CFLAGS \"%s\"\n\n" "$CFLAGS"
+  }
+  fi
 
   printf "[CONFIG]   Amboso config:\n\n"
   printf -- "           -a {%s}\n" "$std_amboso_version"
@@ -3123,9 +3128,17 @@ amboso_parse_args() {
               "$CC" "$passed_CFLAGS" "$script_path"/"$source_name" -o "$script_path"/"$exec_entrypoint" -lm 2>&2
               comp_res=$?
           } else {
-              log_cl "[BUILD]    Running: {$CC $script_path/$source_name -o $script_path/$exec_entrypoint -lm}" info
-              "$CC" "$script_path"/"$source_name" -o "$script_path"/"$exec_entrypoint" -lm 2>&2
-              comp_res=$?
+              local env_CFLAGS="${CFLAGS:-}"
+              if [[ ! -z "$env_CFLAGS" ]]; then {
+                    log_cl "[BUILD]    Running: {$CC $env_CFLAGS $script_path/$source_name -o $script_path/$exec_entrypoint -lm}" info
+                    "$CC" "$env_CFLAGS" "$script_path"/"$source_name" -o "$script_path"/"$exec_entrypoint" -lm 2>&2
+                    comp_res=$?
+              } else {
+                    log_cl "[BUILD]    Running: {$CC $script_path/$source_name -o $script_path/$exec_entrypoint -lm}" info
+                    "$CC" "$script_path"/"$source_name" -o "$script_path"/"$exec_entrypoint" -lm 2>&2
+                    comp_res=$?
+              }
+              fi
           }
           fi
         } else { #Building in git mode, we checkout the tag and move the binary after the build
