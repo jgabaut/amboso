@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.0.9] - Unreleased
+
+### Added
+
+- Add -Z to pass custom CFLAGS
+
+### Changed
+
+- Remove reading passed CFLAGS var
+- Flags expecting an argument refuse args starting with -
+  - Pass AMBOSO_ALLOW_FLAGS_HYPHEN_ARG >0 to skip this check
+
 ## [2.0.8] - 2024-10-24
 
 ### Changed
