@@ -1614,8 +1614,20 @@ handle_nohyphen_flags_arg() {
     local arg="$1"
     local flag="$2"
     [[ -z "$arg" ]] && { log_cl "Invalid empty arg for flag --$flag" error; amboso_usage; exit 1; }
-    [[ "${AMBOSO_ALLOW_FLAGS_HYPHEN_ARG:-0}" -gt 0 ]] && return #If this variable is set we skip the hyphen check. Someone may not want it?
+    [[ "${AMBOSO_ALLOW_FLAGS_HYPHEN_ARG:-0}" -gt 0 ]] && return #We skip the hyphen check. Someone may not want it?
     [[ "$arg" == -* ]] && { log_cl "Flag arguments should not start with -:  -$flag $arg" error; amboso_usage; exit 1; }
+}
+
+handle_config_arg() {
+    local arg="$1"
+    local flag="$2"
+    [[ -z "$arg" ]] && { log_cl "Invalid empty arg for flag -$flag" error; amboso_usage; exit 1; }
+    if [[ "${AMBOSO_CONFIG_FLAG_ARG_ISFILE:-0}" -gt 0 ]]; then {
+        #We expect the argument to be a filename
+        #Note that setting AMBOSO_ALLOW_FLAGS_HYPHEN_ARG >0 is also needed if the filename starts with -
+        handle_nohyphen_flags_arg "$arg" "$flag"
+    }
+    fi
 }
 
 amboso_parse_args() {
@@ -1676,7 +1688,7 @@ amboso_parse_args() {
   be_stego_parser_flag=0
   queried_stego_filepath=""
   pass_autoconf_arg_flag=0
-  autoconf_arg_file=""
+  passed_autoconf_arg=""
   allow_color_flag=1
   do_filelog_flag=0
   enable_make_rebuild_flag=1
@@ -1727,8 +1739,8 @@ amboso_parse_args() {
           linter=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; handle_nohyphen_flags_arg "$val" "-linter"; be_stego_parser_flag=1; queried_stego_filepath="$val";;
           verbose) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); handle_verbose_arg "$val";;
           verbose=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; handle_verbose_arg "$val";;
-          config) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); pass_autoconf_arg_flag=1; autoconf_arg_file="$val";;
-          config=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; pass_autoconf_arg_flag=1; autoconf_arg_file="$val";;
+          config) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); handle_config_arg "$val" "-config"; pass_autoconf_arg_flag=1; passed_autoconf_arg="$val";;
+          config=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; handle_config_arg "$val" "-config"; pass_autoconf_arg_flag=1; passed_autoconf_arg="$val";;
           cflags) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); CFLAGS_was_passed=1; passed_CFLAGS="$val";;
           cflags=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; CFLAGS_was_passed=1; passed_CFLAGS="$val";;
           test) test_mode_flag=1;;
@@ -1779,7 +1791,7 @@ amboso_parse_args() {
       R ) enable_make_rebuild_flag=0;;
       P ) allow_color_flag=0;;
       J ) do_filelog_flag=1;;
-      C ) handle_nohyphen_flags_arg "$OPTARG" "C"; pass_autoconf_arg_flag=1; autoconf_arg_file="$OPTARG";;
+      C ) handle_config_arg "$OPTARG" "C"; pass_autoconf_arg_flag=1; passed_autoconf_arg="$OPTARG";;
       x ) handle_nohyphen_flags_arg "$OPTARG" "x"; be_stego_parser_flag=1; queried_stego_filepath="$OPTARG";;
       W ) show_warranty_flag=1;;
       X ) ignore_git_check_flag=1;;
@@ -1887,8 +1899,8 @@ amboso_parse_args() {
   }
   fi
 
-  if [[ "$pass_autoconf_arg_flag" -gt 0 ]] ; then {
-    [[ -f "$autoconf_arg_file" ]] || { log_cl "Invalid file for configure argument: {$autoconf_arg_file}" error ; exit 1 ; } ;
+  if [[ "${AMBOSO_CONFIG_FLAG_ARG_ISFILE:-0}" -gt 0 && "$pass_autoconf_arg_flag" -gt 0 ]] ; then {
+    [[ -f "$passed_autoconf_arg" ]] || { log_cl "Invalid file for configure argument: {$passed_autoconf_arg}" error ; exit 1 ; } ;
   }
   fi
 
@@ -2345,7 +2357,7 @@ amboso_parse_args() {
       fi
       [[ $force_build_flag -gt 0 ]] && forcebuildm="F"
       [[ $enable_make_rebuild_flag -eq 0 ]] && norebuildm="R"
-      [[ $pass_autoconf_arg_flag -gt 0 ]] && configm="-C $autoconf_arg_file"
+      [[ $pass_autoconf_arg_flag -gt 0 ]] && configm="-C \"$passed_autoconf_arg\""
       [[ $do_filelog_flag -gt 0 ]] && loggedm="J"
       [[ $allow_color_flag -le 0 ]] && plainm="P"
       [[ $ignore_git_check_flag -gt 0 ]] && ignore_gitcheck="X"
@@ -3010,7 +3022,12 @@ amboso_parse_args() {
           fi
           configure_arg=""
           if [[ "$pass_autoconf_arg_flag" -eq 1 ]] ; then {
-              configure_arg="$(cat "$autoconf_arg_file")"
+              if [[ "${AMBOSO_CONFIG_FLAG_ARG_ISFILE:-0}" -gt 0 ]]; then {
+                configure_arg="$(cat "$passed_autoconf_arg")"
+              } else {
+                configure_arg="$passed_autoconf_arg"
+              }
+              fi
               log_cl "[CONF]    Running \"./configure $configure_arg\"" debug
           }
           fi
