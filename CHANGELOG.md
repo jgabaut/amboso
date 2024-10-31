@@ -5,10 +5,10 @@
 ### Added
 
 - Add -Z to pass custom CFLAGS
+  - Avoids reading passed CFLAGS var
 
 ### Changed
 
-- Remove reading passed CFLAGS var
 - Flags expecting an argument refuse args starting with -
   - Pass AMBOSO_ALLOW_FLAGS_HYPHEN_ARG >0 to skip this check
 - Try reading AMBOSO_CONFIG_ARG_ISFILE to use -C with flags directly
