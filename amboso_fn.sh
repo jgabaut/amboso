@@ -1636,6 +1636,209 @@ handle_config_arg() {
     fi
 }
 
+amboso_build_step() {
+    # This function is not very clean. It uses some variables which are to be set before calling it.
+    # Some of these variables are:
+    #   has_makefile
+    #   can_automake
+    local target_dir_path="$1"
+    local target_tag="$2"
+    local target_binary="$3"
+    local target_source="$4"
+    local has_config_script_args="$5"
+    local config_script_arg="$6"
+    local has_CFLAGS="$7"
+    local arg_CFLAGS="$8"
+    if [[ ! -d "$target_dir_path" ]] ; then
+      if [[ "$std_amboso_version" > "$min_amboso_v_treegen" || "$std_amboso_version" = "$min_amboso_v_treegen" ]] ; then {
+        [[ "$base_mode_flag" -gt 0 ]] && { log_cl "Base mode, can't find target dir {$target_dir_path}." error >&2; return 1; } ;
+        log_cl "Creating target_dir_path {$target_dir_path}" debug cyan >&2
+        mkdir "$target_dir_path" || { log_cl "Failed creating target_dir_path: {$target_dir_path}" error >&2 ; return 1; } ;
+      } else {
+        log_cl "'$target_dir_path' is not a valid directory.\n    Check your supported versions for details on ( $target_tag ).\n" error >&2
+        echo_timer "$amboso_start_time"  "Invalid path [$target_dir_path]" "1"
+        return 1
+      }
+      fi
+    fi
+    #we try to build
+    tool_txt="single file gcc"
+    if [[ $has_makefile -gt 0 ]]; then { #Make mode
+      tool_txt="make"
+      if [[ $can_automake -gt 0 ]] ; then { #We support automake by doing autoreconf and ./configure before running make.
+        tool_txt="automake"
+        log_cl "[MODE]    target ( $target_tag ) >= ( $use_autoconf_version ), can autoconf." debug >&2
+        autoreconf
+        if [[ $? -ne 0 ]] ; then {
+          log_cl "autoreconf failed. Doing \"automake --add-missing ; autoreconf\"" warn >&2
+          automake --add-missing
+          autoreconf
+        }
+        fi
+        configure_arg=""
+        if [[ "$has_config_script_args" -eq 1 ]] ; then {
+            if [[ "${AMBOSO_CONFIG_FLAG_ARG_ISFILE:-1}" -ne 0 ]]; then { #Isfile defaults to 1 to start with backwards compatibility
+              configure_arg="$(cat "$config_script_arg")"
+            } else {
+              configure_arg="$config_script_arg"
+            }
+            fi
+            log_cl "[CONF]    Running \"./configure $configure_arg\"" debug
+        }
+        fi
+        ./configure "$configure_arg"
+        configure_res="$?"
+        if [[ "$configure_res" -ne 0 ]]; then {
+            log_cl "./configure returned {$configure_res}" warn
+        }
+        fi
+        log_cl "Done 'autoreconf' and './configure'." info >&2
+      }
+      fi
+      log_cl "[MODE]    target ( $target_tag ) >= ( $makefile_version ), has Makefile." debug >&2
+      [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Building ( $target_tag ), using make." debug >&2
+      curr_dir=$(realpath .)
+      start_t=$(date +%s.%N)
+      if [[ $git_mode_flag -eq 0 && $base_mode_flag -eq 1 ]] ; then { #Building in base mode, we cd into target directory before make
+        [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Running in base mode, expecting full source in $target_dir_path." debug #>&2
+        cd "$target_dir_path" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4 ; };
+        if [[ "$enable_make_rebuild_flag" -gt 0 ]] ; then {
+          log_cl "Running \"make rebuild\"" debug
+          make rebuild >&2
+          comp_res=$?
+        } else {
+          log_cl "Running \"make\"" debug
+          make >&2
+          comp_res=$?
+        }
+        fi
+      } else { #Building in git mode, we checkout the tag and move the binary after the build
+        [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Running in git mode, checking out ( $target_tag )." debug #>&2
+        git checkout "$target_tag" 2>/dev/null #Repo goes back to tagged state
+        checkout_res=$?
+        if [[ $checkout_res -gt 0 ]] ; then { #Checkout failed, we don't build and we set comp_res
+          log_cl "Checkout of ( $target_tag ) failed, this stego.lock tag does not work for the repo." error #>&2
+          comp_res=1
+        } else { #Checkout successful, we build
+          git submodule update --init --recursive #We set all submodules to commit state
+          #Never try to build if checkout fails
+          if [[ "$enable_make_rebuild_flag" -gt 0 ]] ; then {
+            log_cl "Running \"make rebuild\"" debug
+            make rebuild >&2
+            comp_res=$?
+          } else {
+            log_cl "Running \"make\"" debug
+            make >&2
+            comp_res=$?
+          }
+          fi
+          #Output is expected to be in the main dir:
+          if [[ ! -e ./$target_binary ]] ; then {
+            log_cl "$target_binary not found at $(pwd)." error #>&2
+          } else {
+            mv "./$target_binary" "$target_dir_path" #All files generated during the build should be ignored by the repo, to avoid conflict when checking out
+            [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Moved $target_binary to $target_dir_path." debug #>&2
+          }
+          fi
+          git switch - #We get back to starting repo state
+          switch_res="$?"
+          if [[ $switch_res -gt 0 ]]; then {
+            log_cl "\nCan't finish checking out ($target_tag).\n    You may have a dirty index and may need to run \"git restore .\".\n Quitting.\n" error
+            echo_timer "$amboso_start_time"  "Failed checkout" "1"
+            exit 1
+          }
+          fi
+          git submodule update --init --recursive #We set all submodules to commit state
+          [[ $quiet_flag -eq 0 ]] && log_cl "[BUILD]    Switched back to starting commit." info
+        }
+        fi
+      }
+      fi
+      end_t=$(date +%s.%N)
+      runtime=$( printf "$end_t - $start_t\n" | bc -l )
+      cd "$curr_dir" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4; };
+    } else { #Straight gcc mode
+      [[ $verbose_flag -gt 3 ]] && log_cl "[MODE]    target ( $target_tag ) < ( $makefile_version ), single file build with gcc." debug >&2
+      [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Building ( $target_tag ), using gcc call." debug >&2
+      #echo "" >&2 #new line for error output
+      if [[ -z $target_source ]]; then {
+        log_cl "[WTF-ERROR]    Missing source file name. ( $target_tag ).\n" error
+        amboso_usage
+        echo_timer "$amboso_start_time"  "Missing source name for [$target_tag]" "1"
+        exit 1
+      }
+      fi
+      [[ $pack_flag -gt 0 ]] && log_cl "[PACK]    -z is not supported for ($tool_txt). TAG < ($makefile_version).\n\n    Current: ($target_tag @ $target_source).\n" error
+
+      start_t=$(date +%s.%N)
+      if [[ $git_mode_flag -eq 0 ]] ; then { #Building in base mode, we cd into target directory before make
+        [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Running in base mode, expecting full source in $target_dir_path." debug #>&2
+        if [[ $has_CFLAGS -gt 0 ]] ; then {
+            log_cl "[BUILD]    Running: {$CC $arg_CFLAGS $target_dir_path/$target_source -o $target_dir_path/$target_binary -lm}" info
+            "$CC" "$arg_CFLAGS" "$target_dir_path"/"$target_source" -o "$target_dir_path"/"$target_binary" -lm 2>&2
+            comp_res=$?
+        } else {
+            local env_CFLAGS="${CFLAGS:-}"
+            if [[ ! -z "$env_CFLAGS" ]]; then {
+                  log_cl "[BUILD]    Running: {$CC $env_CFLAGS $target_dir_path/$target_source -o $target_dir_path/$target_binary -lm}" info
+                  "$CC" "$env_CFLAGS" "$target_dir_path"/"$target_source" -o "$target_dir_path"/"$target_binary" -lm 2>&2
+                  comp_res=$?
+            } else {
+                  log_cl "[BUILD]    Running: {$CC $target_dir_path/$target_source -o $target_dir_path/$target_binary -lm}" info
+                  "$CC" "$target_dir_path"/"$target_source" -o "$target_dir_path"/"$target_binary" -lm 2>&2
+                  comp_res=$?
+            }
+            fi
+        }
+        fi
+      } else { #Building in git mode, we checkout the tag and move the binary after the build
+        [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Running in git mode, checking out ( $target_tag )." debug #>&2
+        git checkout "$target_tag" 2>/dev/null #Repo goes back to tagged state
+        checkout_res=$?
+        if [[ $checkout_res -gt 0 ]] ; then { #Checkout failed, we set comp_res and don't build
+          log_cl "Checkout of ( $target_tag ) failed, stego.lock may be listing a tag name not on the repo." error
+          comp_res=1
+        } else {
+          git submodule update --init --recursive 2>/dev/null #We set all submodules to commit state
+          if [[ $has_CFLAGS -gt 0 ]] ; then {
+              log_cl "[BUILD]    Running: {$CC $arg_CFLAGS $target_dir_path/$target_source -o $target_dir_path/$target_binary -lm}" info
+              "$CC" "$arg_CFLAGS" "$target_dir_path"/"$target_source" -o "$target_dir_path"/"$target_binary" -lm 2>&2 #Never try to build if checkout fails
+              comp_res=$?
+          } else {
+              log_cl "[BUILD]    Running: {$CC $target_dir_path/$target_source -o $target_dir_path/$target_binary -lm}" info
+              "$CC" "$target_dir_path"/"$target_source" -o "$target_dir_path"/"$target_binary" -lm 2>&2 #Never try to build if checkout fails
+              comp_res=$?
+          }
+          fi
+          #All files generated during the build should be ignored by the repo, to avoid conflict when checking out
+          git switch - 2>/dev/null #We get back to starting repo state
+          switch_res="$?"
+          if [[ $switch_res -gt 0 ]]; then {
+            log_cl "Can't finish checking out ($target_tag). Quitting." error
+            echo_timer "$amboso_start_time"  "Failed checkout for [$target_tag]" "1"
+            exit 1
+          }
+          fi
+          [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Switched back to starting commit." debug >&2
+        }
+        fi
+      }
+      fi
+      end_t=$(date +%s.%N)
+      runtime=$( printf "$end_t - $start_t\n" | bc -l )
+    }
+    fi
+    #Check compilation result
+    if [[ $comp_res -eq 0 ]] ; then
+      log_cl "[BUILD]    Done Building ( $target_tag ) , took $runtime seconds, using ( $tool_txt )." info
+      return 0
+    else
+      log_cl "Build for ( $target_tag ) failed, quitting.\n" error >&2
+      echo_timer "$amboso_start_time"  "Failed build for [$target_tag]" "1"
+      return 1
+    fi
+}
+
 amboso_parse_args() {
   export AMBOSO_LVL_REC="${AMBOSO_LVL_REC:-0}"
   #Increment depth counter
@@ -2339,56 +2542,17 @@ amboso_parse_args() {
       #Build this vers
       #Init mode ALWAYS tries building, even if we have the binary already ATM
       #Save verbose flag
-      verb=""
-      buildm=""
-      gitm=""
-      basem=""
-      quietm=""
-      silentm=""
-      packm=""
-      ignore_gitcheck=""
-      showtimem=""
-      plainm=""
-      loggedm=""
-      configm=""
-      norebuildm=""
-      forcebuildm=""
-      extm=""
-      corem=""
-      if [[ "$std_amboso_version" > "$min_amboso_v_extensions" || "$std_amboso_version" = "$min_amboso_v_extensions" ]] ; then {
-        [[ $extensions_flag -ne 1 ]] && extm="e"
-      } else {
-        log_cl "Taken legacy path, won't pass -e. Current: {$extensions_flag}" warn magenta
-      }
+      has_makefile=0
+      if [[ $init_vers > $makefile_version || $init_vers = "$makefile_version" ]] ; then
+        has_makefile=1
       fi
-      [[ $force_build_flag -gt 0 ]] && forcebuildm="F"
-      [[ $enable_make_rebuild_flag -eq 0 ]] && norebuildm="R"
-      [[ $pass_autoconf_arg_flag -gt 0 ]] && configm="-C \"$passed_autoconf_arg\""
-      [[ $do_filelog_flag -gt 0 ]] && loggedm="J"
-      [[ $allow_color_flag -le 0 ]] && plainm="P"
-      [[ $ignore_git_check_flag -gt 0 ]] && ignore_gitcheck="X"
-      [[ $show_time_flag -gt 0 ]] && showtimem="w"
-      [[ $pack_flag -gt 0 ]] && packm="z" #Pass pack op mode
-      [[ $silent_flag -gt 0 ]] && silentm="s" #Pass silent mode
-      [[ $verbose_flag -ne 3 ]] && verb="-V $verbose_flag" #Pass verbose mode
-      [[ $build_flag -gt 0 ]] && buildm="b" #Pass build op mode
-      [[ $base_mode_flag -gt 0 ]] && basem="B" #We make sure to pass on eventual base mode to the subcalls
-      [[ $git_mode_flag -gt 0 ]] && gitm="g" #We make sure to pass on eventual git mode to the subcalls
-      [[ $quiet_flag -gt 0 ]] && quietm="q" #We make sure to pass on eventual quiet mode to the subcalls
-      if [[ "$std_amboso_version" > "$min_amboso_v_stegodir" || "$std_amboso_version" = "$min_amboso_v_stegodir" ]] ; then {
-          corem="-O $stego_dir -k $std_amboso_kern -a $std_amboso_version"
-      } elif [[ "$std_amboso_version" < "$min_amboso_v_kern"  ]]; then {
-          log_cl "Taken legacy path, not passing any core arg." warn magenta
-          log_cl "Currently: -O {$stego_dir} -a {$std_amboso_version} -k {$std_amboso_kern}\n" warn cyan
-          corem=""
-      } else {
-          log_cl "Taken legacy path, not passing -O {$stego_dir}." warn magenta
-          corem="-k $std_amboso_kern -a $std_amboso_version"
-      }
+
+      can_automake=0
+      if [[ $init_vers > $use_autoconf_version || $init_vers = "$use_autoconf_version" ]] ; then
+        can_automake=1
       fi
-      #First pass sets the verbose flag but redirects stderr to /dev/null
-      [[ $verbose_flag -gt 3 ]] && log_cl "[VERB]    Running \"$(dirname "$(basename "$prog_name")") $corem -Y $amboso_start_time -M $makefile_version -S $source_name -E $exec_entrypoint -D $scripts_dir $verb $configm -b$gitm$basem$quietm$silentm$packm$ignore_gitcheck$showtimem$plainm$loggedm$norebuildm$forcebuildm$extm $init_vers\" ( $(($i+1)) / $tot_vers )" info >&2
-      "$prog_name" $corem -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -E "$exec_entrypoint" -D "$scripts_dir" $verb $configm -b"$gitm""$basem""$quietm""$silentm""$packm""$ignore_gitcheck""$showtimem""$plainm""$loggedm""$norebuildm""$forcebuildm""$extm" "$init_vers" 2>/dev/null
+
+      amboso_build_step "${scripts_dir}v${init_vers}" "$init_vers" "$exec_entrypoint" "$source_name" "$pass_autoconf_arg_flag" "$passed_autoconf_arg" "$CFLAGS_was_passed" "$passed_CFLAGS"
       if [[ $? -eq 0 ]] ; then {
         [[ $verbose_flag -gt 3 ]] && log_cl "[INIT]    $init_vers binary ready." info >&2
         count_bins=$(($count_bins +1))
@@ -2396,14 +2560,6 @@ amboso_parse_args() {
         verbose_hint=""
         [[ $verbose_flag -lt 1 ]] && verbose_hint="Run with -V <lvl> to see more info."
         log_cl "[INIT]    Failed build for $init_vers binary. $verbose_hint\n" error
-        #try building again to get more output, since we discarded stderr before
-        #
-        #we could just pass -v to the first call if we have it on
-        if [[ $verbose_flag -gt 3 || $quiet_flag -eq 0 ]]; then {
-          log_cl "[INIT]    Checking errors, running $(basename "$prog_name") -k $std_amboso_kern -a $std_amboso_version -bV$packm$ignore_gitcheck $init_vers" info >&2
-      ("$prog_name" $corem -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -D "$scripts_dir" -E "$exec_entrypoint" -V 2 -b"$gitm""$basem""$packm""$ignore_gitcheck""$showtimem""$plainm""$loggedm""$norebuildm""$forcebuildm""$extm" "$init_vers") >&2
-        }
-        fi
       }
       fi
     done
@@ -3007,194 +3163,12 @@ amboso_parse_args() {
       }
       fi
     } else {
-      if [[ ! -d "$script_path" ]] ; then
-        if [[ "$std_amboso_version" > "$min_amboso_v_treegen" || "$std_amboso_version" = "$min_amboso_v_treegen" ]] ; then {
-          [[ "$base_mode_flag" -gt 0 ]] && { log_cl "Base mode, can't find target dir {$script_path}." error >&2; return 1; } ;
-          log_cl "Creating script_path {$script_path}" debug cyan >&2
-          mkdir "$script_path" || { log_cl "Failed creating script_path: {$script_path}" error >&2 ; return 1; } ;
-        } else {
-          log_cl "'$script_path' is not a valid directory.\n    Check your supported versions for details on ( $version ).\n" error >&2
-          echo_timer "$amboso_start_time"  "Invalid path [$script_path]" "1"
-          return 1
+        amboso_build_step "$script_path" "$version" "$exec_entrypoint" "$source_name" "$pass_autoconf_arg_flag" "$passed_autoconf_arg" "$CFLAGS_was_passed" "$passed_CFLAGS"
+        local build_step_res="$?"
+        [[ "$build_step_res" -ne 0 ]] && {
+            log_cl "[BUILD]    Failed build step for ( $version ) .\n" error
+            exit "$build_step_res"
         }
-        fi
-      fi
-      #we try to build
-      tool_txt="single file gcc"
-      if [[ $has_makefile -gt 0 ]]; then { #Make mode
-        tool_txt="make"
-        if [[ $can_automake -gt 0 ]] ; then { #We support automake by doing autoreconf and ./configure before running make.
-          tool_txt="automake"
-          log_cl "[MODE]    target ( $version ) >= ( $use_autoconf_version ), can autoconf." debug >&2
-          autoreconf
-          if [[ $? -ne 0 ]] ; then {
-            log_cl "autoreconf failed. Doing \"automake --add-missing ; autoreconf\"" warn >&2
-            automake --add-missing
-            autoreconf
-          }
-          fi
-          configure_arg=""
-          if [[ "$pass_autoconf_arg_flag" -eq 1 ]] ; then {
-              if [[ "${AMBOSO_CONFIG_FLAG_ARG_ISFILE:-1}" -ne 0 ]]; then { #Isfile defaults to 1 to start with backwards compatibility
-                configure_arg="$(cat "$passed_autoconf_arg")"
-              } else {
-                configure_arg="$passed_autoconf_arg"
-              }
-              fi
-              log_cl "[CONF]    Running \"./configure $configure_arg\"" debug
-          }
-          fi
-          ./configure "$configure_arg"
-          configure_res="$?"
-          if [[ "$configure_res" -ne 0 ]]; then {
-              log_cl "./configure returned {$configure_res}" warn
-          }
-          fi
-          log_cl "Done 'autoreconf' and './configure'." info >&2
-        }
-        fi
-        log_cl "[MODE]    target ( $version ) >= ( $makefile_version ), has Makefile." debug >&2
-        [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Building ( $version ), using make." debug >&2
-        curr_dir=$(realpath .)
-        start_t=$(date +%s.%N)
-        if [[ $git_mode_flag -eq 0 && $base_mode_flag -eq 1 ]] ; then { #Building in base mode, we cd into target directory before make
-          [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Running in base mode, expecting full source in $script_path." debug #>&2
-          cd "$script_path" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4 ; };
-          if [[ "$enable_make_rebuild_flag" -gt 0 ]] ; then {
-            log_cl "Running \"make rebuild\"" debug
-            make rebuild >&2
-            comp_res=$?
-          } else {
-            log_cl "Running \"make\"" debug
-            make >&2
-            comp_res=$?
-          }
-          fi
-        } else { #Building in git mode, we checkout the tag and move the binary after the build
-          [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Running in git mode, checking out ( $version )." debug #>&2
-          git checkout "$version" 2>/dev/null #Repo goes back to tagged state
-          checkout_res=$?
-          if [[ $checkout_res -gt 0 ]] ; then { #Checkout failed, we don't build and we set comp_res
-            log_cl "Checkout of ( $version ) failed, this stego.lock tag does not work for the repo." error #>&2
-            comp_res=1
-          } else { #Checkout successful, we build
-            git submodule update --init --recursive #We set all submodules to commit state
-            #Never try to build if checkout fails
-            if [[ "$enable_make_rebuild_flag" -gt 0 ]] ; then {
-              log_cl "Running \"make rebuild\"" debug
-              make rebuild >&2
-              comp_res=$?
-            } else {
-              log_cl "Running \"make\"" debug
-              make >&2
-              comp_res=$?
-            }
-            fi
-            #Output is expected to be in the main dir:
-            if [[ ! -e ./$exec_entrypoint ]] ; then {
-              log_cl "$exec_entrypoint not found at $(pwd)." error #>&2
-            } else {
-              mv "./$exec_entrypoint" "$script_path" #All files generated during the build should be ignored by the repo, to avoid conflict when checking out
-              [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Moved $exec_entrypoint to $script_path." debug #>&2
-            }
-            fi
-            git switch - #We get back to starting repo state
-            switch_res="$?"
-            if [[ $switch_res -gt 0 ]]; then {
-              log_cl "\nCan't finish checking out ($version).\n    You may have a dirty index and may need to run \"git restore .\".\n Quitting.\n" error
-              echo_timer "$amboso_start_time"  "Failed checkout" "1"
-              exit 1
-            }
-            fi
-            git submodule update --init --recursive #We set all submodules to commit state
-            [[ $quiet_flag -eq 0 ]] && log_cl "[BUILD]    Switched back to starting commit." info
-          }
-          fi
-        }
-        fi
-        end_t=$(date +%s.%N)
-        runtime=$( printf "$end_t - $start_t\n" | bc -l )
-        cd "$curr_dir" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4; };
-      } else { #Straight gcc mode
-        [[ $verbose_flag -gt 3 ]] && log_cl "[MODE]    target ( $version ) < ( $makefile_version ), single file build with gcc." debug >&2
-        [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Building ( $version ), using gcc call." debug >&2
-        #echo "" >&2 #new line for error output
-        if [[ -z $source_name ]]; then {
-          log_cl "[WTF-ERROR]    Missing source file name. ( $version ).\n" error
-          amboso_usage
-          echo_timer "$amboso_start_time"  "Missing source name for [$version]" "1"
-          exit 1
-        }
-        fi
-        [[ $pack_flag -gt 0 ]] && log_cl "[PACK]    -z is not supported for ($tool_txt). TAG < ($makefile_version).\n\n    Current: ($version @ $source_name).\n" error
-
-        start_t=$(date +%s.%N)
-        if [[ $git_mode_flag -eq 0 ]] ; then { #Building in base mode, we cd into target directory before make
-          [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Running in base mode, expecting full source in $script_path." debug #>&2
-          if [[ $CFLAGS_was_passed -gt 0 ]] ; then {
-              log_cl "[BUILD]    Running: {$CC $passed_CFLAGS $script_path/$source_name -o $script_path/$exec_entrypoint -lm}" info
-              "$CC" "$passed_CFLAGS" "$script_path"/"$source_name" -o "$script_path"/"$exec_entrypoint" -lm 2>&2
-              comp_res=$?
-          } else {
-              local env_CFLAGS="${CFLAGS:-}"
-              if [[ ! -z "$env_CFLAGS" ]]; then {
-                    log_cl "[BUILD]    Running: {$CC $env_CFLAGS $script_path/$source_name -o $script_path/$exec_entrypoint -lm}" info
-                    "$CC" "$env_CFLAGS" "$script_path"/"$source_name" -o "$script_path"/"$exec_entrypoint" -lm 2>&2
-                    comp_res=$?
-              } else {
-                    log_cl "[BUILD]    Running: {$CC $script_path/$source_name -o $script_path/$exec_entrypoint -lm}" info
-                    "$CC" "$script_path"/"$source_name" -o "$script_path"/"$exec_entrypoint" -lm 2>&2
-                    comp_res=$?
-              }
-              fi
-          }
-          fi
-        } else { #Building in git mode, we checkout the tag and move the binary after the build
-          [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Running in git mode, checking out ( $version )." debug #>&2
-          git checkout "$version" 2>/dev/null #Repo goes back to tagged state
-          checkout_res=$?
-          if [[ $checkout_res -gt 0 ]] ; then { #Checkout failed, we set comp_res and don't build
-            log_cl "Checkout of ( $version ) failed, stego.lock may be listing a tag name not on the repo." error
-            comp_res=1
-          } else {
-            git submodule update --init --recursive 2>/dev/null #We set all submodules to commit state
-            if [[ $CFLAGS_was_passed -gt 0 ]] ; then {
-                log_cl "[BUILD]    Running: {$CC $passed_CFLAGS $script_path/$source_name -o $script_path/$exec_entrypoint -lm}" info
-                "$CC" "$passed_CFLAGS" "$script_path"/"$source_name" -o "$script_path"/"$exec_entrypoint" -lm 2>&2 #Never try to build if checkout fails
-                comp_res=$?
-            } else {
-                log_cl "[BUILD]    Running: {$CC $script_path/$source_name -o $script_path/$exec_entrypoint -lm}" info
-                "$CC" "$script_path"/"$source_name" -o "$script_path"/"$exec_entrypoint" -lm 2>&2 #Never try to build if checkout fails
-                comp_res=$?
-            }
-            fi
-            #All files generated during the build should be ignored by the repo, to avoid conflict when checking out
-            git switch - 2>/dev/null #We get back to starting repo state
-            switch_res="$?"
-            if [[ $switch_res -gt 0 ]]; then {
-              log_cl "Can't finish checking out ($version). Quitting." error
-              echo_timer "$amboso_start_time"  "Failed checkout for [$version]" "1"
-              exit 1
-            }
-            fi
-            [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Switched back to starting commit." debug >&2
-          }
-          fi
-        }
-        fi
-        end_t=$(date +%s.%N)
-        runtime=$( printf "$end_t - $start_t\n" | bc -l )
-      }
-      fi
-      #Check compilation result
-      if [[ $comp_res -eq 0 ]] ; then
-        log_cl "[BUILD]    Done Building ( $version ) , took $runtime seconds, using ( $tool_txt )." info
-      else
-        log_cl "Build for ( $version ) failed, quitting.\n" error >&2
-        echo_timer "$amboso_start_time"  "Failed build for [$version]" "1"
-        exit 1
-      fi
-
     }
     fi
 
