@@ -1839,6 +1839,57 @@ amboso_build_step() {
     fi
 }
 
+amboso_delete_step() {
+    local target_dir_path="$1"
+    local target_tag="$2"
+    local target_binary="$3"
+    local clean_res=1
+    if [[ $has_makeclean -gt 0 && $base_mode_flag -gt 0 ]] ; then { #Running in git mode skips make clean
+      tool_txt="make clean"
+      has_bin=0
+      curr_dir=$(realpath .)
+      delete_path="$target_dir_path""/v""$target_tag"
+        if [[ ! -d $delete_path ]] ; then {
+          log_cl "'$delete_path' is not a valid directory.\n    Check your supported versions for details on ( $target_tag ).\n" error #>&2
+        } elif [[ -x $target_dir_path/v$target_tag/$target_binary ]] ; then { #Executable exists
+          has_bin=1 && log_cl "[DELETE]   ( $target_tag ) has an executable.\n" info >&2
+          cd "$delete_path" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4 ;};
+          make clean 2>/dev/null #1>&2
+          clean_res=$?
+          cd "$curr_dir" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4 ;};
+          echo_timer "$amboso_start_time"  "Did delete, res was [$clean_res]" "3"
+          exit "$clean_res"
+        } else {
+          [[ $verbose_flag -gt 3 ]] && log_cl "[DELETE]   ( $target_tag ) does not have an executable at ( $delete_path ).\n" debug # >&2
+          echo_timer "$amboso_start_time"  "Nothing to delete" "1"
+          exit 1
+        }
+        fi
+    } else { #Doesn't have Makefile, build method 2. Running in git mode also skips using make clean
+      tool_txt="rm"
+      clean_res=128
+      if [[ -x $target_dir_path"/v$target_tag"/"$target_binary" ]] ; then {
+        [[ $verbose_flag -gt 3 ]] && log_cl "[DELETE]    ( $target_tag ) has an executable." debug >&2
+        rm "$(realpath "$target_dir_path"/"v${target_tag}/${target_binary}")" #2>/dev/null
+        clean_res=$?
+        if [[ $clean_res -eq 0 ]] ; then {
+          log_cl "[DELETE]    Success on ( $target_tag )." info
+        } else {
+          log_cl "[DELETE]    Failure on ( $target_tag )." error
+        }
+        fi
+        echo_timer "$amboso_start_time"  "Did delete, res was [$clean_res]" "3"
+        return "$clean_res"
+      } else {
+        log_cl "[DELETE]    ( $target_tag ) does not have an executable." warn >&2
+        echo_timer "$amboso_start_time"  "Did delete, res was [$clean_res]" "3"
+        return 1
+      }
+      fi
+    }
+    fi
+}
+
 amboso_parse_args() {
   export AMBOSO_LVL_REC="${AMBOSO_LVL_REC:-0}"
   #Increment depth counter
@@ -3230,47 +3281,13 @@ amboso_parse_args() {
   #Check if we are deleting and exiting early
   #We skipped first deletion pass if purge mode is requested, since we will enter here later
   if [[ $delete_flag -gt 0 && $purge_flag -eq 0 ]] ; then {
-    clean_res=1
-    if [[ $has_makeclean -gt 0 && $base_mode_flag -gt 0 ]] ; then { #Running in git mode skips make clean
-      tool_txt="make clean"
-      has_bin=0
-      curr_dir=$(realpath .)
-      delete_path="$scripts_dir""v""$version"
-        if [[ ! -d $delete_path ]] ; then {
-          log_cl "'$delete_path' is not a valid directory.\n    Check your supported versions for details on ( $version ).\n" error #>&2
-        } elif [[ -x $scripts_dir/v$version/$exec_entrypoint ]] ; then { #Executable exists
-          has_bin=1 && log_cl "[DELETE]   ( $version ) has an executable.\n" info >&2
-          cd "$delete_path" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4 ;};
-          make clean 2>/dev/null #1>&2
-          clean_res=$?
-          cd "$curr_dir" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4 ;};
-          echo_timer "$amboso_start_time"  "Did delete, res was [$clean_res]" "3"
-          exit "$clean_res"
-        } else {
-          [[ $verbose_flag -gt 3 ]] && log_cl "[DELETE]   ( $version ) does not have an executable at ( $delete_path ).\n" debug # >&2
-          echo_timer "$amboso_start_time"  "Nothing to delete" "1"
-          exit 1
-        }
-        fi
-    } else { #Doesn't have Makefile, build method 2. Running in git mode also skips using make clean
-      tool_txt="rm"
-      has_bin=0
-      if [[ -x $scripts_dir"/v$version"/"$exec_entrypoint" ]] ; then {
-        has_bin=1 && [[ $verbose_flag -gt 3 ]] && log_cl "[DELETE]    ( $version ) has an executable." debug >&2
-      }
-      fi
-      rm "$(realpath "$scripts_dir"/"v${version}/${exec_entrypoint}")" #2>/dev/null
-      clean_res=$?
-      if [[ $clean_res -eq 0 ]] ; then {
-        log_cl "[DELETE]    Success on ( $version )." info
-      } else {
-        log_cl "[DELETE]    Failure on ( $version )." error
-      }
-      fi
-      echo_timer "$amboso_start_time"  "Did delete, res was [$clean_res]" "3"
-      exit "$clean_res"
+    amboso_delete_step "$scripts_dir" "$version" "$exec_entrypoint"
+    local del_res="$?"
+    if [[ "$del_res" -ne 0 ]]; then {
+        log_cl "[DELETE]    Errors while trying to delete {$scripts_dir/v$version/$exec_entrypoint}" error
     }
     fi
+    return "$del_res" # A delete op always results in main returning
   }
   fi
 
@@ -3286,63 +3303,15 @@ amboso_parse_args() {
       if [[ -x $scripts_dir/v$purge_vers/$exec_entrypoint ]] ; then {
         has_bin=1 #&& [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;32m[DELETE]    $version has an executable.\e[0m\n" >&2
       } else {
+        log_cl "[PURGE]    Could not find target for ( $purge_vers ) at {$scripts_dir/v$purge_vers/$exec_entrypoint}. Ignoring it." warn
         continue; #We just skip the version
       }
       fi
       if [[ $purge_vers > "$makefile_version" || $purge_vers = "$makefile_version" ]] ; then
         [[ $git_mode_flag -eq 0 ]] && has_makeclean=1 && tool_txt="make clean" #We never use make clean for purge, if in git mode
       fi
-
-      ## Rerun with -d
-      verb=""
-      gitm=""
-      basem=""
-      quietm=""
-      silentm=""
-      packm=""
-      ignore_gitcheck=""
-      showtimem=""
-      plainm=""
-      loggedm=""
-      extm=""
-      corem=""
-      if [[ "$std_amboso_version" > "$min_amboso_v_stegodir" || "$std_amboso_version" = "$min_amboso_v_stegodir" ]] ; then {
-          corem="-O $stego_dir -k $std_amboso_kern -a $std_amboso_version"
-      } elif [[ "$std_amboso_version" < "$min_amboso_v_kern"  ]]; then {
-          log_cl "Taken legacy path, not passing any core arg." warn magenta
-          log_cl "Currently: -O {$stego_dir} -a {$std_amboso_version} -k {$std_amboso_kern}\n" warn cyan
-          corem=""
-      } else {
-          log_cl "Taken legacy path, not passing -O {$stego_dir}." warn magenta
-          corem="-k $std_amboso_kern -a $std_amboso_version"
-      }
-      fi
-
-      if [[ "$std_amboso_version" > "$min_amboso_v_extensions" || "$std_amboso_version" = "$min_amboso_v_extensions" ]] ; then {
-        [[ $extensions_flag -ne 1 ]] && extm="e"
-      } else {
-        log_cl "Taken legacy path, won't pass -e. Current: {$extensions_flag}." warn magenta
-      }
-      fi
-
-      [[ $do_filelog_flag -gt 0 ]] && loggedm="J"
-      [[ $allow_color_flag -le 0 ]] && plainm="P"
-      [[ $show_time_flag -gt 0 ]] && showtimem="w"
-      [[ $ignore_git_check_flag -gt 0 ]] && ignore_gitcheck="X"
-      [[ $pack_flag -gt 0 ]] && packm="z"
-      [[ $silent_flag -gt 0 ]] && silentm="s"
-      [[ $verbose_flag -ne 3 ]] && verb="-V $verbose_flag"
-      [[ $verbose_flag -gt 3 ]] && printf "\n[PURGE]    Trying to delete ( $purge_vers ) ( $(($i+1)) / $tot_vers )\n" >&2
-      [[ $base_mode_flag -gt 0 ]] && basem="B" #We make sure to pass on eventual base mode to the subcalls
-      [[ $git_mode_flag -gt 0 ]] && gitm="g" #We make sure to pass on eventual git mode to the subcalls
-      [[ $quiet_flag -gt 0 ]] && quietm="q" #We make sure to pass on eventual quiet flag mode to the subcalls
-      if [[ $quiet_flag -eq 0 ]] ; then {
-        log_cl "[PURGE]    Running \"$(basename "$prog_name") $corem -Y $amboso_start_time -M $makefile_version -S $source_name -E $exec_entrypoint -D $scripts_dir $verb -d$gitm$basem$quietm$silentm$packm$ignore_gitcheck$showtimem$plainm$loggedm$extm $purge_vers 2>/dev/null\"" debug
-      }
-      fi
-      ( $prog_name $corem -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -E "$exec_entrypoint" -D "$scripts_dir" $verb -d"$gitm""$basem""$quietm""$silentm""$packm""$ignore_gitcheck""$showtimem""$plainm""$loggedm""$extm" "$purge_vers" ) 2>/dev/null
+      amboso_delete_step "$scripts_dir" "$purge_vers" "$exec_entrypoint"
       clean_res="$?"
-      #To be sure delete OP is gonna be the returning op here, we assume pack just never makes the script return, so it will always go to delete OP safely.
 
       #Check clean result
       if [[ $clean_res -eq 0 && $has_bin -gt 0 ]] ; then {
@@ -3354,15 +3323,6 @@ amboso_parse_args() {
         [[ $verbose_flag -lt 1 ]] && verbose_hint="Run with -V <lvl> to see more info."
         log_cl "[PURGE]    Failed delete for ( $purge_vers ) binary. $verbose_hint\n" error
         [[ $verbose_flag -gt 3 ]] && log_cl "[PURGE]    Failed removing ( $purge_vers ) using ( $tool_txt ). $verbose_hint" error #>&2
-        #try deleting again to get more output, since we discarded stderr before
-        #
-        #we could just pass -v to the first call if we have it on
-        if [[ $verbose_flag -gt 3 ]]; then {
-          printf "[PURGE]    Verbose flag was asserted as ($verbose_flag).\n" >&2
-          log_cl "[PURGE]    Checking errors, running $(basename "$prog_name") $corem -V 2 -d $purge_vers" debug >&2
-          ("$prog_name" $corem -Y "$amboso_start_time" -M "$makefile_version" -S "$source_name" -D "$scripts_dir" -E "$exec_entrypoint" -V 2 -d"$gitm""$basem""$ignore_gitcheck""$showtimem""$plainm""$loggedm""$extm" "$purge_vers") #>&2
-        }
-        fi
       }
       fi
 
