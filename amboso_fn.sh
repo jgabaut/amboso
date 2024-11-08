@@ -2115,6 +2115,7 @@ amboso_parse_args() {
   stego_dir_flag=0
   min_amboso_v_stegodir="2.0.3"
   min_amboso_v_treegen="2.0.4"
+  min_amboso_v_morekern="2.0.9"
   long_options_hack="-:" # From https://stackoverflow.com/questions/402377/using-getopts-to-process-long-and-short-command-line-options/7680682#7680682
   while getopts "Z:O:A:M:S:E:D:K:G:Y:x:V:C:a:k:${long_options_hack}wBgbpHhrivdlLtTqszUXWPJRFe" opt; do
     case $opt in
@@ -2628,6 +2629,17 @@ amboso_parse_args() {
   # Check queried kern
   if [[ "$std_amboso_version" > "$min_amboso_v_kern" || "$std_amboso_version" = "$min_amboso_v_kern" ]]; then {
     if [[ ! -z "$queried_amboso_kern" ]] ; then {
+        if [[ "$std_amboso_version" > "$min_amboso_v_morekern" || "$std_amboso_version" = "$min_amboso_v_morekern" ]]; then {
+            :
+        } elif [[ ! "$queried_amboso_kern" = "amboso-C" ]]; then { # Legacy path: Refuse kern as unknown
+            log_cl "Invalid kern argument --> {$queried_amboso_kern}" error
+            log_cl "Hint: Use one of these: --> {" error
+            log_cl "    amboso-C" info
+            log_cl "}" error
+            exit 1
+        }
+        fi
+
         if [[ "$queried_amboso_kern" = "anvilPy" ]]; then {
             log_cl "\n##\n#\n# The anvilPy kern is experimental.\n#\n##\n" warn
         }
