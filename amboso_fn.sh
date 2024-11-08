@@ -1926,11 +1926,19 @@ anvilPy_build_step() {
 
     #TODO: find a better way to pass main entrypoint name to gen_shim()
     local main_entry="$(grep "$bin_name =" "./pyproject.toml")"
+    local grep_res="$?"
+    [[ "$grep_res" -ne 0 ]] && { log_cl "${FUNCNAME[0]}():    Failed grep for main entry. Errcode: {$grep_res}" error; return 1; }
+
+    [[ -z "$main_entry" ]] && { log_cl "${FUNCNAME[0]}():    Can't deduce main_entry from pyproject.toml" error; return 1; }
+
+    log_cl "[BUILD]    Extracted main_entry: {$main_entry}" debug
 
     # Remove the prefix up to and including the start delimiter
     main_entry="${main_entry#*$bin_name.}"
     # Remove everything after the end delimiter
     local main_name="${main_entry%:main*}"
+
+    [[ -z "$main_name" ]] && { log_cl "${FUNCNAME[0]}():    Can't deduce main_name from main_entry: {$main_entry}" error; return 1; }
 
     log_cl "[BUILD]    Extracted main name: {$main_name}" info
 
