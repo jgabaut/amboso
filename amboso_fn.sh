@@ -1933,7 +1933,9 @@ anvilPy_build_step() {
     local target_d="$1" # Target dir
     local q_tag="$2" # Queried tag
     local bin_name="$3" # Target bin name
+    local stego_dir="$4" # Stego dir name
     local anvilPy_unpack_dirname="unpack"
+    local pyproj_toml_path="$stego_dir/pyproject.toml"
 
     if [[ "$git_mode_flag" -gt 0 ]] ; then {
         [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Running in git mode, checking out ( $q_tag )." debug #>&2
@@ -1950,20 +1952,19 @@ anvilPy_build_step() {
     }
     fi
 
-
-    if [[ ! -f "./pyproject.toml" ]] ; then {
-        log_cl "Can't find ./pyproject.toml" error
+    if [[ ! -f "$pyproj_toml_path" ]] ; then {
+        log_cl "Can't find $pyproj_toml_path" error
         anvilPy_git_restore "$q_tag"
         return 1
     }
     fi
 
     #TODO: find a better way to pass main entrypoint name to gen_shim()
-    local main_entry="$(grep "$bin_name =" "./pyproject.toml")"
+    local main_entry="$(grep "$bin_name =" "$pyproj_toml_path")"
     local grep_res="$?"
-    [[ "$grep_res" -ne 0 ]] && { log_cl "${FUNCNAME[0]}():    Failed grep for main entry. Errcode: {$grep_res}" error; anvilPy_git_restore "$q_tag"; return 1; }
+    [[ "$grep_res" -ne 0 ]] && { log_cl "${FUNCNAME[0]}():    Failed grep of {$pyproj_toml_path} for main entry. Errcode: {$grep_res}" error; anvilPy_git_restore "$q_tag"; return 1; }
 
-    [[ -z "$main_entry" ]] && { log_cl "${FUNCNAME[0]}():    Can't deduce main_entry from pyproject.toml" error; anvilPy_git_restore "$q_tag"; return 1; }
+    [[ -z "$main_entry" ]] && { log_cl "${FUNCNAME[0]}():    Can't deduce main_entry from {$pyproj_toml_path}" error; anvilPy_git_restore "$q_tag"; return 1; }
 
     log_cl "[BUILD]    Extracted main_entry: {$main_entry}" debug
 
@@ -2760,7 +2761,7 @@ amboso_parse_args() {
             ambosoC_build_step "${scripts_dir}v${init_vers}" "$init_vers" "$exec_entrypoint" "$source_name" "$pass_autoconf_arg_flag" "$passed_autoconf_arg" "$CFLAGS_was_passed" "$passed_CFLAGS"
             ;;
         "anvilPy")
-            anvilPy_build_step "${scripts_dir}v${init_vers}" "$init_vers" "$exec_entrypoint"
+            anvilPy_build_step "${scripts_dir}v${init_vers}" "$init_vers" "$exec_entrypoint" "$stego_dir"
             ;;
         *)
             log_cl "[BUILD]    Invalid kern: {$std_amboso_kern}" error
@@ -3402,7 +3403,7 @@ amboso_parse_args() {
                 ambosoC_build_step "$script_path" "$version" "$exec_entrypoint" "$source_name" "$pass_autoconf_arg_flag" "$passed_autoconf_arg" "$CFLAGS_was_passed" "$passed_CFLAGS"
                 ;;
             "anvilPy")
-                anvilPy_build_step "$script_path" "$version" "$exec_entrypoint"
+                anvilPy_build_step "$script_path" "$version" "$exec_entrypoint" "$stego_dir"
                 ;;
             *)
                 log_cl "[BUILD]    Invalid kern: {$std_amboso_kern}" error
