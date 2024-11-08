@@ -1395,7 +1395,7 @@ set_amboso_stego_info() {
           use_anvil_version_arg "$value"
         } elif [[ $variable = "anvil_kern" ]] ; then {
           if [[ "$std_amboso_version" > "$min_amboso_v_kern" || "$std_amboso_version" = "$min_amboso_v_kern" ]]; then {
-            log_cl "Checking stego kern value: {$value}" debug
+            #log_cl "Checking stego kern value: {$value}" debug
             handle_kern_arg "$value"
           } else {
             if [[ "${AMBOSO_LVL_REC}" -eq 1 || "$verbose_flag" -gt 3 ]] ; then {
@@ -2626,9 +2626,8 @@ amboso_parse_args() {
 
   # Check queried kern
   if [[ "$std_amboso_version" > "$min_amboso_v_kern" || "$std_amboso_version" = "$min_amboso_v_kern" ]]; then {
-    log_cl "${FUNCNAME[0]}():    Using queried amboso kern: {$queried_amboso_kern}" info
     if [[ ! -z "$queried_amboso_kern" ]] ; then {
-        log_cl "Using kern {$queried_amboso_kern}" info
+        log_cl "Using {$queried_amboso_kern}" info
         std_amboso_kern="$queried_amboso_kern"
     } else {
         log_cl "Queried kern is empty: {$queried_amboso_kern}, sticking with {$std_amboso_kern}" debug
