@@ -2627,6 +2627,10 @@ amboso_parse_args() {
   # Check queried kern
   if [[ "$std_amboso_version" > "$min_amboso_v_kern" || "$std_amboso_version" = "$min_amboso_v_kern" ]]; then {
     if [[ ! -z "$queried_amboso_kern" ]] ; then {
+        if [[ "$queried_amboso_kern" = "anvilPy" ]]; then {
+            log_cl "\n##\n#\n# The anvilPy kern is experimental.\n#\n##\n" warn
+        }
+        fi
         log_cl "Using {$queried_amboso_kern}" info
         std_amboso_kern="$queried_amboso_kern"
     } else {
