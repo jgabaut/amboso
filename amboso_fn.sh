@@ -1991,8 +1991,10 @@ anvilPy_build_step() {
       fi
     fi
 
+    local build_res=0
     python -m build
-    if [[ "$?" -eq 0 ]] ; then {
+    build_res="$?"
+    if [[ "$build_res" -eq 0 ]] ; then {
         local srcdist_path_glob="./dist/*-"$q_tag".tar.gz"
         local srcdist_files=($srcdist_path_glob)
         if [[ "${#srcdist_files[@]}" -ne 1 ]] ; then {
@@ -2027,10 +2029,12 @@ anvilPy_build_step() {
         tar -xvzf "$target_d"/"$dist_filename" --strip-components=1 -C "$target_d/$anvilPy_unpack_dirname"
 
         anvilPy_gen_shim "$target_d" "$q_tag" "$bin_name" "$main_name"
+    } else {
+        log_cl "[BUILD]    Failed python -m build" error
     }
     fi
     anvilPy_git_restore "$q_tag"
-    return "$?"
+    return "$build_res"
 }
 
 amboso_parse_args() {
