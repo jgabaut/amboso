@@ -3311,6 +3311,11 @@ amboso_parse_args() {
   #We expect $scripts_dir to end with /
   local interpr_regex='stego.lock$'
   local interpr_does_make=1
+  if [[ "$std_amboso_kern" = "anvilPy" ]]; then {
+    log_cl "[KERN]    Avoiding make branch for anvilPy interpreter" debug
+    interpr_does_make=0
+  }
+  fi
   if [[ "$std_amboso_version" > "2.0.2" && "$query" =~ $interpr_regex ]] ; then {
     log_cl "Running as interpreter for {$query}\n" info
     if [[ "$interpr_does_make" -gt 0 ]] ; then {
@@ -3320,6 +3325,8 @@ amboso_parse_args() {
               try_doing_make
               ;;
           "anvilPy")
+              log_cl "[BUILD]    Interpreter make branch for anvilPy kern is not implemented" error
+              return 1
               ;;
           *)
               log_cl "[BUILD]    Invalid kern: {$std_amboso_kern}" error
@@ -3333,6 +3340,8 @@ amboso_parse_args() {
       return "$make_res"
     } else {
       log_cl "Building: -->    {$latest_version}\n" info magenta
+      log_cl "Setting build flag: --> {$build_flag} to 1" info magenta
+      build_flag=1
       check_tags
       query="$latest_version"
     }
