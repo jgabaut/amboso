@@ -2116,6 +2116,7 @@ amboso_parse_args() {
   min_amboso_v_stegodir="2.0.3"
   min_amboso_v_treegen="2.0.4"
   min_amboso_v_morekern="2.0.9"
+  min_amboso_v_anvilPy_kern="2.1.0"
   long_options_hack="-:" # From https://stackoverflow.com/questions/402377/using-getopts-to-process-long-and-short-command-line-options/7680682#7680682
   while getopts "Z:O:A:M:S:E:D:K:G:Y:x:V:C:a:k:${long_options_hack}wBgbpHhrivdlLtTqszUXWPJRFe" opt; do
     case $opt in
@@ -2641,7 +2642,14 @@ amboso_parse_args() {
         fi
 
         if [[ "$queried_amboso_kern" = "anvilPy" ]]; then {
-            log_cl "\n##\n#\n# The anvilPy kern is experimental.\n#\n##\n" warn
+            if [[ "$std_amboso_version" > "$min_amboso_v_anvilPy_kern" || "$std_amboso_version" = "$min_amboso_v_anvilPy_kern" ]]; then {
+                log_cl "\n##\n#\n# The anvilPy kern is experimental.\n#\n##\n" warn
+            } else {
+                log_cl "Can't use anvilPy while running as {$std_amboso_version}" debug
+                log_cl "Using anvilPy kern requires running as 2.1.0 preview." debug
+                return 1
+            }
+            fi
         }
         fi
         log_cl "Using {$queried_amboso_kern}" info
