@@ -1960,7 +1960,7 @@ anvilPy_build_step() {
     fi
 
     #TODO: find a better way to pass main entrypoint name to gen_shim()
-    local main_entry="$(grep "$bin_name =" "$pyproj_toml_path")"
+    local main_entry="$(grep "^[[:space:]]*$bin_name[[:space:]]*=" "$pyproj_toml_path")"
     local grep_res="$?"
     [[ "$grep_res" -ne 0 ]] && { log_cl "${FUNCNAME[0]}():    Failed grep of {$pyproj_toml_path} for main entry. Errcode: {$grep_res}" error; anvilPy_git_restore "$q_tag"; return 1; }
 
