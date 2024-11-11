@@ -1405,6 +1405,17 @@ set_amboso_stego_info() {
             fi
           }
           fi
+        } elif [[ $variable = "anvil_custombuilder" ]] ; then {
+            if [[ "$std_amboso_version" > "$min_amboso_v_custom_kern" || "$std_amboso_version" = "$min_amboso_v_custom_kern" ]]; then {
+                amboso_custom_builder="$value"
+            } else {
+                if [[ "${AMBOSO_LVL_REC}" -eq 1 || "$verbose_flag" -gt 3 ]] ; then {
+                  log_cl "std_amboso_version --> {$std_amboso_version}" info
+                  log_cl "Ignoring stego-defined builder --> {$value}" debug
+                }
+                fi
+            }
+            fi
         }
         fi
     }
@@ -1579,7 +1590,7 @@ handle_anvil_arg() {
 handle_kern_arg() {
   local arg="$1"
   case "$arg" in
-   "amboso-C" | "anvilPy" )
+   "amboso-C" | "anvilPy" | "custom" )
        queried_amboso_kern="$arg"
        [[ "$verbose_flag" -gt 3 ]] && log_cl "Queried {$queried_amboso_kern} kern" info
        ;;
@@ -1894,6 +1905,33 @@ ambosoC_delete_step() {
     fi
 }
 
+anvilPy_delete_step() {
+    local target_dir_path="$1"
+    local target_tag="$2"
+    local target_binary="$3"
+    local clean_res=1
+    tool_txt="rm"
+    clean_res=128
+    if [[ -x $target_dir_path"/v$target_tag"/"$target_binary" ]] ; then {
+      [[ $verbose_flag -gt 3 ]] && log_cl "[DELETE]    ( $target_tag ) has an executable." debug >&2
+      rm "$(realpath "$target_dir_path"/"v${target_tag}/${target_binary}")" #2>/dev/null
+      clean_res=$?
+      if [[ $clean_res -eq 0 ]] ; then {
+        log_cl "[DELETE]    Success on ( $target_tag )." info
+      } else {
+        log_cl "[DELETE]    Failure on ( $target_tag )." error
+      }
+      fi
+      echo_timer "$amboso_start_time"  "Did delete, res was [$clean_res]" "3"
+      return "$clean_res"
+    } else {
+      log_cl "[DELETE]    ( $target_tag ) does not have an executable." warn >&2
+      echo_timer "$amboso_start_time"  "Did delete, res was [$clean_res]" "3"
+      return 1
+    }
+    fi
+}
+
 anvilPy_git_restore() {
     [[ ! "$git_mode_flag" -gt 0 ]] && return 0 # Return early when out of git mode
     local q_tag="$1"
@@ -2037,6 +2075,38 @@ anvilPy_build_step() {
     return "$build_res"
 }
 
+custom_build_step () {
+    local target_d="$1"
+    local q_tag="$2"
+    local bin_name="$3"
+    local stego_dir="$4"
+    local custom_builder="$5"
+    if [[ -z "$custom_builder" ]]; then {
+        log_cl "[BUILD]    anvil_custombuilder was not set. Check your stego file." error
+        return 1
+    } elif [[ ! -x "$custom_builder" ]]; then {
+        log_cl "[BUILD]    Builder {$custom_builder} is not an executable file." error
+        return 1
+    } else {
+        log_cl "[BUILD]    Running custom builder for tag {$q_tag}, output file expected at: {$target_d/$bin_name}" info
+        log_cl "[BUILD]    Running : {$custom_builder $target_d/$bin_name $q_tag $stego_dir}" info magenta
+        "$custom_builder" "$target_d/$bin_name" "$q_tag" "$stego_dir"
+        local cs_build_res="$?"
+        if [[ "$cs_build_res" -ne 0 ]] ; then {
+            log_cl "[BUILD]    Custom build step returned {$cs_build_res}" error
+            return "$cs_build_res"
+        }
+        fi
+        if [[ ! -f "$target_d/$bin_name" ]]; then {
+            log_cl "[BUILD]    Can't find {$target_d/$bin_name} after running {$custom_builder} command" error
+            return 1
+        }
+        fi
+    }
+    fi
+    return 0
+}
+
 amboso_parse_args() {
   export AMBOSO_LVL_REC="${AMBOSO_LVL_REC:-0}"
   #Increment depth counter
@@ -2109,7 +2179,7 @@ amboso_parse_args() {
   std_amboso_version_list=("2.0.0" "2.0.*" "1.*" "2.1.0")
   std_amboso_short_version_list=("2.0" "2.1" "1.*")
   std_amboso_kern="amboso-C"
-  std_amboso_kern_list=("amboso-C" "anvilPy")
+  std_amboso_kern_list=("amboso-C" "anvilPy" "custom")
   queried_amboso_kern=""
   min_amboso_v_kern="2.0.2"
   min_amboso_v_extensions="2.0.1"
@@ -2121,6 +2191,8 @@ amboso_parse_args() {
   min_amboso_v_treegen="2.0.4"
   min_amboso_v_morekern="2.0.9"
   min_amboso_v_anvilPy_kern="2.1.0"
+  min_amboso_v_custom_kern="2.1.0"
+  amboso_custom_builder=""
   long_options_hack="-:" # From https://stackoverflow.com/questions/402377/using-getopts-to-process-long-and-short-command-line-options/7680682#7680682
   while getopts "Z:O:A:M:S:E:D:K:G:Y:x:V:C:a:k:${long_options_hack}wBgbpHhrivdlLtTqszUXWPJRFe" opt; do
     case $opt in
@@ -2649,8 +2721,17 @@ amboso_parse_args() {
             if [[ "$std_amboso_version" > "$min_amboso_v_anvilPy_kern" || "$std_amboso_version" = "$min_amboso_v_anvilPy_kern" ]]; then {
                 log_cl "\n##\n#\n# The anvilPy kern is experimental.\n#\n##\n" warn
             } else {
-                log_cl "Can't use anvilPy while running as {$std_amboso_version}" debug
-                log_cl "Using anvilPy kern requires running as 2.1.0 preview." debug
+                log_cl "Can't use anvilPy kern while running as {$std_amboso_version}" debug
+                log_cl "Using this function requires running as 2.1.0 preview." debug
+                return 1
+            }
+            fi
+        } elif [[ "$queried_amboso_kern" = "custom" ]]; then {
+            if [[ "$std_amboso_version" > "$min_amboso_v_custom_kern" || "$std_amboso_version" = "$min_amboso_v_custom_kern" ]]; then {
+                log_cl "\n##\n#\n# The custom kern is experimental.\n#\n##\n" warn
+            } else {
+                log_cl "Can't use custom kern while running as {$std_amboso_version}" debug
+                log_cl "Using this function requires running as 2.1.0 preview." debug
                 return 1
             }
             fi
@@ -2786,6 +2867,9 @@ amboso_parse_args() {
             ;;
         "anvilPy")
             anvilPy_build_step "${scripts_dir}v${init_vers}" "$init_vers" "$exec_entrypoint" "$stego_dir"
+            ;;
+        "custom")
+            custom_build_step "${scripts_dir}v{$init_vers}" "$init_vers" "$exec_entrypoint" "$stego_dir" "$amboso_custom_builder"
             ;;
         *)
             log_cl "[BUILD]    Invalid kern: {$std_amboso_kern}" error
@@ -2978,7 +3062,11 @@ amboso_parse_args() {
         "amboso-C")
             try_doing_make
             ;;
-        "anvilPy")
+        "anvilPy" | "custom")
+            log_cl "Missing query." error
+            log_cl "           Run with -h for help." info
+            echo_timer "$amboso_start_time"  "Missing query" "1"
+            return 1
             ;;
         *)
             log_cl "[BUILD]    Invalid kern: {$std_amboso_kern}" error
@@ -3325,8 +3413,8 @@ amboso_parse_args() {
   local interpr_does_make=1
   if [[ "$std_amboso_version" > "2.0.2" && "$query" =~ $interpr_regex ]] ; then {
     log_cl "Running as interpreter for {$query}\n" info
-    if [[ "$std_amboso_kern" = "anvilPy" ]]; then {
-      log_cl "[KERN]    Avoiding make branch for anvilPy interpreter" debug
+    if [[ "$std_amboso_kern" = "anvilPy" || "$std_amboso_kern" = "custom" ]]; then {
+      log_cl "[KERN]    Avoiding make branch for {$std_amboso_kern} interpreter" debug
       interpr_does_make=0
     }
     fi
@@ -3336,8 +3424,8 @@ amboso_parse_args() {
               log_cl "Building: -->    {Plain make}\n" info magenta
               try_doing_make
               ;;
-          "anvilPy")
-              log_cl "[BUILD]    Interpreter make branch for anvilPy kern is not implemented" error
+          "anvilPy" | "custom")
+              log_cl "[BUILD]    Interpreter make branch for {$std_amboso_kern} kern is not implemented" error
               return 1
               ;;
           *)
@@ -3438,6 +3526,9 @@ amboso_parse_args() {
             "anvilPy")
                 anvilPy_build_step "$script_path" "$version" "$exec_entrypoint" "$stego_dir"
                 ;;
+            "custom")
+                custom_build_step "$script_path" "$version" "$exec_entrypoint" "$stego_dir" "$amboso_custom_builder"
+                ;;
             *)
                 log_cl "[BUILD]    Invalid kern: {$std_amboso_kern}" error
                 exit 1
@@ -3509,7 +3600,18 @@ amboso_parse_args() {
   #Check if we are deleting and exiting early
   #We skipped first deletion pass if purge mode is requested, since we will enter here later
   if [[ $delete_flag -gt 0 && $purge_flag -eq 0 ]] ; then {
-    ambosoC_delete_step "$scripts_dir" "$version" "$exec_entrypoint"
+    case "$std_amboso_kern" in
+        "amboso-C")
+            ambosoC_delete_step "$scripts_dir" "$version" "$exec_entrypoint"
+            ;;
+        "anvilPy" | "custom" ) #TODO: handle custom delete step
+            anvilPy_delete_step "$scripts_dir" "$version" "$exec_entrypoint"
+            ;;
+        *)
+            log_cl "[BUILD]    Invalid kern: {$std_amboso_kern}" error
+            exit 1
+            ;;
+    esac
     local del_res="$?"
     if [[ "$del_res" -ne 0 ]]; then {
         log_cl "[DELETE]    Errors while trying to delete {$scripts_dir/v$version/$exec_entrypoint}" error
@@ -3535,10 +3637,21 @@ amboso_parse_args() {
         continue; #We just skip the version
       }
       fi
-      if [[ $purge_vers > "$makefile_version" || $purge_vers = "$makefile_version" ]] ; then
-        [[ $git_mode_flag -eq 0 ]] && has_makeclean=1 && tool_txt="make clean" #We never use make clean for purge, if in git mode
-      fi
-      ambosoC_delete_step "$scripts_dir" "$purge_vers" "$exec_entrypoint"
+      case "$std_amboso_kern" in
+          "amboso-C")
+              if [[ $purge_vers > "$makefile_version" || $purge_vers = "$makefile_version" ]] ; then
+                  [[ $git_mode_flag -eq 0 ]] && has_makeclean=1 && tool_txt="make clean" #We never use make clean for purge, if in git mode
+              fi
+              ambosoC_delete_step "$scripts_dir" "$purge_vers" "$exec_entrypoint"
+              ;;
+          "anvilPy" | "custom" ) # TODO: handle custom delete step
+              anvilPy_delete_step "$scripts_dir" "$purge_vers" "$exec_entrypoint"
+              ;;
+          *)
+              log_cl "[BUILD]    Invalid kern: {$std_amboso_kern}" error
+              exit 1
+              ;;
+      esac
       clean_res="$?"
 
       #Check clean result
