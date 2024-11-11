@@ -2084,8 +2084,27 @@ custom_build_step () {
     if [[ -z "$custom_builder" ]]; then {
         log_cl "[BUILD]    anvil_custombuilder was not set. Check your stego file." error
         return 1
-    } elif [[ ! -x "$custom_builder" ]]; then {
+    }
+    fi
+
+    if [[ "$git_mode_flag" -gt 0 ]] ; then {
+        [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Running in git mode, checking out ( $q_tag )." debug #>&2
+        git checkout "$q_tag" 2>/dev/null #Repo goes back to tagged state
+        checkout_res=$?
+        if [[ $checkout_res -gt 0 ]] ; then { #Checkout failed, we don't build
+          log_cl "Checkout of ( $q_tag ) failed, this stego.lock tag does not work for the repo." error #>&2
+          return 1
+        }
+        fi
+        #Checkout successful, we build
+        git submodule update --init --recursive #We set all submodules to commit state
+        #Never try to build if checkout fails
+    }
+    fi
+
+    if [[ ! -x "$custom_builder" ]]; then {
         log_cl "[BUILD]    Builder {$custom_builder} is not an executable file." error
+        anvilPy_git_restore "$q_tag"
         return 1
     } else {
         log_cl "[BUILD]    Running custom builder for tag {$q_tag}, output file expected at: {$target_d/$bin_name}" info
@@ -2094,16 +2113,19 @@ custom_build_step () {
         local cs_build_res="$?"
         if [[ "$cs_build_res" -ne 0 ]] ; then {
             log_cl "[BUILD]    Custom build step returned {$cs_build_res}" error
+            anvilPy_git_restore "$q_tag"
             return "$cs_build_res"
         }
         fi
         if [[ ! -f "$target_d/$bin_name" ]]; then {
             log_cl "[BUILD]    Can't find {$target_d/$bin_name} after running {$custom_builder} command" error
+            anvilPy_git_restore "$q_tag"
             return 1
         }
         fi
     }
     fi
+    anvilPy_git_restore "$q_tag"
     return 0
 }
 
