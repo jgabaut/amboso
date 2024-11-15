@@ -2108,8 +2108,8 @@ custom_build_step () {
         return 1
     } else {
         log_cl "[BUILD]    Running custom builder for tag {$q_tag}, output file expected at: {$target_d/$bin_name}" info
-        log_cl "[BUILD]    Running : {$custom_builder $target_d/$bin_name $q_tag $stego_dir}" info magenta
-        "$custom_builder" "$target_d/$bin_name" "$q_tag" "$stego_dir"
+        log_cl "[BUILD]    Running : {$custom_builder $target_d $bin_name $q_tag $stego_dir}" info magenta
+        "$custom_builder" "$target_d" "$bin_name" "$q_tag" "$stego_dir"
         local cs_build_res="$?"
         if [[ "$cs_build_res" -ne 0 ]] ; then {
             log_cl "[BUILD]    Custom build step returned {$cs_build_res}" error
