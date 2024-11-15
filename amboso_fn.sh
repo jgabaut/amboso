@@ -2107,6 +2107,18 @@ custom_build_step () {
         anvilPy_git_restore "$q_tag"
         return 1
     } else {
+        if [[ ! -d "$target_d" ]] ; then
+          if [[ "$std_amboso_version" > "$min_amboso_v_treegen" || "$std_amboso_version" = "$min_amboso_v_treegen" ]] ; then {
+            [[ "$base_mode_flag" -gt 0 ]] && { log_cl "Base mode, can't find target dir {$target_d}." error >&2; return 1; } ;
+            log_cl "Creating target_d {$target_d}" debug cyan >&2
+            mkdir "$target_d" || { log_cl "Failed creating target_d: {$target_d}" error >&2 ; return 1; } ;
+          } else {
+            log_cl "'$target_d' is not a valid directory.\n    Check your supported versions for details on ( $q_tag ).\n" error >&2
+            echo_timer "$amboso_start_time"  "Invalid path [$target_d]" "1"
+            return 1
+          }
+          fi
+        fi
         log_cl "[BUILD]    Running custom builder for tag {$q_tag}, output file expected at: {$target_d/$bin_name}" info
         log_cl "[BUILD]    Running : {$custom_builder $target_d $bin_name $q_tag $stego_dir}" info magenta
         "$custom_builder" "$target_d" "$bin_name" "$q_tag" "$stego_dir"
