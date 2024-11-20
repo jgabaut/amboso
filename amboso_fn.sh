@@ -2119,7 +2119,8 @@ custom_build_step () {
           }
           fi
         fi
-        log_cl "[BUILD]    Running custom builder for tag {$q_tag}, output file expected at: {$target_d/$bin_name}" info
+        log_cl "[BUILD]    Running custom builder for tag {$q_tag}, output file expected at: {./$bin_name}" info
+        log_cl "[BUILD]    $prog_name will try to mv {./$bin_name} to {$target_d/$bin_name}" debug
         log_cl "[BUILD]    Running : {$custom_builder $target_d $bin_name $q_tag $stego_dir}" info magenta
         "$custom_builder" "$target_d" "$bin_name" "$q_tag" "$stego_dir"
         local cs_build_res="$?"
@@ -2129,10 +2130,21 @@ custom_build_step () {
             return "$cs_build_res"
         }
         fi
-        if [[ ! -f "$target_d/$bin_name" ]]; then {
-            log_cl "[BUILD]    Can't find {$target_d/$bin_name} after running {$custom_builder} command" error
-            anvilPy_git_restore "$q_tag"
-            return 1
+        #Output is expected to be in the main dir:
+        if [[ ! -e ./"$bin_name" ]]; then {
+            if [[ ! -e "$target_d/$bin_name" ]]; then {
+                log_cl "[BUILD]    Can't find {./$bin_name} after running {$custom_builder} command" error
+                anvilPy_git_restore "$q_tag"
+                return 1
+            } else {
+                log_cl "[BUILD]    It seems {$custom_builder} command may have moved {$bin_name} to {$target_d}. Skipping mv" warn
+                anvilPy_git_restore "$q_tag"
+                return 0
+            }
+            fi
+        } else {
+            mv "./$bin_name" "$target_d/" #All files generated during the build should be ignored by the repo, to avoid conflict when checking out
+            [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Moved $bin_name to $target_d." debug #>&2
         }
         fi
     }
