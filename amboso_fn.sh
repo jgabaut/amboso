@@ -1407,7 +1407,9 @@ set_amboso_stego_info() {
           fi
         } elif [[ $variable = "anvil_custombuilder" ]] ; then {
             if [[ "$std_amboso_version" > "$min_amboso_v_custom_kern" || "$std_amboso_version" = "$min_amboso_v_custom_kern" ]]; then {
-                amboso_custom_builder="$value"
+                handle_custombuilder_arg "$value"
+                local chk_res="$?"
+                [[ "$chk_res" -ne 0 ]] && { log_cl "anvil_custombuilder --> {$value}" error; exit 1; }
             } else {
                 if [[ "${AMBOSO_LVL_REC}" -eq 1 || "$verbose_flag" -gt 3 ]] ; then {
                   log_cl "std_amboso_version --> {$std_amboso_version}" info
@@ -1649,6 +1651,27 @@ handle_config_arg() {
         handle_nohyphen_flags_arg "$arg" "$flag"
     }
     fi
+}
+
+check_for_reserved_chars() {
+    local arg="$1"
+    local reserved_chars='[\$\`\"\;\|\&\>\<\*\(\)\#\{\}]|\[|\]'
+
+    # Check if the arg contains any of the reserved characters
+    if [[ $arg =~ $reserved_chars ]]; then
+        return 1  # Return 1 for invalid arg
+    fi
+
+    return 0  # Return 0 for valid arg
+}
+
+handle_custombuilder_arg() {
+    local arg="$1"
+    [[ -z "$arg" ]] && { log_cl "Invalid empty arg for custombuilder" error; return 1; }
+    check_for_reserved_chars "$arg"
+    local res="$?"
+    [[ "$res" -ne 0 ]] && { log_cl "Invalid arg for custombuilder: {$arg}" error; return 1; }
+    amboso_custom_builder="$arg"
 }
 
 ambosoC_build_step() {
@@ -1998,7 +2021,7 @@ anvilPy_build_step() {
     fi
 
     #TODO: find a better way to pass main entrypoint name to gen_shim()
-    local main_entry="$(grep "^[[:space:]]*$bin_name[[:space:]]*=" "$pyproj_toml_path")"
+    local main_entry="$(grep "^[[:space:]]*${bin_name}[[:space:]]*=" "$pyproj_toml_path")"
     local grep_res="$?"
     [[ "$grep_res" -ne 0 ]] && { log_cl "${FUNCNAME[0]}():    Failed grep of {$pyproj_toml_path} for main entry. Errcode: {$grep_res}" error; anvilPy_git_restore "$q_tag"; return 1; }
 
@@ -2036,7 +2059,7 @@ anvilPy_build_step() {
         local srcdist_path_glob="./dist/*-"$q_tag".tar.gz"
         local srcdist_files=($srcdist_path_glob)
         if [[ "${#srcdist_files[@]}" -ne 1 ]] ; then {
-            log_cl "[BUILD]    Error: srcdist_path_glob expands to multiple files: {${srcdist_files[@]}}" error
+            log_cl "[BUILD]    Error: srcdist_path_glob expands to multiple files: {${srcdist_files[*]}}" error
             anvilPy_git_restore "$q_tag"
             return 1
         }
