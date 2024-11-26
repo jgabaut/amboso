@@ -1,11 +1,14 @@
 # Changelog
 
-## [2.0.9] - Unreleased
+## [2.0.9] - 2024-11-26
 
 ### Added
 
 - Add -Z to pass custom CFLAGS
   - Avoids reading passed CFLAGS var
+- Add 2.1.0 support from stego.lock
+- Add rough support for anvilPy kern
+- Add rough support for custom kern
 
 ### Changed
 
@@ -14,6 +17,8 @@
 - Try reading AMBOSO_CONFIG_ARG_ISFILE to use -C with flags directly
   - Setting it to 0 enables the new, backwards incompatible behaviour
 - Fix echo_active_flags() reporting -C incorrectly
+- Try using HEAD when -G receives an invalid tag
+- Refactor build, delete step to make init and purge iterative
 
 ## [2.0.8] - 2024-10-24
 
