@@ -2398,7 +2398,7 @@ amboso_parse_args() {
           warranty) show_warranty_flag=1;;
           ignore-gitcheck) ignore_git_check_flag=1;;
           logged) do_filelog_flag=1;;
-          no-color) allow_color_flag=0;;
+          no-color) { allow_color_flag=0; AMBOSO_COLOR=0; };;
           force) force_build_flag=1;;
           no-rebuild) enable_make_rebuild_flag=0;;
           strict) extensions_flag=0;;
@@ -2430,7 +2430,7 @@ amboso_parse_args() {
       e ) extensions_flag=0;;
       F ) force_build_flag=1;;
       R ) enable_make_rebuild_flag=0;;
-      P ) allow_color_flag=0;;
+      P ) { allow_color_flag=0; AMBOSO_COLOR=0; };;
       J ) do_filelog_flag=1;;
       C ) handle_config_arg "$OPTARG" "C"; pass_autoconf_arg_flag=1; passed_autoconf_arg="$OPTARG";;
       x ) handle_nohyphen_flags_arg "$OPTARG" "x"; be_stego_parser_flag=1; queried_stego_filepath="$OPTARG";;
