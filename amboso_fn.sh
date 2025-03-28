@@ -3054,13 +3054,21 @@ amboso_parse_args() {
       #Save verbose flag
       case "$std_amboso_kern" in
         "amboso-C")
+            compare_semver "$init_vers" "$makefile_version"
+            local make_cmp_res="$?"
+            local greater=2
+            local equal=0
             has_makefile=0
-            if [[ $init_vers > $makefile_version || $init_vers = "$makefile_version" ]] ; then
+            if [[ "$make_cmp_res" -eq "$greater" || "$make_cmp_res" -eq "$equal" ]] ; then
+            #if [[ $init_vers > $makefile_version || $init_vers = "$makefile_version" ]] ; then
               has_makefile=1
             fi
 
+            compare_semver "$init_vers" "$use_autoconf_version"
+            local automake_cmp_res="$?"
             can_automake=0
-            if [[ $init_vers > $use_autoconf_version || $init_vers = "$use_autoconf_version" ]] ; then
+            if [[ "$automake_cmp_res" -eq "$greater" || "$automake_cmp_res" -eq "$equal" ]] ; then
+            #if [[ $init_vers > $use_autoconf_version || $init_vers = "$use_autoconf_version" ]] ; then
               can_automake=1
             fi
 
@@ -3711,13 +3719,21 @@ amboso_parse_args() {
   }
   fi
 
+  compare_semver "$version" "$makefile_version"
+  local make_cmp_res="$?"
+  local greater=2
+  local equal=0
   has_makefile=0
-  if [[ $version > $makefile_version || $version = "$makefile_version" ]] ; then
+  if [[ "$make_cmp_res" -eq "$greater" || "$make_cmp_res" -eq "$equal" ]] ; then
+  #if [[ $version > $makefile_version || $version = "$makefile_version" ]] ; then
     has_makefile=1
   fi
 
+  compare_semver "$version" "$use_autoconf_version"
+  local automake_cmp_res="$?"
   can_automake=0
-  if [[ $version > $use_autoconf_version || $version = "$use_autoconf_version" ]] ; then
+  if [[ "$automake_cmp_res" -eq "$greater" || "$automake_cmp_res" -eq "$equal" ]] ; then
+  #if [[ $version > $use_autoconf_version || $version = "$use_autoconf_version" ]] ; then
     can_automake=1
   fi
 
@@ -3861,7 +3877,12 @@ amboso_parse_args() {
       fi
       case "$std_amboso_kern" in
           "amboso-C")
-              if [[ $purge_vers > "$makefile_version" || $purge_vers = "$makefile_version" ]] ; then
+              compare_semver "$purge_vers" "$makefile_version"
+              local make_cmp_res="$?"
+              local greater=2
+              local equal=0
+              if [[ "$make_cmp_res" -eq "$greater" || "$make_cmp_res" -eq "$equal" ]] ; then
+              #if [[ $purge_vers > "$makefile_version" || $purge_vers = "$makefile_version" ]] ; then
                   [[ $git_mode_flag -eq 0 ]] && has_makeclean=1 && tool_txt="make clean" #We never use make clean for purge, if in git mode
               fi
               ambosoC_delete_step "$scripts_dir" "$purge_vers" "$exec_entrypoint"
