@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.0.10] - 2025-03-31
+
+### Added
+
+- Add `compare_semver()`
+  - Improves handling `std_amboso_version` checks properly
+
+### Changed
+
+- Use `compare_semver()` for getting `has_makefile`, `can_automake`
+- Fix bad call to `custom_build_step()`
+- Fix: use `.` as default for `stego_dir` when missing `-O`
+- Fix: `-P` and `--no-color` immediately set `AMBOSO_COLOR`
+- Lower warn output for testfiles not ending in `.k`
+
 ## [2.0.9] - 2024-11-26
 
 ### Added
