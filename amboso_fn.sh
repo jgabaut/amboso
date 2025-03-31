@@ -72,11 +72,24 @@ trace() {
 # @return 0 equals, 1 lesser, 2 greater
 compare_semver() {
 
-    let equal=0
-    let lesser=1
-    let greater=2
     local ver1="$1"
-    local ver2="$2"
+    local op="$2"
+    local ver2="$3"
+    local want_greater=1
+    local want_lesser=1
+    local want_equal=1
+
+    case "$op" in
+        "==") want_equal=0 ;;
+        ">") want_greater=0 ;;
+        "<") want_lesser=0 ;;
+        ">=") want_equal=0; want_greater=0 ;;
+        "<=") want_equal=0; want_lesser=0 ;;
+        *)
+            log_cl "Invalid op in compare_semver: $op" error
+            exit 1
+            ;;
+    esac
 
     # Extract version major numer (major.minor.patch)
     local major1=$(echo "$ver1" | awk -F '.' '{print $1}')
@@ -84,29 +97,29 @@ compare_semver() {
 
     # Compare major number
     if [[ $major1 -lt $major2 ]]; then
-        return "$lesser"
+        return "$want_lesser"
     elif [[ $major1 -gt $major2 ]]; then
-        return "$greater"
+        return "$want_greater"
     else
         # Extract version minor number (major.minor.patch)
         local minor1=$(echo "$ver1" | awk -F '.' '{print $2}')
         local minor2=$(echo "$ver2" | awk -F '.' '{print $2}')
         # If major number is the same, compare the minor number
         if [[ $minor1 -lt $minor2 ]]; then
-            return "$lesser"
+            return "$want_lesser"
         elif [[ $minor1 -gt $minor2 ]]; then
-            return "$greater"
+            return "$want_greater"
         else
             # Extract version patch number (major.minor.patch)
             local patch1=$(echo "$ver1" | awk -F '.' '{print $3}')
             local patch2=$(echo "$ver2" | awk -F '.' '{print $3}')
             # If minor number is the same, compare the patch number
             if [[ $patch1 -lt $patch2 ]]; then
-                return "$lesser"
+                return "$want_lesser"
             elif [[ $patch1 -gt $patch2 ]]; then
-                return "$greater"
+                return "$want_greater"
             else
-                return "$equal"
+                return "$want_equal"
             fi
         fi
     fi
@@ -1082,10 +1095,7 @@ try_parsing_stego() {
   verbose="$2"
   lexed_tokens=""
 
-  compare_semver "$std_amboso_version" "1.8.x"
-  local cmp_res="$?"
-  local greater=2
-  if [[ "$cmp_res" -eq "$greater" ]] ; then {
+  if compare_semver "$std_amboso_version" ">" "1.8.x" ; then {
     lexed_tokens="$(lex_stego_file "$input")"
   } else {
     # Run the legacy function
@@ -1181,17 +1191,10 @@ use_anvil_version_arg() {
           ;;
     esac
     [[ "$verbose_flag" -ge 4 ]] && log_cl "${FUNCNAME[0]}():  Using ANVIL_VERSION: {$my_value}\n" info
-    compare_semver "$std_amboso_version" "$min_amboso_v_stego_noforce"
-    local cmp_res="$?"
-    local lesser=1
-    if [[ "$cmp_res" -eq "$lesser" ]] ; then {
+    if compare_semver "$std_amboso_version" "<" "$min_amboso_v_stego_noforce" ; then {
         log_cl "Taken legacy path: stego.lock defined value always overrides current std_amboso_version." warn cyan
         log_cl "Current: {$std_amboso_version}, min needed: {$min_amboso_v_stego_noforce}" warn
-        compare_semver "$std_amboso_version" "${AMBOSO_API_LVL}"
-        local cmp_res="$?"
-        local lesser=1
-        local equal=0
-        if [[ "$cmp_res" -eq "$lesser" || "$cmp_res" -eq "$equal" ]] ; then {
+        if compare_semver "$std_amboso_version" "<=" "${AMBOSO_API_LVL}" ; then {
           # This check was not present originally.
           std_amboso_version="$my_value"
         } else {
@@ -1201,11 +1204,7 @@ use_anvil_version_arg() {
         fi
         log_cl "Set std_amboso_version to -> {$std_amboso_version}" warn
     } else {
-      compare_semver "$std_amboso_version" "${AMBOSO_API_LVL}"
-      local cmp_res="$?"
-      local lesser=1
-      local equal=0
-      if [[ "$cmp_res" -eq "$lesser" || "$cmp_res" -eq "$equal" ]] ; then {
+      if compare_semver "$std_amboso_version" "<=" "${AMBOSO_API_LVL}" ; then {
         # This check was not present originally.
         std_amboso_version="$my_value"
       } else {
@@ -1253,11 +1252,7 @@ set_anvil_conf_info() {
         if [[ $variable = "anvil_version" ]] ; then {
           use_anvil_version_arg "$value"
         } elif [[ $variable = "anvil_kern" ]] ; then {
-          compare_semver "$std_amboso_version" "$min_amboso_v_kern"
-          local cmp_res="$?"
-          local greater=2
-          local equal=0
-          if [[ "$cmp_res" -eq "$greater" || "$cmp_res" -eq "$equal" ]] ; then {
+          if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_kern" ; then {
             handle_kern_arg "$value"
           } else {
             if [[ "${AMBOSO_LVL_REC}" -eq 1 || "$verbose_flag" -gt 3 ]] ; then {
@@ -1350,11 +1345,7 @@ print_amboso_stego_scopes() {
         if [[ $variable = "anvil_version" ]] ; then {
           printf "ANVIL_VERSION: {$value}\n"
         } elif [[ $variable = "anvil_kern" ]] ; then {
-          compare_semver "$std_amboso_version" "$min_amboso_v_kern"
-          local cmp_res="$?"
-          local greater=2
-          local equal=0
-          if [[ "$cmp_res" -eq "$greater" || "$cmp_res" -eq "$equal" ]] ; then {
+          if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_kern" ; then {
               printf "ANVIL_KERN: {$value}\n"
           }
           fi
@@ -1461,11 +1452,7 @@ set_amboso_stego_info() {
         if [[ $variable = "anvil_version" ]] ; then {
           use_anvil_version_arg "$value"
         } elif [[ $variable = "anvil_kern" ]] ; then {
-          compare_semver "$std_amboso_version" "$min_amboso_v_kern"
-          local cmp_res="$?"
-          local greater=2
-          local equal=0
-          if [[ "$cmp_res" -eq "$greater" || "$cmp_res" -eq "$equal" ]] ; then {
+          if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_kern" ; then {
             #log_cl "Checking stego kern value: {$value}" debug
             handle_kern_arg "$value"
           } else {
@@ -1477,11 +1464,7 @@ set_amboso_stego_info() {
           }
           fi
         } elif [[ $variable = "anvil_custombuilder" ]] ; then {
-            compare_semver "$std_amboso_version" "$min_amboso_v_custom_kern"
-            local cmp_res="$?"
-            local greater=2
-            local equal=0
-            if [[ "$cmp_res" -eq "$greater" || "$cmp_res" -eq "$equal" ]] ; then {
+            if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_custom_kern" ; then {
                 handle_custombuilder_arg "$value"
                 local chk_res="$?"
                 [[ "$chk_res" -ne 0 ]] && { log_cl "anvil_custombuilder --> {$value}" error; exit 1; }
@@ -1763,11 +1746,7 @@ ambosoC_build_step() {
     local has_CFLAGS="$7"
     local arg_CFLAGS="$8"
     if [[ ! -d "$target_dir_path" ]] ; then
-      compare_semver "$std_amboso_version" "$min_amboso_v_treegen"
-      local cmp_res="$?"
-      local greater=2
-      local equal=0
-      if [[ "$cmp_res" -eq "$greater" || "$cmp_res" -eq "$equal" ]] ; then {
+      if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_treegen" ; then {
         [[ "$base_mode_flag" -gt 0 ]] && { log_cl "Base mode, can't find target dir {$target_dir_path}." error >&2; return 1; } ;
         log_cl "Creating target_dir_path {$target_dir_path}" debug cyan >&2
         mkdir "$target_dir_path" || { log_cl "Failed creating target_dir_path: {$target_dir_path}" error >&2 ; return 1; } ;
@@ -2118,11 +2097,7 @@ anvilPy_build_step() {
     log_cl "[BUILD]    Extracted main name: {$main_name}" info
 
     if [[ ! -d "$target_d" ]] ; then
-      compare_semver "$std_amboso_version" "$min_amboso_v_treegen"
-      local cmp_res="$?"
-      local greater=2
-      local equal=0
-      if [[ "$cmp_res" -eq "$greater" || "$cmp_res" -eq "$equal" ]] ; then {
+      if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_treegen" ; then {
         [[ "$base_mode_flag" -gt 0 ]] && { log_cl "Base mode, can't find target dir {$target_d}." error >&2; anvilPy_git_restore "$q_tag"; return 1; } ;
         log_cl "Creating target_d {$target_d}" debug cyan >&2
         mkdir "$target_d" || { log_cl "Failed creating target_d: {$target_d}" error >&2 ; anvilPy_git_restore "$q_tag"; return 1; } ;
@@ -2214,11 +2189,7 @@ custom_build_step () {
         return 1
     } else {
         if [[ ! -d "$target_d" ]] ; then
-          compare_semver "$std_amboso_version" "$min_amboso_v_treegen"
-          local cmp_res="$?"
-          local greater=2
-          local equal=0
-          if [[ "$cmp_res" -eq "$greater" || "$cmp_res" -eq "$equal" ]] ; then {
+          if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_treegen" ; then {
             [[ "$base_mode_flag" -gt 0 ]] && { log_cl "Base mode, can't find target dir {$target_d}." error >&2; return 1; } ;
             log_cl "Creating target_d {$target_d}" debug cyan >&2
             mkdir "$target_d" || { log_cl "Failed creating target_d: {$target_d}" error >&2 ; return 1; } ;
@@ -2413,11 +2384,7 @@ amboso_parse_args() {
           ;;
         esac;;
       O )
-        compare_semver "$std_amboso_version" "$min_amboso_v_stegodir"
-        local cmp_res="$?"
-        local greater=2
-        local equal=0
-        if [[ "$cmp_res" -eq "$greater" || "$cmp_res" -eq "$equal" ]] ; then {
+        if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_stegodir" ; then {
           stego_dir="$OPTARG"
           stego_dir_flag=1
         } else {
@@ -2518,10 +2485,7 @@ amboso_parse_args() {
   }
   fi
 
-  compare_semver "$std_amboso_version" "$min_amboso_v_extensions"
-  local cmp_res="$?"
-  local lesser=1
-  if [[ "$extensions_flag" -ne 0 && "$cmp_res" -eq "$lesser" ]] ; then {
+  if [[ "$extensions_flag" -ne 0 ]] && compare_semver "$std_amboso_version" "<" "$min_amboso_v_extensions" ; then {
     # Turn off extensions when below 2.0.1
     log_cl "${FUNCNAME[0]}():    Turning off extensions flag" info
     extensions_flag=0
@@ -2568,11 +2532,7 @@ amboso_parse_args() {
       log_cl "When running as >=2.0.3, a direct invocation of gawk is performed later." debug
       if [[ "$is_mawk" = "yes" ]] ; then {
         log_cl "awk seems to be mawk. The script may fail unexpectedly. See issue: https://github.com/jgabaut/amboso/issues/58" warn
-        compare_semver "$std_amboso_version" "$min_amboso_v_fix_awk"
-        local cmp_res="$?"
-        local greater=2
-        local equal=0
-        if [[ "$cmp_res" -eq "$greater" || "$cmp_res" -eq "$equal" ]] ; then {
+        if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_fix_awk" ; then {
             log_cl "Trying to use gawk instead.\n" warn magenta
             AMBOSO_AWK_NAME="gawk"
         }
@@ -2581,11 +2541,7 @@ amboso_parse_args() {
         log_cl "awk seems to be nawk. The script may fail unexpectedly. See issues:" warn
         log_cl "https://github.com/jgabaut/amboso/issues/58" warn
         log_cl "https://github.com/jgabaut/amboso/issues/100" warn
-        compare_semver "$std_amboso_version" "$min_amboso_v_fix_awk"
-        local cmp_res="$?"
-        local greater=2
-        local equal=0
-        if [[ "$cmp_res" -eq "$greater" || "$cmp_res" -eq "$equal" ]] ; then {
+        if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_fix_awk" ; then {
             log_cl "Trying to use gawk instead.\n" warn magenta
             AMBOSO_AWK_NAME="gawk"
         }
@@ -2779,11 +2735,7 @@ amboso_parse_args() {
   [[ ! $dir_flag -gt 0 ]] && scripts_dir="./bin/" && log_cl "No -D flag, using ( $scripts_dir ) for target dir. Run with -V <lvl> to see more." debug >&2 #&& usage && exit 1
 
   if [[ ! -d "$scripts_dir" ]] ; then {
-    compare_semver "$std_amboso_version" "$min_amboso_v_treegen"
-    local cmp_res="$?"
-    local greater=2
-    local equal=0
-    if [[ "$cmp_res" -eq "$greater" || "$cmp_res" -eq "$equal" ]] ; then {
+    if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_treegen" ; then {
         log_cl "Creating scripts_dir: {$scripts_dir}" debug cyan >&2
         mkdir "$scripts_dir" || { log_cl "Failed creating scripts_dir: {$scripts_dir}" error; return 1; } ;
     } else {
@@ -2793,11 +2745,7 @@ amboso_parse_args() {
   }
   fi
 
-  compare_semver "$std_amboso_version" "$min_amboso_v_stegodir"
-  local cmp_res="$?"
-  local greater=2
-  local equal=0
-  if [[ "$cmp_res" -eq "$greater" || "$cmp_res" -eq "$equal" ]] ; then {
+  if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_stegodir" ; then {
     #We always notify of missing -O argument
     [[ ! $stego_dir_flag -gt 0 ]] && stego_dir="." && log_cl "No -O flag, using ( $stego_dir ) for stego dir. Run with -V <lvl> to see more." debug >&2
 
@@ -2814,10 +2762,7 @@ amboso_parse_args() {
 
   #We always notify of missing -K argument, if in test mode
   if [[ $test_mode_flag -gt 0 && ! $testdir_flag -gt 0 ]] ; then {
-    compare_semver "$std_amboso_version" "$min_amboso_v_stegodir"
-    local cmp_res="$?"
-    local lesser=1
-    if [[ "$cmp_res" -eq "$lesser" ]] ; then {
+    if compare_semver "$std_amboso_version" "<" "$min_amboso_v_stegodir" ; then {
         log_cl "Using legacy method, scripts_dir contains stego.lock\n" debug
         set_amboso_stego_info "$scripts_dir/stego.lock" "$verbose_flag"
     } else {
@@ -2864,10 +2809,7 @@ amboso_parse_args() {
   fi
 
   #Syncpoint: we assert we know these names after this. WIP
-  compare_semver "$std_amboso_version" "$min_amboso_v_stegodir"
-  local cmp_res="$?"
-  local lesser=1
-  if [[ "$cmp_res" -eq "$lesser" ]] ; then {
+  if compare_semver "$std_amboso_version" "<" "$min_amboso_v_stegodir" ; then {
     log_cl "Using legacy method, scripts_dir contains stego.lock\n" debug
     set_amboso_stego_info "$scripts_dir/stego.lock" "$verbose_flag"
   } else {
@@ -2889,17 +2831,9 @@ amboso_parse_args() {
   fi
 
   # Check queried kern
-  compare_semver "$std_amboso_version" "$min_amboso_v_kern"
-  local cmp_res="$?"
-  local greater=2
-  local equal=0
-  if [[ "$cmp_res" -eq "$greater" || "$cmp_res" -eq "$equal" ]] ; then {
+  if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_kern" ; then {
     if [[ ! -z "$queried_amboso_kern" ]] ; then {
-        compare_semver "$std_amboso_version" "$min_amboso_v_morekern"
-        local cmp_res="$?"
-        local greater=2
-        local equal=0
-        if [[ "$cmp_res" -eq "$greater" || "$cmp_res" -eq "$equal" ]] ; then {
+        if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_morekern" ; then {
             :
         } elif [[ ! "$queried_amboso_kern" = "amboso-C" ]]; then { # Legacy path: Refuse kern as unknown
             log_cl "Invalid kern argument --> {$queried_amboso_kern}" error
@@ -2911,11 +2845,7 @@ amboso_parse_args() {
         fi
 
         if [[ "$queried_amboso_kern" = "anvilPy" ]]; then {
-            compare_semver "$std_amboso_version" "$min_amboso_v_anvilPy_kern"
-            local cmp_res="$?"
-            local greater=2
-            local equal=0
-            if [[ "$cmp_res" -eq "$greater" || "$cmp_res" -eq "$equal" ]] ; then {
+            if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_anvilPy_kern" ; then {
                 log_cl "\n##\n#\n# The anvilPy kern is experimental.\n#\n##\n" warn
             } else {
                 log_cl "Can't use anvilPy kern while running as {$std_amboso_version}" debug
@@ -2924,11 +2854,7 @@ amboso_parse_args() {
             }
             fi
         } elif [[ "$queried_amboso_kern" = "custom" ]]; then {
-            compare_semver "$std_amboso_version" "$min_amboso_v_custom_kern"
-            local cmp_res="$?"
-            local greater=2
-            local equal=0
-            if [[ "$cmp_res" -eq "$greater" || "$cmp_res" -eq "$equal" ]] ; then {
+            if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_custom_kern" ; then {
                 log_cl "\n##\n#\n# The custom kern is experimental.\n#\n##\n" warn
             } else {
                 log_cl "Can't use custom kern while running as {$std_amboso_version}" debug
@@ -3054,22 +2980,18 @@ amboso_parse_args() {
       #Save verbose flag
       case "$std_amboso_kern" in
         "amboso-C")
-            compare_semver "$init_vers" "$makefile_version"
-            local make_cmp_res="$?"
-            local greater=2
-            local equal=0
             has_makefile=0
-            if [[ "$make_cmp_res" -eq "$greater" || "$make_cmp_res" -eq "$equal" ]] ; then
+            if compare_semver "$init_vers" ">=" "$makefile_version" ; then {
             #if [[ $init_vers > $makefile_version || $init_vers = "$makefile_version" ]] ; then
               has_makefile=1
+            }
             fi
 
-            compare_semver "$init_vers" "$use_autoconf_version"
-            local automake_cmp_res="$?"
             can_automake=0
-            if [[ "$automake_cmp_res" -eq "$greater" || "$automake_cmp_res" -eq "$equal" ]] ; then
-            #if [[ $init_vers > $use_autoconf_version || $init_vers = "$use_autoconf_version" ]] ; then
+            if compare_semver "$init_vers" ">=" "$use_autoconf_version" ; then {
+              #if [[ $init_vers > $use_autoconf_version || $init_vers = "$use_autoconf_version" ]] ; then
               can_automake=1
+            }
             fi
 
             ambosoC_build_step "${scripts_dir}v${init_vers}" "$init_vers" "$exec_entrypoint" "$source_name" "$pass_autoconf_arg_flag" "$passed_autoconf_arg" "$CFLAGS_was_passed" "$passed_CFLAGS"
@@ -3146,18 +3068,10 @@ amboso_parse_args() {
     loggedm=""
     extm=""
     corem=""
-    compare_semver "$std_amboso_version" "$min_amboso_v_stegodir"
-    local cmp_stegodir_res="$?"
-    compare_semver "$std_amboso_version" "$min_amboso_v_kern"
-    local cmp_kern_res="$?"
-    compare_semver "$std_amboso_version" "$min_amboso_v_extensions"
-    local cmp_ext_res="$?"
-    local greater=2
-    local equal=0
-    local lesser=1
-    if [[ "$cmp_stegodir_res" -eq "$greater" || "$cmp_res" -eq "$equal" ]] ; then {
+
+    if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_stegodir" ; then {
         corem="-O $stego_dir -k $std_amboso_kern -a $std_amboso_version"
-    } elif [[ "$cmp_kern_res" -eq "$lesser"  ]]; then {
+    } elif compare_semver "$std_amboso_version" "<" "$min_amboso_v_kern" ; then {
         log_cl "Taken legacy path, not passing any core arg." warn magenta
         log_cl "Currently: -O {$stego_dir} -a {$std_amboso_version} -k {$std_amboso_kern}\n" warn cyan
         corem=""
@@ -3166,7 +3080,7 @@ amboso_parse_args() {
         corem="-k $std_amboso_kern -a $std_amboso_version"
     }
     fi
-    if [[ "$cmp_ext_res" -eq "$greater" || "$cmp_ext_res" -eq "$equal" ]] ; then {
+    if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_extensions" ; then {
       # This portion below was actually bugged and assigned to ext rather than extm... Wanna go full compat??
       [[ $extensions_flag -ne 1 ]] && extm="e"
     } else {
@@ -3419,18 +3333,10 @@ amboso_parse_args() {
         loggedm=""
         extm=""
         corem=""
-        compare_semver "$std_amboso_version" "$min_amboso_v_stegodir"
-        local cmp_stegodir_res="$?"
-        compare_semver "$std_amboso_version" "$min_amboso_v_kern"
-        local cmp_kern_res="$?"
-        compare_semver "$std_amboso_version" "$min_amboso_v_extensions"
-        local cmp_ext_res="$?"
-        local greater=2
-        local equal=0
-        local lesser=1
-        if [[ "$cmp_stegodir_res" -eq "$greater" || "$cmp_stegodir_res" -eq "$equal" ]]; then {
+
+        if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_stegodir" ; then {
           corem="-O $stego_dir -k $std_amboso_kern -a $std_amboso_version"
-        } elif [[ "$cmp_kern_res" -eq "$lesser"  ]]; then {
+        } elif compare_semver "$std_amboso_version" "<" "$min_amboso_v_kern" ; then {
             log_cl "Taken legacy path, not passing any core arg." warn magenta
             log_cl "Currently: -O {$stego_dir} -a {$std_amboso_version} -k {$std_amboso_kern}\n" warn cyan
             corem=""
@@ -3439,7 +3345,7 @@ amboso_parse_args() {
             corem="-k $std_amboso_kern -a $std_amboso_version"
         }
         fi
-        if [[ "$cmp_ext_res" -eq "$greater" || "$cmp_ext_res" -eq "$equal" ]] ; then {
+        if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_extensions" ; then {
           [[ $extensions_flag -ne 1 ]] && extm="e"
         } else {
           log_cl "Taken legacy path, won't pass -e. Current: {$extensions_flag}" warn magenta
@@ -3638,10 +3544,8 @@ amboso_parse_args() {
   #We expect $scripts_dir to end with /
   local interpr_regex='stego.lock$'
   local interpr_does_make=1
-  compare_semver "$std_amboso_version" "2.0.2"
-  local cmp_res="$?"
-  local greater=2
-  if [[ "$cmp_res" -eq "$greater" && "$query" =~ $interpr_regex ]] ; then {
+
+  if compare_semver "$std_amboso_version" ">" "2.0.2" && [[ "$query" =~ $interpr_regex ]] ; then {
     log_cl "Running as interpreter for {$query}\n" info
     if [[ "$std_amboso_kern" = "anvilPy" || "$std_amboso_kern" = "custom" ]]; then {
       log_cl "[KERN]    Avoiding make branch for {$std_amboso_kern} interpreter" debug
@@ -3719,22 +3623,20 @@ amboso_parse_args() {
   }
   fi
 
-  compare_semver "$version" "$makefile_version"
-  local make_cmp_res="$?"
-  local greater=2
-  local equal=0
+
   has_makefile=0
-  if [[ "$make_cmp_res" -eq "$greater" || "$make_cmp_res" -eq "$equal" ]] ; then
+  if compare_semver "$version" ">=" "$makefile_version" ; then {
   #if [[ $version > $makefile_version || $version = "$makefile_version" ]] ; then
     has_makefile=1
+  }
   fi
 
-  compare_semver "$version" "$use_autoconf_version"
-  local automake_cmp_res="$?"
+
   can_automake=0
-  if [[ "$automake_cmp_res" -eq "$greater" || "$automake_cmp_res" -eq "$equal" ]] ; then
+  if compare_semver "$version" ">=" "$use_autoconf_version" ; then {
   #if [[ $version > $use_autoconf_version || $version = "$use_autoconf_version" ]] ; then
     can_automake=1
+  }
   fi
 
   #If we can't find the file we may try to build it
@@ -3877,13 +3779,11 @@ amboso_parse_args() {
       fi
       case "$std_amboso_kern" in
           "amboso-C")
-              compare_semver "$purge_vers" "$makefile_version"
-              local make_cmp_res="$?"
-              local greater=2
-              local equal=0
-              if [[ "$make_cmp_res" -eq "$greater" || "$make_cmp_res" -eq "$equal" ]] ; then
+
+              if compare_semver "$purge_vers" ">=" "$makefile_version" ; then {
               #if [[ $purge_vers > "$makefile_version" || $purge_vers = "$makefile_version" ]] ; then
                   [[ $git_mode_flag -eq 0 ]] && has_makeclean=1 && tool_txt="make clean" #We never use make clean for purge, if in git mode
+              }
               fi
               ambosoC_delete_step "$scripts_dir" "$purge_vers" "$exec_entrypoint"
               ;;
