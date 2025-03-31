@@ -621,7 +621,7 @@ set_supported_tests() {
       test_fp="$cases_path/$(basename "$FILE")"
       extens=$(printf "${cases_path}/${FILE}\n" | awk -F"." '{print $2}')
       if [[ "$extens" != "k" ]] ; then {
-        [[ "${AMBOSO_LVL_REC}" -eq 1 || $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] && log_cl "{$test_fp} does not have .k extension." warn
+          [[ $verbose_flag -gt 3 && $quiet_flag -eq 0 ]] && log_cl "{$test_fp} does not have .k extension." warn
         skipped=$((skipped+1))
         continue
       }
@@ -649,7 +649,7 @@ set_supported_tests() {
     test_fp="$errorcases_path/$(basename "$FILE")"
     extens=$(printf "${errorcases_path}/${FILE}\n" | awk -F"." '{print $2}')
     if [[ "$extens" != "k" ]] ; then {
-      [[ $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] && log_cl "{$test_fp} does not have .k extension." warn
+      [[ $verbose_flag -gt 3 && $quiet_flag -eq 0 ]] && log_cl "{$test_fp} does not have .k extension." warn
       skipped=$((skipped+1))
       continue
     }
