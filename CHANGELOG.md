@@ -14,6 +14,7 @@
 - Fix: use `.` as default for `stego_dir` when missing `-O`
 - Fix: `-P` and `--no-color` immediately set `AMBOSO_COLOR`
 - Lower warn output for testfiles not ending in `.k`
+- Check if `bc` is installed
 
 ## [2.0.9] - 2024-11-26
 

@@ -2505,7 +2505,11 @@ amboso_parse_args() {
   export AMBOSO_AWK_NAME="${AMBOSO_AWK_NAME:-awk}"
   if [[ "${AMBOSO_LVL_REC}" -lt 2 ]]; then {
     echo_amboso_splash "$amboso_currvers" "$(basename "$prog_name")"
-    awk_check="$("${AMBOSO_AWK_NAME}" --version 2>/dev/null)"
+    if ! command -v "bc" > /dev/null; then
+        log_cl "[CRITICAL]    Error: bc is not installed. Please install bc before running this script." error
+        exit 8
+    fi
+    local awk_check="$("${AMBOSO_AWK_NAME}" --version 2>/dev/null)"
     local awk_check_res="$?"
     local is_gawk="$(grep "GNU" <<< "$awk_check")"
     local is_mawk="$(grep "mawk" <<< "$awk_check")"
