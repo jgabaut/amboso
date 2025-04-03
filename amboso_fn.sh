@@ -3181,7 +3181,12 @@ amboso_parse_args() {
   if [[ $verbose_flag -ge 4 ]]; then { #WIP
       log_cl "[VERB]    SYNCPOINT:  listing tag names" info cyan >&2
       echo_supported_tags >&2
-      echo_tests_info "$kazoj_dir" >&2
+      #This echo_tests_info call makes so we
+      # ALWAYS do set_supported_tests for no reason
+      # TODO: check if any usage of echo_tests_info happens before
+      # the first call to set_supported_tests, in order to drop the call to set
+      # inside
+      #echo_tests_info "$kazoj_dir" >&2
   }
   fi
 
