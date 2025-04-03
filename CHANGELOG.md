@@ -13,6 +13,7 @@
 - Refuse `AMBOSO_LVL_REC == 3`
 - Refuse`-Ti` when running as `>=2.0.11`
 - Wrap `-Ti` behaviour as legacy support
+- Fix word splitting in `anvilPy_build_step()`
 
 ## [2.0.10] - 2025-03-31
 
