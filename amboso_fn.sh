@@ -2237,18 +2237,22 @@ custom_build_step () {
 amboso_test_step() {
   # This function is not very clean. It uses some variables which are to be set before calling it.
   # Some of these variables are:
-  #   read_tests_files (array)
-  #   count_tests_names (len of read_tests_files)
-  #   read_errortests_files (array)
-  #   count_errortests_names (len of read_errortests_files)
-  #   supportes_tests (array)
+  #   supported_tests (array)
   #   tot_tests (len of supported_tests)
   #   values used to reconstruct flags for recursion on -Ti
+  #   TODO: ensure state_cases_arrlen == count_tests_names (len of read_tests_files)
+  #   TODO: ensure state_errors_arrlen == count_errortests_names (len of read_errortests_files)
 
   local target_test="$1"
   local target_tests_root="$2"
   local target_cases_dir="$3"
   local target_errors_dir="$4"
+  local state_cases_arrname="${5}[@]"
+  local state_cases_arr=("${!state_cases_arrname}")
+  local state_cases_arrlen="${#state_cases_arr[@]}"
+  local state_errors_arrname="${6}[@]"
+  local state_errors_arr=("${!state_errors_arrname}")
+  local state_errors_arrlen="${#state_errors_arr[@]}"
 
   if [[ $quiet_flag -eq 0 && $verbose_flag -ge 4 ]]; then { #WIP
       log_cl "[VERB]    Test mode (-T was on)." info >&2
@@ -2260,32 +2264,34 @@ amboso_test_step() {
   test_type=""
   test_path=""
   [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Checking if query $target_test is a testcase." info >&2
-  for i in $(seq 0 $(($count_tests_names-1))); do {
-    current_item="${read_tests_files[$i]}"
-    [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Checking case ($i/$count_tests_names): $current_item" info >&2
+  local t_counter=0
+  for current_item in "${state_cases_arr[@]}"; do {
+    [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Checking case ($t_counter/$state_cases_arrlen): $current_item" info >&2
     #echo "checking $current_item"
     if [[ $target_test = "$current_item" ]]; then {
       test_type="casetest"
       test_name="$target_test"
-      test_path="$target_tests_root/$target_cases_dir/${read_tests_files[$i]}"
+      test_path="$target_tests_root/$target_cases_dir/${read_tests_files[$t_counter]}"
       break; #done looking
     }
     fi
+    t_counter="$(($t_counter+1))"
   }
   done
+  t_counter=0
   if [[ -z $test_name ]] ; then {
     [[ $verbose_flag -ge 4 ]] && log_cl "[TEST]    Checking if query $target_test is a error testcase." info >&2
-    for i in $(seq 0 $(($count_errortests_names-1))); do {
-      current_item="${read_errortests_files[$i]}"
-      [[ $verbose_flag -ge 4 ]] && log_cl "[TEST]    Checking error case ($i/$count_errortests_names): $current_item" info >&2
+    for current_item in "${state_errors_arr[@]}"; do {
+      [[ $verbose_flag -ge 4 ]] && log_cl "[TEST]    Checking error case ($t_counter/$state_errors_arrlen): $current_item" info >&2
       #echo "checking $current_item"
       if [[ $target_test = "$current_item" ]] ; then {
-    test_type="errortest"
-    test_name="$target_test"
-    test_path="$target_tests_root/$target_errors_dir/${read_errortests_files[$i]}"
-    break; #done looking
+        test_type="errortest"
+        test_name="$target_test"
+        test_path="$target_tests_root/$target_errors_dir/${read_errortests_files[$t_counter]}"
+        break; #done looking
       }
       fi
+      t_counter="$(($t_counter+1))"
     }
     done
   }
@@ -3411,7 +3417,7 @@ amboso_parse_args() {
     start_t_tests=$(date +%s.%N)
     for k in $(seq 0 $(($tot_tests-1))); do {
       start_t_curr_test=$(date +%s.%N)
-      amboso_test_step "${supported_tests[$k]}" "$kazoj_dir" "$cases_dir" "$errors_dir"
+      amboso_test_step "${supported_tests[$k]}" "$kazoj_dir" "$cases_dir" "$errors_dir" "read_tests_files" "read_errortests_files"
       retcod="$?"
       if [[ $retcod -eq 0 ]] ; then {
         tot_successes=$(($tot_successes+1))
@@ -3529,7 +3535,7 @@ amboso_parse_args() {
   fi
   #Check if we are doing a test
   if [[ $test_mode_flag -gt 0 ]]; then {
-      amboso_test_step "$query" "$kazoj_dir" "$cases_dir" "$errors_dir"
+      amboso_test_step "$query" "$kazoj_dir" "$cases_dir" "$errors_dir" "read_tests_files" "read_errortests_files"
   }
   fi
   #End of test mode block
