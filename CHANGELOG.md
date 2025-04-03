@@ -9,6 +9,10 @@
 ### Changed
 
 - Refactor test macro to be iterative
+- Fix `-t` macro index being `i`
+- Refuse `AMBOSO_LVL_REC == 3`
+- Refuse`-Ti` when running as `>=2.0.11`
+- Wrap `-Ti` behaviour as legacy support
 
 ## [2.0.10] - 2025-03-31
 
