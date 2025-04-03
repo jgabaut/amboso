@@ -2358,58 +2358,8 @@ amboso_test_step() {
     #echo -e "\033[0;34m[TEST]    \"-d\" is set, Deleting: ( $relative_testpath ).\e[0m" >&2
     #delete_test "$relative_testpath"
   } elif [[ $init_flag -gt 0 ]] ; then {
-    #echo "UNREACHABLE." && exit 1
-    log_cl "[TEST]    \"-i\" is set, Recording ALL: ( $relative_testpath )." debug
-    log_cl "( $tot_tests ) total tests ready." debug >&2
-    for i in $(seq 0 $(($tot_tests-1))); do {
-      TEST="${supported_tests[$i]}"
-      verb=""
-      quietm=""
-      showtimem=""
-      plainm=""
-      loggedm=""
-      extm=""
-      corem=""
-
-      if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_stegodir" ; then {
-        corem="-O $stego_dir -k $std_amboso_kern -a $std_amboso_version"
-      } elif compare_semver "$std_amboso_version" "<" "$min_amboso_v_kern" ; then {
-          log_cl "Taken legacy path, not passing any core arg." warn magenta
-          log_cl "Currently: -O {$stego_dir} -a {$std_amboso_version} -k {$std_amboso_kern}\n" warn cyan
-          corem=""
-      } else {
-          log_cl "Taken legacy path, not passing -O {$stego_dir}." warn magenta
-          corem="-k $std_amboso_kern -a $std_amboso_version"
-      }
-      fi
-      if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_extensions" ; then {
-        [[ $extensions_flag -ne 1 ]] && extm="e"
-      } else {
-        log_cl "Taken legacy path, won't pass -e. Current: {$extensions_flag}" warn magenta
-      }
-      fi
-
-      [[ $do_filelog_flag -gt 0 ]] && loggedm="J"
-      [[ $allow_color_flag -le 0 ]] && plainm="P"
-      [[ $show_time_flag -gt 0 ]] && showtimem="w"
-      [[ $quiet_flag -gt 0 ]] && quietm="q" #We make sure to pass on eventual quiet flag mode to the subcalls
-      [[ $verbose_flag -ne 3 ]] && verb="-V $verbose_flag"
-      [[ $verbose_flag -gt 3 ]] && printf "\n[TEST]    Recording ALL: ( $(($i+1)) / $tot_tests ) ( $TEST )\n" >&2
-      log_cl "[TEST]    Running:    \"$prog_name $corem -K $target_tests_root -D $scripts_dir $verb -bT$quietm$showtimem$plainm$loggedm$extm $TEST 2>/dev/null \"\e[0m\n" debug
-      start_t=$(date +%s.%N)
-      ( "$prog_name" $corem -Y "$amboso_start_time" -K "$target_tests_root" -D "$scripts_dir" $verb -b"$quietm""$showtimem""$plainm""$loggedm""$extm"T "$TEST" 2>/dev/null ; exit "$?")
-      record_res="$?"
-      if [[ $record_res -eq 69 ]]; then {
-        log_cl "[PANIC]    Unsupported: a test call returned 69. Will do the same.\n" error &&
-        echo_timer "$amboso_start_time"  "Record Test call returned 69" "1"
-        return 69
-      }
-      fi
-      end_t=$(date +%s.%N)
-      runtime=$( printf "$end_t - $start_t\n" | bc -l )
-      printf "\n[TEST]    took $runtime s ( $TEST )\n" >&2
-    }
-    done
+    echo "UNREACHABLE."
+    exit 1
     #init_all_tests "$relative_testpath"
   } elif [[ $purge_flag -gt 0 ]] ; then {
     :
@@ -3528,14 +3478,51 @@ amboso_parse_args() {
     return "$make_res"
   } elif [[ $tot_left_args -lt 1 && $test_mode_flag -gt 0 ]] ; then {
     #If in test mode, we still whine about a target test
-    log_cl "Missing test query.\n" error
-    log_cl "       Run with -h for help.\n" error
+    if [[ $init_flag -gt 0 ]]; then {
+      #Legacy behaviour support: called with -Ti
+      #This behaviour is deprecated
+      #Call with -tb instead
+      :
+    } else {
+      log_cl "Missing test query.\n" error
+      log_cl "       Run with -h for help.\n" error
+    }
+    fi
     #printf "can we do init/purge?\n" #TODO wth does this mean
   }
   fi
   #Check if we are doing a test
   if [[ $test_mode_flag -gt 0 ]]; then {
+    if [[ $init_flag -gt 0 ]]; then {
+      log_cl "Legacy behaviour support: called with -Ti" warn
+      log_cl "This behaviour is deprecated." warn
+      log_cl "Call with -tb instead." warn
+      log_cl "Setting init_flag to 0" debug
+      init_flag=0
+      log_cl "Setting build_flag to 1, was: $build_flag" debug
+      build_flag=1
+
+      log_cl "( $tot_tests ) total tests ready." debug >&2
+      local curr_test_count=0
+      for curr_test in "${supported_tests[@]}"; do {
+          log_cl "Recording test ($curr_test_count/$tot_tests):" debug
+          amboso_test_step "$curr_test" "$kazoj_dir" "$cases_dir" "$errors_dir" "read_tests_files" "read_errortests_files"
+          local curr_test_res="$?"
+          if [[ $curr_test_res -eq 69 ]]; then {
+            log_cl "[PANIC]    Unsupported: a test call returned 69. Will do the same.\n" error
+            echo_timer "$amboso_start_time"  "Record Test call returned 69" "1"
+            return 69
+          }
+          fi
+          curr_test_count="$(($curr_test_count+1))"
+      }
+      done
+      return "$?"
+    } else {
       amboso_test_step "$query" "$kazoj_dir" "$cases_dir" "$errors_dir" "read_tests_files" "read_errortests_files"
+      return "$?"
+    }
+    fi
   }
   fi
   #End of test mode block
