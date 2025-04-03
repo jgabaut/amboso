@@ -2609,6 +2609,7 @@ amboso_parse_args() {
   min_amboso_v_stegodir="2.0.3"
   min_amboso_v_treegen="2.0.4"
   min_amboso_v_morekern="2.0.9"
+  min_amboso_v_refuseTi="2.0.11"
   min_amboso_v_anvilPy_kern="2.1.0"
   min_amboso_v_custom_kern="2.1.0"
   amboso_custom_builder=""
@@ -3334,8 +3335,16 @@ amboso_parse_args() {
   fi
 
   if [[ $init_flag -gt 0 && $test_mode_flag -gt 0 ]] && [[ $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] ; then {
-    log_cl "[TEST]    [-i]    Will record all tests." info >&2
-    log_cl "DEPRECATED" warn >&2
+    if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_refuseTi"; then {
+        log_cl "Invalid usage: -Ti." error
+        log_cl "To record all tests, use -tb instead." error
+        return 1
+    } else {
+        log_cl "Taken legacy path: accept -Ti to record all tests" warn cyan
+        log_cl "[TEST]    [-i]    Will record all tests." info >&2
+        log_cl "DEPRECATED" warn >&2
+    }
+    fi
   }
   fi
   if [[ $purge_flag -gt 0 && $test_mode_flag -gt 0 ]] && [[ $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] ; then {
@@ -3484,10 +3493,18 @@ amboso_parse_args() {
   } elif [[ $tot_left_args -lt 1 && $test_mode_flag -gt 0 ]] ; then {
     #If in test mode, we still whine about a target test
     if [[ $init_flag -gt 0 ]]; then {
-      #Legacy behaviour support: called with -Ti
-      #This behaviour is deprecated
-      #Call with -tb instead
-      :
+      if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_refuseTi"; then {
+        log_cl "Invalid usage: -Ti." error
+        log_cl "To record all tests, use -tb instead." error
+        return 1
+      } else {
+          log_cl "Taken legacy path: accept -Ti to record all tests" warn cyan
+          #Legacy behaviour support: called with -Ti
+          #This behaviour is deprecated
+          #Call with -tb instead
+          :
+      }
+      fi
     } else {
       log_cl "Missing test query.\n" error
       log_cl "       Run with -h for help.\n" error
@@ -3499,9 +3516,17 @@ amboso_parse_args() {
   #Check if we are doing a test
   if [[ $test_mode_flag -gt 0 ]]; then {
     if [[ $init_flag -gt 0 ]]; then {
+      if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_refuseTi"; then {
+        log_cl "Invalid usage: -Ti." error
+        log_cl "To record all tests, use -tb instead." error
+        return 1
+      }
+      fi
       log_cl "Legacy behaviour support: called with -Ti" warn
       log_cl "This behaviour is deprecated." warn
       log_cl "Call with -tb instead." warn
+
+      log_cl "Taken legacy path: accept -Ti to record all tests" warn cyan
       log_cl "Setting init_flag to 0" debug
       init_flag=0
       log_cl "Setting build_flag to 1, was: $build_flag" debug
