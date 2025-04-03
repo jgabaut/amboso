@@ -3409,9 +3409,9 @@ amboso_parse_args() {
     tot_successes=0
     tot_failures=0
     start_t_tests=$(date +%s.%N)
-    for i in $(seq 0 $(($tot_tests-1))); do {
+    for k in $(seq 0 $(($tot_tests-1))); do {
       start_t_curr_test=$(date +%s.%N)
-      amboso_test_step "${supported_tests[$i]}" "$kazoj_dir" "$cases_dir" "$errors_dir"
+      amboso_test_step "${supported_tests[$k]}" "$kazoj_dir" "$cases_dir" "$errors_dir"
       retcod="$?"
       if [[ $retcod -eq 0 ]] ; then {
         tot_successes=$(($tot_successes+1))
@@ -3434,7 +3434,7 @@ amboso_parse_args() {
         display_zero=""
       }
       fi
-      [[ $quiet_flag -eq 0 ]] && log_cl "[TEST]  ($(($i+1))/$tot_tests)  took $display_zero$runtime_curr_test seconds." info
+      [[ $quiet_flag -eq 0 ]] && log_cl "[TEST]  ($(($k+1))/$tot_tests)  took $display_zero$runtime_curr_test seconds." info
     }
     done
     end_t_tests=$(date +%s.%N)
