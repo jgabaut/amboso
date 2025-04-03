@@ -1836,8 +1836,30 @@ ambosoC_build_step() {
             [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Moved $target_binary to $target_dir_path." debug #>&2
           }
           fi
-          git switch - #We get back to starting repo state
-          switch_res="$?"
+          local amb_inside_CI=0
+          local amb_CI_name=""
+          if [[ "$GITHUB_ACTIONS" = "true" ]]; then {
+            amb_inside_CI=1
+            amb_CI_name="Github Actions"
+          } elif [[ "$GITLAB_CI" = "true" ]]; then {
+            amb_inside_CI=1
+            amb_CI_name="Gitlab CI"
+          } elif [[ -n "$CI" ]]; then {
+            amb_inside_CI=1
+            amb_CI_name="unknown CI"
+          }
+          fi
+          if [[ "$amb_inside_CI" -eq 1 ]]; then {
+            #We use --detach when running in a CI.
+            # If we were to always use it, it'd not go back to previous branch
+            log_cl "Running in CI: {$amb_CI_name}, will add --detach to the switchback" debug
+            git switch - --detach #We get back to starting repo state
+            switch_res="$?"
+          } else {
+            git switch - #We get back to starting repo state
+            switch_res="$?"
+          }
+          fi
           if [[ $switch_res -gt 0 ]]; then {
             log_cl "\nCan't finish checking out ($target_tag).\n    You may have a dirty index and may need to run \"git restore .\".\n Quitting.\n" error
             echo_timer "$amboso_start_time"  "Failed checkout" "1"
