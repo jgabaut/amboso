@@ -1732,6 +1732,39 @@ handle_custombuilder_arg() {
     amboso_custom_builder="$arg"
 }
 
+amboso_git_switch() {
+    local head_detached="${1:-0}"
+    local git_switch_res=1
+    if [[ "$head_detached" -eq 1 ]]; then {
+        #We use --detach when the checkout started from a detached HEAD to begin with
+        # If we were to always use it, we'd not go back to previous named branch
+        log_cl "Checkout started from a detached HEAD, will add --detach to the switchback" debug
+        git switch - --detach #We get back to starting repo state
+        git_switch_res="$?"
+    } else {
+        git switch - #We get back to starting repo state
+        git_switch_res="$?"
+    }
+    fi
+    return "$git_switch_res"
+}
+
+amboso_is_head_detached() {
+    if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_check_detached"; then {
+        #From https://stackoverflow.com/questions/17322876/how-to-tell-if-your-head-is-detached-in-git
+        local cur_head_str="$(git rev-parse --abbrev-ref --symbolic-full-name HEAD)"
+        if [[ "$cur_head_str" = "HEAD" ]]; then {
+            log_cl "Starting from a detached HEAD" debug cyan
+            return 0
+        }
+        fi
+    } else {
+      log_cl "Taken legacy path: will not do --detach on switchback" warn cyan
+    }
+    fi
+    return 1
+}
+
 ambosoC_build_step() {
     # This function is not very clean. It uses some variables which are to be set before calling it.
     # Some of these variables are:
@@ -1810,6 +1843,11 @@ ambosoC_build_step() {
         fi
       } else { #Building in git mode, we checkout the tag and move the binary after the build
         [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Running in git mode, checking out ( $target_tag )." debug #>&2
+        local head_detached=0
+        if amboso_is_head_detached; then {
+            head_detached=1
+        }
+        fi
         git checkout "$target_tag" 2>/dev/null #Repo goes back to tagged state
         checkout_res=$?
         if [[ $checkout_res -gt 0 ]] ; then { #Checkout failed, we don't build and we set comp_res
@@ -1836,30 +1874,8 @@ ambosoC_build_step() {
             [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Moved $target_binary to $target_dir_path." debug #>&2
           }
           fi
-          local amb_inside_CI=0
-          local amb_CI_name=""
-          if [[ "$GITHUB_ACTIONS" = "true" ]]; then {
-            amb_inside_CI=1
-            amb_CI_name="Github Actions"
-          } elif [[ "$GITLAB_CI" = "true" ]]; then {
-            amb_inside_CI=1
-            amb_CI_name="Gitlab CI"
-          } elif [[ -n "$CI" ]]; then {
-            amb_inside_CI=1
-            amb_CI_name="unknown CI"
-          }
-          fi
-          if [[ "$amb_inside_CI" -eq 1 ]]; then {
-            #We use --detach when running in a CI.
-            # If we were to always use it, it'd not go back to previous branch
-            log_cl "Running in CI: {$amb_CI_name}, will add --detach to the switchback" debug
-            git switch - --detach #We get back to starting repo state
-            switch_res="$?"
-          } else {
-            git switch - #We get back to starting repo state
-            switch_res="$?"
-          }
-          fi
+          amboso_git_switch "$head_detached"
+          switch_res="$?"
           if [[ $switch_res -gt 0 ]]; then {
             log_cl "\nCan't finish checking out ($target_tag).\n    You may have a dirty index and may need to run \"git restore .\".\n Quitting.\n" error
             echo_timer "$amboso_start_time"  "Failed checkout" "1"
@@ -1911,6 +1927,11 @@ ambosoC_build_step() {
         fi
       } else { #Building in git mode, we checkout the tag and move the binary after the build
         [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Running in git mode, checking out ( $target_tag )." debug #>&2
+        local head_detached=0
+        if amboso_is_head_detached; then {
+            head_detached=1
+        }
+        fi
         git checkout "$target_tag" 2>/dev/null #Repo goes back to tagged state
         checkout_res=$?
         if [[ $checkout_res -gt 0 ]] ; then { #Checkout failed, we set comp_res and don't build
@@ -1929,7 +1950,7 @@ ambosoC_build_step() {
           }
           fi
           #All files generated during the build should be ignored by the repo, to avoid conflict when checking out
-          git switch - 2>/dev/null #We get back to starting repo state
+          amboso_git_switch "$head_detached" 2>/dev/null
           switch_res="$?"
           if [[ $switch_res -gt 0 ]]; then {
             log_cl "Can't finish checking out ($target_tag). Quitting." error
@@ -2038,7 +2059,8 @@ anvilPy_delete_step() {
 anvilPy_git_restore() {
     [[ ! "$git_mode_flag" -gt 0 ]] && return 0 # Return early when out of git mode
     local q_tag="$1"
-    git switch - #We get back to previous repo state
+    local head_detached="${2:-0}"
+    amboso_git_switch "$head_detached"
     local switch_res="$?"
     if [[ $switch_res -gt 0 ]]; then {
       log_cl "\nCan't finish checking out ($q_tag).\n    You may have a dirty index and may need to run \"git restore .\".\n Quitting.\n" error
@@ -2078,6 +2100,12 @@ anvilPy_build_step() {
     local anvilPy_unpack_dirname="unpack"
     local pyproj_toml_path="$stego_dir/pyproject.toml"
 
+    local head_detached=0
+    if amboso_is_head_detached; then {
+        head_detached=1
+    }
+    fi
+
     if [[ "$git_mode_flag" -gt 0 ]] ; then {
         [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Running in git mode, checking out ( $q_tag )." debug #>&2
         git checkout "$q_tag" 2>/dev/null #Repo goes back to tagged state
@@ -2095,7 +2123,7 @@ anvilPy_build_step() {
 
     if [[ ! -f "$pyproj_toml_path" ]] ; then {
         log_cl "Can't find $pyproj_toml_path" error
-        anvilPy_git_restore "$q_tag"
+        anvilPy_git_restore "$q_tag" "$head_detached"
         return 1
     }
     fi
@@ -2103,7 +2131,7 @@ anvilPy_build_step() {
     #TODO: find a better way to pass main entrypoint name to gen_shim()
     local main_entry="$(grep "^[[:space:]]*${bin_name}[[:space:]]*=" "$pyproj_toml_path")"
     local grep_res="$?"
-    [[ "$grep_res" -ne 0 ]] && { log_cl "${FUNCNAME[0]}():    Failed grep of {$pyproj_toml_path} for main entry. Errcode: {$grep_res}" error; anvilPy_git_restore "$q_tag"; return 1; }
+    [[ "$grep_res" -ne 0 ]] && { log_cl "${FUNCNAME[0]}():    Failed grep of {$pyproj_toml_path} for main entry. Errcode: {$grep_res}" error; anvilPy_git_restore "$q_tag" "$head_detached"; return 1; }
 
     [[ -z "$main_entry" ]] && { log_cl "${FUNCNAME[0]}():    Can't deduce main_entry from {$pyproj_toml_path}" error; anvilPy_git_restore "$q_tag"; return 1; }
 
@@ -2126,7 +2154,7 @@ anvilPy_build_step() {
       } else {
         log_cl "'$target_d' is not a valid directory.\n    Check your supported versions for details on ( $q_tag ).\n" error >&2
         echo_timer "$amboso_start_time"  "Invalid path [$target_d]" "1"
-        anvilPy_git_restore "$q_tag"
+        anvilPy_git_restore "$q_tag" "$head_detached"
         return 1
       }
       fi
@@ -2141,7 +2169,7 @@ anvilPy_build_step() {
 
         if [[ "${#srcdist_files[@]}" -ne 1 ]] ; then {
             log_cl "[BUILD]    Error: srcdist_path_glob expands to multiple files: {${srcdist_files[*]}}" error
-            anvilPy_git_restore "$q_tag"
+            anvilPy_git_restore "$q_tag" "$head_detached"
             return 1
         }
         fi
@@ -2175,7 +2203,7 @@ anvilPy_build_step() {
         log_cl "[BUILD]    Failed python -m build" error
     }
     fi
-    anvilPy_git_restore "$q_tag"
+    anvilPy_git_restore "$q_tag" "$head_detached"
     return "$build_res"
 }
 
@@ -2188,6 +2216,11 @@ custom_build_step () {
     if [[ -z "$custom_builder" ]]; then {
         log_cl "[BUILD]    anvil_custombuilder was not set. Check your stego file." error
         return 1
+    }
+    fi
+    local head_detached=0
+    if amboso_is_head_detached; then {
+        head_detached=1
     }
     fi
 
@@ -2208,7 +2241,7 @@ custom_build_step () {
 
     if [[ ! -x "$custom_builder" ]]; then {
         log_cl "[BUILD]    Builder {$custom_builder} is not an executable file." error
-        anvilPy_git_restore "$q_tag"
+        anvilPy_git_restore "$q_tag" "$head_detached"
         return 1
     } else {
         if [[ ! -d "$target_d" ]] ; then
@@ -2230,7 +2263,7 @@ custom_build_step () {
         local cs_build_res="$?"
         if [[ "$cs_build_res" -ne 0 ]] ; then {
             log_cl "[BUILD]    Custom build step returned {$cs_build_res}" error
-            anvilPy_git_restore "$q_tag"
+            anvilPy_git_restore "$q_tag" "$head_detached"
             return "$cs_build_res"
         }
         fi
@@ -2238,11 +2271,11 @@ custom_build_step () {
         if [[ ! -e ./"$bin_name" ]]; then {
             if [[ ! -e "$target_d/$bin_name" ]]; then {
                 log_cl "[BUILD]    Can't find {./$bin_name} after running {$custom_builder} command" error
-                anvilPy_git_restore "$q_tag"
+                anvilPy_git_restore "$q_tag" "$head_detached"
                 return 1
             } else {
                 log_cl "[BUILD]    It seems {$custom_builder} command may have moved {$bin_name} to {$target_d}. Skipping mv" warn
-                anvilPy_git_restore "$q_tag"
+                anvilPy_git_restore "$q_tag" "$head_detached"
                 return 0
             }
             fi
@@ -2253,7 +2286,7 @@ custom_build_step () {
         fi
     }
     fi
-    anvilPy_git_restore "$q_tag"
+    anvilPy_git_restore "$q_tag" "$head_detached"
     return 0
 }
 
@@ -2633,6 +2666,7 @@ amboso_parse_args() {
   min_amboso_v_treegen="2.0.4"
   min_amboso_v_morekern="2.0.9"
   min_amboso_v_refuseTi="2.0.11"
+  min_amboso_v_check_detached="2.0.11"
   min_amboso_v_anvilPy_kern="2.1.0"
   min_amboso_v_custom_kern="2.1.0"
   amboso_custom_builder=""
