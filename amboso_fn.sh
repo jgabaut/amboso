@@ -2531,7 +2531,7 @@ amboso_parse_args() {
   #Increment depth counter
   AMBOSO_LVL_REC=$(($AMBOSO_LVL_REC+1))
   # check recursion
-  if [[ "${AMBOSO_LVL_REC}" -le "3" ]]; then
+  if [[ "${AMBOSO_LVL_REC}" -le "2" ]]; then
     PARENT_COMMAND="$(ps -o comm= $PPID)"
     [[ "$PARENT_COMMAND" = "$prog_name" ]] && log_cl "Unexpected result while checking amboso recursion level." error && exit 1
   else
@@ -3075,7 +3075,7 @@ amboso_parse_args() {
   }
   fi
   if [[ $test_mode_flag -gt 0 && $test_info_was_set -gt 0 ]] ; then {
-    if [[ $AMBOSO_LVL_REC -lt 3 ]] ; then {
+    if [[ $AMBOSO_LVL_REC -lt 2 ]] ; then {
       log_cl "bone dir: ( $cases_dir )" debug >&2
       log_cl "       kulpo dir: ( $errors_dir )" debug >&2 #&& usage && exit 1
     } else {
@@ -3088,7 +3088,7 @@ amboso_parse_args() {
     }
     fi
   } elif [[ $test_info_was_set -eq 0 && $test_mode_flag -gt 0 ]] ; then {
-    if [[ $AMBOSO_LVL_REC -lt 3 ]] ; then {
+    if [[ $AMBOSO_LVL_REC -lt 2 ]] ; then {
       log_cl "bone dir (NO -K passed to this call): ( $cases_dir )" debug >&2
       log_cl "       kulpo dir (NO -K passed to this amboso call): ( $errors_dir )" debug >&2 #&& usage && exit 1
     } else {
