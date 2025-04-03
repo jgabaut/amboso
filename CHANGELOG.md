@@ -14,6 +14,9 @@
 - Refuse`-Ti` when running as `>=2.0.11`
 - Wrap `-Ti` behaviour as legacy support
 - Fix word splitting in `anvilPy_build_step()`
+- Fix git mode CI:
+  - Specify `fetch-depth` for workflow checkout since tags are needed
+  - Add --detach to the switchback after a checkout coming from detached HEAD
 
 ## [2.0.10] - 2025-03-31
 
