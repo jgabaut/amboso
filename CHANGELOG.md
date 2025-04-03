@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.0.11] - Unreleased
+
+### Added
+
+- Add `amboso_test_step()`
+
+### Changed
+
+- Refactor test macro to be iterative
+
 ## [2.0.10] - 2025-03-31
 
 ### Added
