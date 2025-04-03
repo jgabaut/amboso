@@ -2114,8 +2114,9 @@ anvilPy_build_step() {
     python -m build
     build_res="$?"
     if [[ "$build_res" -eq 0 ]] ; then {
-        local srcdist_path_glob="./dist/*-"$q_tag".tar.gz"
-        local srcdist_files=($srcdist_path_glob)
+        local srcdist_path_glob="./dist/*-$q_tag.tar.gz"
+        mapfile -t srcdist_files < <(compgen -G "$srcdist_path_glob")
+
         if [[ "${#srcdist_files[@]}" -ne 1 ]] ; then {
             log_cl "[BUILD]    Error: srcdist_path_glob expands to multiple files: {${srcdist_files[*]}}" error
             anvilPy_git_restore "$q_tag"
