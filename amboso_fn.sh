@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="2.0.10"
+AMBOSO_API_LVL="2.0.11"
 at() {
     #printf -- "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] -> {\n"
     log_cl "{ call: [" debug white
@@ -1732,6 +1732,39 @@ handle_custombuilder_arg() {
     amboso_custom_builder="$arg"
 }
 
+amboso_git_switch() {
+    local head_detached="${1:-0}"
+    local git_switch_res=1
+    if [[ "$head_detached" -eq 1 ]]; then {
+        #We use --detach when the checkout started from a detached HEAD to begin with
+        # If we were to always use it, we'd not go back to previous named branch
+        log_cl "Checkout started from a detached HEAD, will add --detach to the switchback" debug
+        git switch - --detach #We get back to starting repo state
+        git_switch_res="$?"
+    } else {
+        git switch - #We get back to starting repo state
+        git_switch_res="$?"
+    }
+    fi
+    return "$git_switch_res"
+}
+
+amboso_is_head_detached() {
+    if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_check_detached"; then {
+        #From https://stackoverflow.com/questions/17322876/how-to-tell-if-your-head-is-detached-in-git
+        local cur_head_str="$(git rev-parse --abbrev-ref --symbolic-full-name HEAD)"
+        if [[ "$cur_head_str" = "HEAD" ]]; then {
+            log_cl "Starting from a detached HEAD" debug cyan
+            return 0
+        }
+        fi
+    } else {
+      log_cl "Taken legacy path: will not do --detach on switchback" warn cyan
+    }
+    fi
+    return 1
+}
+
 ambosoC_build_step() {
     # This function is not very clean. It uses some variables which are to be set before calling it.
     # Some of these variables are:
@@ -1810,6 +1843,11 @@ ambosoC_build_step() {
         fi
       } else { #Building in git mode, we checkout the tag and move the binary after the build
         [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Running in git mode, checking out ( $target_tag )." debug #>&2
+        local head_detached=0
+        if amboso_is_head_detached; then {
+            head_detached=1
+        }
+        fi
         git checkout "$target_tag" 2>/dev/null #Repo goes back to tagged state
         checkout_res=$?
         if [[ $checkout_res -gt 0 ]] ; then { #Checkout failed, we don't build and we set comp_res
@@ -1836,7 +1874,7 @@ ambosoC_build_step() {
             [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Moved $target_binary to $target_dir_path." debug #>&2
           }
           fi
-          git switch - #We get back to starting repo state
+          amboso_git_switch "$head_detached"
           switch_res="$?"
           if [[ $switch_res -gt 0 ]]; then {
             log_cl "\nCan't finish checking out ($target_tag).\n    You may have a dirty index and may need to run \"git restore .\".\n Quitting.\n" error
@@ -1889,6 +1927,11 @@ ambosoC_build_step() {
         fi
       } else { #Building in git mode, we checkout the tag and move the binary after the build
         [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Running in git mode, checking out ( $target_tag )." debug #>&2
+        local head_detached=0
+        if amboso_is_head_detached; then {
+            head_detached=1
+        }
+        fi
         git checkout "$target_tag" 2>/dev/null #Repo goes back to tagged state
         checkout_res=$?
         if [[ $checkout_res -gt 0 ]] ; then { #Checkout failed, we set comp_res and don't build
@@ -1907,7 +1950,7 @@ ambosoC_build_step() {
           }
           fi
           #All files generated during the build should be ignored by the repo, to avoid conflict when checking out
-          git switch - 2>/dev/null #We get back to starting repo state
+          amboso_git_switch "$head_detached" 2>/dev/null
           switch_res="$?"
           if [[ $switch_res -gt 0 ]]; then {
             log_cl "Can't finish checking out ($target_tag). Quitting." error
@@ -2016,7 +2059,8 @@ anvilPy_delete_step() {
 anvilPy_git_restore() {
     [[ ! "$git_mode_flag" -gt 0 ]] && return 0 # Return early when out of git mode
     local q_tag="$1"
-    git switch - #We get back to previous repo state
+    local head_detached="${2:-0}"
+    amboso_git_switch "$head_detached"
     local switch_res="$?"
     if [[ $switch_res -gt 0 ]]; then {
       log_cl "\nCan't finish checking out ($q_tag).\n    You may have a dirty index and may need to run \"git restore .\".\n Quitting.\n" error
@@ -2056,6 +2100,12 @@ anvilPy_build_step() {
     local anvilPy_unpack_dirname="unpack"
     local pyproj_toml_path="$stego_dir/pyproject.toml"
 
+    local head_detached=0
+    if amboso_is_head_detached; then {
+        head_detached=1
+    }
+    fi
+
     if [[ "$git_mode_flag" -gt 0 ]] ; then {
         [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Running in git mode, checking out ( $q_tag )." debug #>&2
         git checkout "$q_tag" 2>/dev/null #Repo goes back to tagged state
@@ -2073,7 +2123,7 @@ anvilPy_build_step() {
 
     if [[ ! -f "$pyproj_toml_path" ]] ; then {
         log_cl "Can't find $pyproj_toml_path" error
-        anvilPy_git_restore "$q_tag"
+        anvilPy_git_restore "$q_tag" "$head_detached"
         return 1
     }
     fi
@@ -2081,7 +2131,7 @@ anvilPy_build_step() {
     #TODO: find a better way to pass main entrypoint name to gen_shim()
     local main_entry="$(grep "^[[:space:]]*${bin_name}[[:space:]]*=" "$pyproj_toml_path")"
     local grep_res="$?"
-    [[ "$grep_res" -ne 0 ]] && { log_cl "${FUNCNAME[0]}():    Failed grep of {$pyproj_toml_path} for main entry. Errcode: {$grep_res}" error; anvilPy_git_restore "$q_tag"; return 1; }
+    [[ "$grep_res" -ne 0 ]] && { log_cl "${FUNCNAME[0]}():    Failed grep of {$pyproj_toml_path} for main entry. Errcode: {$grep_res}" error; anvilPy_git_restore "$q_tag" "$head_detached"; return 1; }
 
     [[ -z "$main_entry" ]] && { log_cl "${FUNCNAME[0]}():    Can't deduce main_entry from {$pyproj_toml_path}" error; anvilPy_git_restore "$q_tag"; return 1; }
 
@@ -2104,7 +2154,7 @@ anvilPy_build_step() {
       } else {
         log_cl "'$target_d' is not a valid directory.\n    Check your supported versions for details on ( $q_tag ).\n" error >&2
         echo_timer "$amboso_start_time"  "Invalid path [$target_d]" "1"
-        anvilPy_git_restore "$q_tag"
+        anvilPy_git_restore "$q_tag" "$head_detached"
         return 1
       }
       fi
@@ -2114,11 +2164,12 @@ anvilPy_build_step() {
     python -m build
     build_res="$?"
     if [[ "$build_res" -eq 0 ]] ; then {
-        local srcdist_path_glob="./dist/*-"$q_tag".tar.gz"
-        local srcdist_files=($srcdist_path_glob)
+        local srcdist_path_glob="./dist/*-$q_tag.tar.gz"
+        mapfile -t srcdist_files < <(compgen -G "$srcdist_path_glob")
+
         if [[ "${#srcdist_files[@]}" -ne 1 ]] ; then {
             log_cl "[BUILD]    Error: srcdist_path_glob expands to multiple files: {${srcdist_files[*]}}" error
-            anvilPy_git_restore "$q_tag"
+            anvilPy_git_restore "$q_tag" "$head_detached"
             return 1
         }
         fi
@@ -2152,7 +2203,7 @@ anvilPy_build_step() {
         log_cl "[BUILD]    Failed python -m build" error
     }
     fi
-    anvilPy_git_restore "$q_tag"
+    anvilPy_git_restore "$q_tag" "$head_detached"
     return "$build_res"
 }
 
@@ -2165,6 +2216,11 @@ custom_build_step () {
     if [[ -z "$custom_builder" ]]; then {
         log_cl "[BUILD]    anvil_custombuilder was not set. Check your stego file." error
         return 1
+    }
+    fi
+    local head_detached=0
+    if amboso_is_head_detached; then {
+        head_detached=1
     }
     fi
 
@@ -2185,7 +2241,7 @@ custom_build_step () {
 
     if [[ ! -x "$custom_builder" ]]; then {
         log_cl "[BUILD]    Builder {$custom_builder} is not an executable file." error
-        anvilPy_git_restore "$q_tag"
+        anvilPy_git_restore "$q_tag" "$head_detached"
         return 1
     } else {
         if [[ ! -d "$target_d" ]] ; then
@@ -2207,7 +2263,7 @@ custom_build_step () {
         local cs_build_res="$?"
         if [[ "$cs_build_res" -ne 0 ]] ; then {
             log_cl "[BUILD]    Custom build step returned {$cs_build_res}" error
-            anvilPy_git_restore "$q_tag"
+            anvilPy_git_restore "$q_tag" "$head_detached"
             return "$cs_build_res"
         }
         fi
@@ -2215,11 +2271,11 @@ custom_build_step () {
         if [[ ! -e ./"$bin_name" ]]; then {
             if [[ ! -e "$target_d/$bin_name" ]]; then {
                 log_cl "[BUILD]    Can't find {./$bin_name} after running {$custom_builder} command" error
-                anvilPy_git_restore "$q_tag"
+                anvilPy_git_restore "$q_tag" "$head_detached"
                 return 1
             } else {
                 log_cl "[BUILD]    It seems {$custom_builder} command may have moved {$bin_name} to {$target_d}. Skipping mv" warn
-                anvilPy_git_restore "$q_tag"
+                anvilPy_git_restore "$q_tag" "$head_detached"
                 return 0
             }
             fi
@@ -2230,8 +2286,300 @@ custom_build_step () {
         fi
     }
     fi
-    anvilPy_git_restore "$q_tag"
+    anvilPy_git_restore "$q_tag" "$head_detached"
     return 0
+}
+
+amboso_test_step() {
+  # This function is not very clean. It uses some variables which are to be set before calling it.
+  # Some of these variables are:
+  #   supported_tests (array)
+  #   tot_tests (len of supported_tests)
+  #   values used to reconstruct flags for recursion on -Ti
+  #   TODO: ensure state_cases_arrlen == count_tests_names (len of read_tests_files)
+  #   TODO: ensure state_errors_arrlen == count_errortests_names (len of read_errortests_files)
+
+  local target_test="$1"
+  local target_tests_root="$2"
+  local target_cases_dir="$3"
+  local target_errors_dir="$4"
+  local state_cases_arrname="${5}[@]"
+  local state_cases_arr=("${!state_cases_arrname}")
+  local state_cases_arrlen="${#state_cases_arr[@]}"
+  local state_errors_arrname="${6}[@]"
+  local state_errors_arr=("${!state_errors_arrname}")
+  local state_errors_arrlen="${#state_errors_arr[@]}"
+
+  if [[ $quiet_flag -eq 0 && $verbose_flag -ge 4 ]]; then { #WIP
+      log_cl "[VERB]    Test mode (-T was on)." info >&2
+      [[ $small_test_mode_flag -gt 0 ]] && log_cl "[VERB]    (-t was on)." info >&2
+      echo_tests_info "$target_tests_root" >&2
+  }
+  fi
+  test_name=""
+  test_type=""
+  test_path=""
+  [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Checking if query $target_test is a testcase." info >&2
+  local t_counter=0
+  for current_item in "${state_cases_arr[@]}"; do {
+    [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Checking case ($t_counter/$state_cases_arrlen): $current_item" info >&2
+    #echo "checking $current_item"
+    if [[ $target_test = "$current_item" ]]; then {
+      test_type="casetest"
+      test_name="$target_test"
+      test_path="$target_tests_root/$target_cases_dir/${read_tests_files[$t_counter]}"
+      break; #done looking
+    }
+    fi
+    t_counter="$(($t_counter+1))"
+  }
+  done
+  t_counter=0
+  if [[ -z $test_name ]] ; then {
+    [[ $verbose_flag -ge 4 ]] && log_cl "[TEST]    Checking if query $target_test is a error testcase." info >&2
+    for current_item in "${state_errors_arr[@]}"; do {
+      [[ $verbose_flag -ge 4 ]] && log_cl "[TEST]    Checking error case ($t_counter/$state_errors_arrlen): $current_item" info >&2
+      #echo "checking $current_item"
+      if [[ $target_test = "$current_item" ]] ; then {
+        test_type="errortest"
+        test_name="$target_test"
+        test_path="$target_tests_root/$target_errors_dir/${read_errortests_files[$t_counter]}"
+        break; #done looking
+      }
+      fi
+      t_counter="$(($t_counter+1))"
+    }
+    done
+  }
+  fi
+
+  if [[ $quiet_flag -eq 0 ]]; then { #WIP
+      log_cl "[TEST]    Expected:\n\n    type:  $test_type\n\n    name:  $test_name\n    path:  $test_path\n" info >&2
+  }
+  fi
+
+  if [[ -z $test_path ]]; then {
+    if [[ $quiet_flag -eq 0 ]] ; then {
+      flaginit=""
+      flagbuild=""
+      [[ $build_flag -gt 0 ]] && flagbuild="b"
+      [[ $init_flag -gt 0 ]] && flaginit="t"
+      log_cl "[VERB]    Test path was empty but we have [-$flagbuild$flaginit]." debug >&2
+    }
+    fi
+    if [[ -z $test_path && -z $target_test ]] ; then {
+      [[ $quiet_flag -eq 0 ]] && log_cl "[VERB]    testpath was empty, query was empty. Should quit." debug >&2
+      keep_run_txt=""
+      if [[ $init_flag -gt 0 ]] ; then {
+        keep_run_txt="[INIT]"
+        log_cl "[TEST]    ( \"empty\"[$target_test] ) is not a supported test. $keep_run_txt." error >&2
+        echo_timer "$amboso_start_time"  "Empty test query" "1"
+        return 1
+      }
+      fi
+      printf "${FUNCNAME[0]}():    UNREACHABLE.\n"
+      exit 1
+    } elif [[ -z $test_path && ! -z $target_test ]] ; then {
+      [[ $quiet_flag -eq 0 ]] && log_cl "[VERB]    testpath was empty, query was not empty: ( $target_test )." info >&2
+      keep_run_txt=""
+      if [[ $init_flag -gt 0 ]] ; then {
+        keep_run_txt="[INIT]"
+        log_cl "[TEST]    ( $target_test ) is not a supported test name, we quit at this point. $keep_run_txt." error >&2
+        echo_timer "$amboso_start_time"  "Unsupported test query [$target_test]" "3"
+        return 1
+      }
+      fi
+      [[ $build_flag -gt 0 ]] && keep_run_txt="[BUILD]" && log_cl "[TEST]    ( $target_test ) is not a supported tag, but we continue to $keep_run_txt." debug >&2
+    } else {
+      [[ $verbose_flag -ge 4 || $quiet_flag -eq 0 ]] && log_cl "[TEST] expected:\n  $test_type\n\n  name: $test_name\n  path: $test_path" debug # >&2
+      log_cl "[TEST]    target: ( $test_path ).\n" info
+    }
+    fi
+  } elif [[ -z $test_path && -z $target_test ]] ; then {
+    #Panic
+    log_cl "( $test_name : at  $test_path ) is not a supported test.\n" error
+    log_cl "       Run with -h for help.\n" error
+    echo_timer "$amboso_start_time"  "Unsupported test name [$test_name] at [$test_path]" "1"
+    return 1
+  }
+  fi
+
+  relative_testpath="$test_path"
+
+  if [[ $build_flag -gt 0 ]] ; then {
+    log_cl "[TEST]    \"-b\" is set, Recording: ( $relative_testpath )." debug >&2
+    #record_test "$relative_testpath"
+  } elif [[ $delete_flag -gt 0 ]] ; then {
+    :
+    #echo -e "\033[0;34m[TEST]    \"-d\" is set, Deleting: ( $relative_testpath ).\e[0m" >&2
+    #delete_test "$relative_testpath"
+  } elif [[ $init_flag -gt 0 ]] ; then {
+    echo "UNREACHABLE."
+    exit 1
+    #init_all_tests "$relative_testpath"
+  } elif [[ $purge_flag -gt 0 ]] ; then {
+    :
+    #echo "[TEST]    Deleting ALL: ( $relative_testpath )."
+    #purge_all_tests "$relative_testpath"
+  }
+  fi
+  if [[ -z $relative_testpath && $init_flag -eq 0 ]] ; then {
+    #Exit 0 as intended behaviour FIXME
+    log_cl "[TEST]    Can't proceed further with no valid target path, query was ( $target_test )." warn
+    log_cl "[TEST]    Supported tests:\n" info
+    echo_tests_info "$target_tests_root"
+    log_cl "[TEST]    Quitting." error
+    echo_timer "$amboso_start_time"  "Invalid target path [$relative_testpath]" "1"
+    return 1
+  }
+  fi
+  if [[ -z $relative_testpath && $init_flag -eq 1 && ! -z $target_test ]] ; then {
+    #Exit 0 as intended behaviour FIXME
+    log_cl "Can't proceed even with -i flag, with no testpath. ( p: $relative_testpath ) can't be be ( q: $target_test )." error
+    echo_timer "$amboso_start_time"  "Invalid target path (-i) [$relative_testpath]" "1"
+    return 0
+  }
+  fi
+  if [[ -z $relative_testpath && $init_flag -eq 1 && -z $target_test ]] ; then {
+    log_cl "Can't proceed with no query.  ( q: $target_test, p: $relative_testpath )." error
+    echo_timer "$amboso_start_time"  "Empty test query [$target_test]" "1"
+    return 1
+  }
+  fi
+  run_tmp_out="$(mktemp)"
+  run_tmp_escout="$(mktemp)"
+  run_tmp_err="$(mktemp)"
+  run_tmp_escerr="$(mktemp)"
+  [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Created tempfiles." debug >&2
+  log_cl "[TEST]    Running:    \"$relative_testpath\"" debug
+  run_test "$relative_testpath" >>"$run_tmp_out" 2>>"$run_tmp_err"
+  ran_res="$?"
+
+  if [[ $ran_res -eq 69 ]] ; then {
+    log_cl "Test call returned 69, we clean tmpfiles and follow suit." warn
+    #Delete tmpfiles
+    rm -f "$run_tmp_out" || log_cl "Failed removing tmpfile ($run_tmp_out). Why?\n" error
+    [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Removed tempfile \"$run_tmp_out\"." debug >&2
+    rm -f "$run_tmp_err" || log_cl "Failed removing tmpfile ($run_tmp_err). Why?\n" error
+    [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Removed tempfile \"$run_tmp_err\"." debug >&2
+    rm -f "$run_tmp_escout" || log_cl "Failed removing tmpfile ($run_tmp_escout). Why?\n" error
+    [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Removed tempfile \"$run_tmp_escout\"." debug >&2
+    rm -f "$run_tmp_escerr" || log_cl "Failed removing tmpfile ($run_tmp_escerr). Why?\n" error
+    [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Removed tempfile \"$run_tmp_escerr\".\n" debug >&2
+    log_cl "[PANIC]    Quitting with 69." error
+    echo_timer "$amboso_start_time"  "Test run ended with 69" "1"
+    return 69
+  }
+  fi
+  #echo "r: $ran_res" >> "$run_tmp_out"
+  escape_colorcodes_tee "$run_tmp_out" "$run_tmp_escout"
+  escape_colorcodes_tee "$run_tmp_err" "$run_tmp_escerr"
+  if [[ $build_flag -gt 0 ]] ; then {
+    cp "$run_tmp_escout" "$relative_testpath.stdout" || printf "Failed replacing stdout with new file.\n"
+    cp "$run_tmp_escerr" "$relative_testpath.stderr" || printf "Failed replacing stderr with new file.\n"
+  } else {
+    [[ $quiet_flag -eq 0 || $verbose_flag -gt 3 ]] && log_cl "[TEST]    Won't record, no [-b].\n" info
+  }
+  fi
+  rm -f "$run_tmp_out" || log_cl "Failed removing tmpfile ($run_tmp_out). Why?\n" error
+  [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Removed tempfile \"$run_tmp_out\"." debug >&2
+  rm -f "$run_tmp_err" || log_cl "Failed removing tmpfile ($run_tmp_err). Why?\n" error
+  [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Removed tempfile \"$run_tmp_err\"." debug >&2
+  #Testing diff for escaped stdout
+  ( diff "$run_tmp_escout" "$relative_testpath".stdout ) 2>/dev/null 1>&2
+  diff_res="$?"
+  out_res=""
+  if [[ "$diff_res" -eq 0 ]]; then {
+    out_res="pass"
+    if [[ ! -z "$run_tmp_escout" ]] ; then { #FIXME: SC2157 && ! -z "$relative_testpath".stdout ]]; then {
+      #This one doesn't go on stderr since we still want it in recursive calls:
+      [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Pass, both outputs are not empty." debug
+    } elif [[ -z "$run_tmp_escout" ]]; then {
+      [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Pass, current stdout is empty. Is that expected?" info >&2
+    } #FIXME: SC2157 elif [[ -z "$relative_testpath.stdout" ]]; then {
+      #[[ $verbose_flag -gt 0 ]] && printf "\033[0;35m[TEST]    Pass, registered stdout is empty. Is that expected?\e[0m\n" >&2
+    #}
+    fi
+    if [[ $verbose_flag -gt 3 && $quiet_flag -eq 0 ]]; then {
+      log_cl "[TEST]    (stdout) Expected:" info
+      cat "$relative_testpath.stdout"
+      log_cl "[TEST]    (stdout) Found:" info
+      cat "$run_tmp_escout"
+    }
+    fi
+  } else {
+    out_res="fail"
+    if [[ $quiet_flag -eq 0 ]]; then {
+      log_cl "[TEST]    (stdout) Expected:" info
+      cat "$relative_testpath.stdout"
+      log_cl "[TEST]    (stdout) Found:" error
+      cat "$run_tmp_escout"
+    }
+    fi
+    log_cl "[TEST]    Failed: stdout changed." error
+    #cat "$run_tmp_escout"
+  }
+  fi
+  rm -f "$run_tmp_escout" || log_cl "Failed removing tmpfile ($run_tmp_escout). Why?\n" error
+  [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Removed tempfile \"$run_tmp_escout\"." debug >&2
+  #Testing diff for escaped stderr
+  ( diff "$run_tmp_escerr" "$relative_testpath".stderr ) 2>/dev/null 1>&2
+  diff_res="$?"
+  if [[ "$diff_res" -eq 0 ]]; then {
+    err_res="pass"
+    if [[ ! -z "$run_tmp_escerr" ]]; then { #FIXME SC2157 && ! -z "$relative_testpath.stderr" ]]; then {
+      #This one doesn't go on stderr since we still want it in recursive calls:
+      [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Pass, both stderrs are not empty." debug
+    } elif [[ -z "$run_tmp_escerr" ]]; then {
+      [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Pass, current run stderr is empty. Is that expected?" info >&2
+    } #FIXME SC2157 elif [[ -z "$relative_testpath.stderr" ]]; then {
+     # [[ $verbose_flag -gt 0 ]] && printf "\033[0;35m[TEST]    Pass, registered stderr is empty. Is that expected?\e[0m\n" >&2
+    #}
+    fi
+    if [[ $verbose_flag -gt 3 && $quiet_flag -eq 0 ]]; then {
+      log_cl "[TEST]    (stderr) Expected:" info
+      cat "$relative_testpath.stderr"
+      log_cl "[TEST]    (stderr) Found:" info
+      cat "$run_tmp_escerr"
+    }
+    fi
+    #cat "$run_tmp_escerr"
+  } else {
+    err_res="fail"
+    if [[ $quiet_flag -eq 0 ]]; then {
+      log_cl "[TEST]    (stderr) Expected:" info
+      cat "$relative_testpath.stderr"
+      log_cl "[TEST]    (stderr) Found:" error
+      cat "$run_tmp_escerr"
+    }
+    fi
+    log_cl "[TEST]    Failed: stderr changed." error
+    #cat "$run_tmp_escerr"
+  }
+  fi
+  rm -f "$run_tmp_escerr" || log_cl "Failed removing tmpfile ($run_tmp_escerr). Why?\n" error
+  [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Removed tempfile \"$run_tmp_escerr\"." debug >&2
+  if [[ $build_flag -gt 0 ]] ; then {
+    #We simulate success since we're recording
+    log_cl "[TEST]    Phony pass (recording)." debug
+    [[ $verbose_flag -gt 3 ]] && log_cl "(out: $out_res)" debug
+    [[ $verbose_flag -gt 3 ]] && log_cl "(err: $err_res)" debug
+    echo_timer "$amboso_start_time"  "Phony test pass" "3"
+    return 0 #We return earlier
+  } elif [[ $out_res = "pass" && $err_res = "pass" ]]; then {
+    log_cl "[TEST]    Passed." info
+    echo_timer "$amboso_start_time"  "Test pass" "2"
+    return 0 #We return earlier
+  } elif [[ $out_res = "fail" ]] ; then {
+   : #echo "failed" #We echoed before
+  } elif [[ $err_res = "fail" ]] ; then {
+   : #echo "failed" #We echoed before
+  } else {
+    log_cl "Unexpected values (o:$out_res/e:$err_res) should be either pass or fail. How?" error
+  }
+  fi
+  echo_timer "$amboso_start_time"  "Test fail" "1"
+  return 1
 }
 
 amboso_parse_args() {
@@ -2239,7 +2587,7 @@ amboso_parse_args() {
   #Increment depth counter
   AMBOSO_LVL_REC=$(($AMBOSO_LVL_REC+1))
   # check recursion
-  if [[ "${AMBOSO_LVL_REC}" -le "3" ]]; then
+  if [[ "${AMBOSO_LVL_REC}" -le "2" ]]; then
     PARENT_COMMAND="$(ps -o comm= $PPID)"
     [[ "$PARENT_COMMAND" = "$prog_name" ]] && log_cl "Unexpected result while checking amboso recursion level." error && exit 1
   else
@@ -2317,6 +2665,8 @@ amboso_parse_args() {
   min_amboso_v_stegodir="2.0.3"
   min_amboso_v_treegen="2.0.4"
   min_amboso_v_morekern="2.0.9"
+  min_amboso_v_refuseTi="2.0.11"
+  min_amboso_v_check_detached="2.0.11"
   min_amboso_v_anvilPy_kern="2.1.0"
   min_amboso_v_custom_kern="2.1.0"
   amboso_custom_builder=""
@@ -2783,7 +3133,7 @@ amboso_parse_args() {
   }
   fi
   if [[ $test_mode_flag -gt 0 && $test_info_was_set -gt 0 ]] ; then {
-    if [[ $AMBOSO_LVL_REC -lt 3 ]] ; then {
+    if [[ $AMBOSO_LVL_REC -lt 2 ]] ; then {
       log_cl "bone dir: ( $cases_dir )" debug >&2
       log_cl "       kulpo dir: ( $errors_dir )" debug >&2 #&& usage && exit 1
     } else {
@@ -2796,7 +3146,7 @@ amboso_parse_args() {
     }
     fi
   } elif [[ $test_info_was_set -eq 0 && $test_mode_flag -gt 0 ]] ; then {
-    if [[ $AMBOSO_LVL_REC -lt 3 ]] ; then {
+    if [[ $AMBOSO_LVL_REC -lt 2 ]] ; then {
       log_cl "bone dir (NO -K passed to this call): ( $cases_dir )" debug >&2
       log_cl "       kulpo dir (NO -K passed to this amboso call): ( $errors_dir )" debug >&2 #&& usage && exit 1
     } else {
@@ -2889,7 +3239,12 @@ amboso_parse_args() {
   if [[ $verbose_flag -ge 4 ]]; then { #WIP
       log_cl "[VERB]    SYNCPOINT:  listing tag names" info cyan >&2
       echo_supported_tags >&2
-      echo_tests_info "$kazoj_dir" >&2
+      #This echo_tests_info call makes so we
+      # ALWAYS do set_supported_tests for no reason
+      # TODO: check if any usage of echo_tests_info happens before
+      # the first call to set_supported_tests, in order to drop the call to set
+      # inside
+      #echo_tests_info "$kazoj_dir" >&2
   }
   fi
 
@@ -3037,8 +3392,16 @@ amboso_parse_args() {
   fi
 
   if [[ $init_flag -gt 0 && $test_mode_flag -gt 0 ]] && [[ $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] ; then {
-    log_cl "[TEST]    [-i]    Will record all tests." info >&2
-    log_cl "DEPRECATED" warn >&2
+    if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_refuseTi"; then {
+        log_cl "Invalid usage: -Ti." error
+        log_cl "To record all tests, use -tb instead." error
+        return 1
+    } else {
+        log_cl "Taken legacy path: accept -Ti to record all tests" warn cyan
+        log_cl "[TEST]    [-i]    Will record all tests." info >&2
+        log_cl "DEPRECATED" warn >&2
+    }
+    fi
   }
   fi
   if [[ $purge_flag -gt 0 && $test_mode_flag -gt 0 ]] && [[ $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] ; then {
@@ -3064,48 +3427,18 @@ amboso_parse_args() {
       log_cl "will pass: ( -qVbw ) to subcall, if asserted.\n" debug
     }
     fi
-    quietm=""
-    verbm=""
-    buildm=""
-    showtimem=""
-    plainm=""
-    loggedm=""
-    extm=""
-    corem=""
-
-    if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_stegodir" ; then {
-        corem="-O $stego_dir -k $std_amboso_kern -a $std_amboso_version"
-    } elif compare_semver "$std_amboso_version" "<" "$min_amboso_v_kern" ; then {
-        log_cl "Taken legacy path, not passing any core arg." warn magenta
-        log_cl "Currently: -O {$stego_dir} -a {$std_amboso_version} -k {$std_amboso_kern}\n" warn cyan
-        corem=""
-    } else {
-        log_cl "Taken legacy path, not passing -O {$stego_dir}." warn magenta
-        corem="-k $std_amboso_kern -a $std_amboso_version"
+    if [[ $init_flag -gt 0 ]]; then {
+        log_cl "Recording all tests with -ti is deprecated." error
+        exit 2
     }
     fi
-    if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_extensions" ; then {
-      # This portion below was actually bugged and assigned to ext rather than extm... Wanna go full compat??
-      [[ $extensions_flag -ne 1 ]] && extm="e"
-    } else {
-      log_cl "Taken legacy path, won't pass -e. Current: {$extensions_flag}." warn magenta
-    }
-    fi
-    [[ $do_filelog_flag -gt 0 ]] && loggedm="J"
-    [[ $allow_color_flag -le 0 ]] && plainm="P"
-    [[ $show_time_flag -gt 0 ]] && showtimem="w"
-    [[ $quiet_flag -gt 0 ]] && quietm="q"
-    [[ $verbose_flag -ne 3 ]] && verbm="-V $verbose_flag"
-    [[ $build_flag -gt 0 ]] && buildm="b"
-    [[ $init_flag -gt 0 ]] && log_cl "Recording all tests with -ti is deprecated." error && exit 2
 
     tot_successes=0
     tot_failures=0
     start_t_tests=$(date +%s.%N)
-    for i in $(seq 0 $(($tot_tests-1))); do {
-      [[ $quiet_flag -eq 0 ]] && log_cl "[TEST-MACRO]    Running:  \"$(basename "$prog_name") $corem -Y $amboso_start_time $verbm -T$quietm$buildm$showtimem$plainm$loggedm$extm -K $kazoj_dir -D $scripts_dir ${supported_tests[$i]}\"" info >&2
+    for k in $(seq 0 $(($tot_tests-1))); do {
       start_t_curr_test=$(date +%s.%N)
-      "$prog_name" $corem -Y "$amboso_start_time" $verbm -T"$quietm$buildm""$showtimem""$plainm""$loggedm""$extm" -K "$kazoj_dir" -D "$scripts_dir" "${supported_tests[$i]}"
+      amboso_test_step "${supported_tests[$k]}" "$kazoj_dir" "$cases_dir" "$errors_dir" "read_tests_files" "read_errortests_files"
       retcod="$?"
       if [[ $retcod -eq 0 ]] ; then {
         tot_successes=$(($tot_successes+1))
@@ -3128,7 +3461,7 @@ amboso_parse_args() {
         display_zero=""
       }
       fi
-      [[ $quiet_flag -eq 0 ]] && log_cl "[TEST]  ($(($i+1))/$tot_tests)  took $display_zero$runtime_curr_test seconds." info
+      [[ $quiet_flag -eq 0 ]] && log_cl "[TEST]  ($(($k+1))/$tot_tests)  took $display_zero$runtime_curr_test seconds." info
     }
     done
     end_t_tests=$(date +%s.%N)
@@ -3216,331 +3549,67 @@ amboso_parse_args() {
     return "$make_res"
   } elif [[ $tot_left_args -lt 1 && $test_mode_flag -gt 0 ]] ; then {
     #If in test mode, we still whine about a target test
-    log_cl "Missing test query.\n" error
-    log_cl "       Run with -h for help.\n" error
+    if [[ $init_flag -gt 0 ]]; then {
+      if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_refuseTi"; then {
+        log_cl "Invalid usage: -Ti." error
+        log_cl "To record all tests, use -tb instead." error
+        return 1
+      } else {
+          log_cl "Taken legacy path: accept -Ti to record all tests" warn cyan
+          #Legacy behaviour support: called with -Ti
+          #This behaviour is deprecated
+          #Call with -tb instead
+          :
+      }
+      fi
+    } else {
+      log_cl "Missing test query.\n" error
+      log_cl "       Run with -h for help.\n" error
+    }
+    fi
     #printf "can we do init/purge?\n" #TODO wth does this mean
   }
   fi
   #Check if we are doing a test
   if [[ $test_mode_flag -gt 0 ]]; then {
-    if [[ $quiet_flag -eq 0 && $verbose_flag -ge 4 ]]; then { #WIP
-        log_cl "[VERB]    Test mode (-T was on)." info >&2
-        [[ $small_test_mode_flag -gt 0 ]] && log_cl "[VERB]    (-t was on)." info >&2
-        echo_tests_info "$kazoj_dir" >&2
-    }
-    fi
-    test_name=""
-    test_type=""
-    test_path=""
-    [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Checking if query $query is a testcase." info >&2
-    for i in $(seq 0 $(($count_tests_names-1))); do {
-      current_item="${read_tests_files[$i]}"
-      [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Checking case ($i/$count_tests_names): $current_item" info >&2
-      #echo "checking $current_item"
-      if [[ $query = "$current_item" ]]; then {
-        test_type="casetest"
-        test_name="$query"
-        test_path="$kazoj_dir/$cases_dir/${read_tests_files[$i]}"
-        break; #done looking
+    if [[ $init_flag -gt 0 ]]; then {
+      if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_refuseTi"; then {
+        log_cl "Invalid usage: -Ti." error
+        log_cl "To record all tests, use -tb instead." error
+        return 1
       }
       fi
-    }
-    done
-    if [[ -z $test_name ]] ; then {
-      [[ $verbose_flag -ge 4 ]] && log_cl "[TEST]    Checking if query $query is a error testcase." info >&2
-      for i in $(seq 0 $(($count_errortests_names-1))); do {
-        current_item="${read_errortests_files[$i]}"
-        [[ $verbose_flag -ge 4 ]] && log_cl "[TEST]    Checking error case ($i/$count_errortests_names): $current_item" info >&2
-        #echo "checking $current_item"
-        if [[ $query = "$current_item" ]] ; then {
-      test_type="errortest"
-      test_name="$query"
-      test_path="$kazoj_dir/$errors_dir/${read_errortests_files[$i]}"
-      break; #done looking
-        }
-        fi
-      }
-      done
-    }
-    fi
+      log_cl "Legacy behaviour support: called with -Ti" warn
+      log_cl "This behaviour is deprecated." warn
+      log_cl "Call with -tb instead." warn
 
-    if [[ $quiet_flag -eq 0 ]]; then { #WIP
-        log_cl "[TEST]    Expected:\n\n    type:  $test_type\n\n    name:  $test_name\n    path:  $test_path\n" info >&2
-    }
-    fi
+      log_cl "Taken legacy path: accept -Ti to record all tests" warn cyan
+      log_cl "Setting init_flag to 0" debug
+      init_flag=0
+      log_cl "Setting build_flag to 1, was: $build_flag" debug
+      build_flag=1
 
-    if [[ -z $test_path ]]; then {
-      if [[ $quiet_flag -eq 0 ]] ; then {
-        flaginit=""
-        flagbuild=""
-        [[ $build_flag -gt 0 ]] && flagbuild="b"
-        [[ $init_flag -gt 0 ]] && flaginit="t"
-        log_cl "[VERB]    Test path was empty but we have [-$flagbuild$flaginit]." debug >&2
-      }
-      fi
-      if [[ -z $test_path && -z $query ]] ; then {
-        [[ $quiet_flag -eq 0 ]] && log_cl "[VERB]    testpath was empty, query was empty. Should quit." debug >&2
-        keep_run_txt=""
-        if [[ $init_flag -gt 0 ]] ; then {
-          keep_run_txt="[INIT]"
-          log_cl "[TEST]    ( \"empty\"[$query] ) is not a supported tag. $keep_run_txt." error >&2
-          echo_timer "$amboso_start_time"  "Empty test query" "1"
-          exit 1
-        }
-        fi
-        printf "${FUNCNAME[0]}():    UNREACHABLE.\n"
-        exit 1
-      } elif [[ -z $test_path && ! -z $query ]] ; then {
-        [[ $quiet_flag -eq 0 ]] && log_cl "[VERB]    testpath was empty, query was not empty: ( $query )." info >&2
-        keep_run_txt=""
-        if [[ $init_flag -gt 0 ]] ; then {
-          keep_run_txt="[INIT]"
-          log_cl "[TEST]    ( $query ) is not a supported tag, we quit at this point. $keep_run_txt." error >&2
-          echo_timer "$amboso_start_time"  "Unsupported test query [$query]" "3"
-          exit 0
-        }
-        fi
-        [[ $build_flag -gt 0 ]] && keep_run_txt="[BUILD]" && log_cl "[TEST]    ( $query ) is not a supported tag, but we continue to $keep_run_txt." debug >&2
-      } else {
-        [[ $verbose_flag -ge 4 || $quiet_flag -eq 0 ]] && log_cl "[TEST] expected:\n  $test_type\n\n  name: $test_name\n  path: $test_path" debug # >&2
-        log_cl "[TEST]    target: ( $test_path ).\n" info
-      }
-      fi
-    } elif [[ -z $test_path && -z $query ]] ; then {
-      #Panic
-      log_cl "( $test_name : at  $test_path ) is not a supported test.\n" error
-      log_cl "       Run with -h for help.\n" error
-      echo_timer "$amboso_start_time"  "Unsupported test name [$test_name] at [$test_path]" "1"
-      exit 1
-    }
-    fi
-
-    relative_testpath="$test_path"
-
-    if [[ $build_flag -gt 0 ]] ; then {
-      log_cl "[TEST]    \"-b\" is set, Recording: ( $relative_testpath )." debug >&2
-      #record_test "$relative_testpath"
-    } elif [[ $delete_flag -gt 0 ]] ; then {
-      :
-      #echo -e "\033[0;34m[TEST]    \"-d\" is set, Deleting: ( $relative_testpath ).\e[0m" >&2
-      #delete_test "$relative_testpath"
-    } elif [[ $init_flag -gt 0 ]] ; then {
-      #echo "UNREACHABLE." && exit 1
-      log_cl "[TEST]    \"-i\" is set, Recording ALL: ( $relative_testpath )." debug
       log_cl "( $tot_tests ) total tests ready." debug >&2
-      for i in $(seq 0 $(($tot_tests-1))); do {
-        TEST="${supported_tests[$i]}"
-        verb=""
-        quietm=""
-        showtimem=""
-        plainm=""
-        loggedm=""
-        extm=""
-        corem=""
-
-        if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_stegodir" ; then {
-          corem="-O $stego_dir -k $std_amboso_kern -a $std_amboso_version"
-        } elif compare_semver "$std_amboso_version" "<" "$min_amboso_v_kern" ; then {
-            log_cl "Taken legacy path, not passing any core arg." warn magenta
-            log_cl "Currently: -O {$stego_dir} -a {$std_amboso_version} -k {$std_amboso_kern}\n" warn cyan
-            corem=""
-        } else {
-            log_cl "Taken legacy path, not passing -O {$stego_dir}." warn magenta
-            corem="-k $std_amboso_kern -a $std_amboso_version"
-        }
-        fi
-        if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_extensions" ; then {
-          [[ $extensions_flag -ne 1 ]] && extm="e"
-        } else {
-          log_cl "Taken legacy path, won't pass -e. Current: {$extensions_flag}" warn magenta
-        }
-        fi
-
-        [[ $do_filelog_flag -gt 0 ]] && loggedm="J"
-        [[ $allow_color_flag -le 0 ]] && plainm="P"
-        [[ $show_time_flag -gt 0 ]] && showtimem="w"
-        [[ $quiet_flag -gt 0 ]] && quietm="q" #We make sure to pass on eventual quiet flag mode to the subcalls
-        [[ $verbose_flag -ne 3 ]] && verb="-V $verbose_flag"
-        [[ $verbose_flag -gt 3 ]] && printf "\n[TEST]    Recording ALL: ( $(($i+1)) / $tot_tests ) ( $TEST )\n" >&2
-        log_cl "[TEST]    Running:    \"$prog_name $corem -K $kazoj_dir -D $scripts_dir $verb -bT$quietm$showtimem$plainm$loggedm$extm $TEST 2>/dev/null \"\e[0m\n" debug
-        start_t=$(date +%s.%N)
-        ( "$prog_name" $corem -Y "$amboso_start_time" -K "$kazoj_dir" -D "$scripts_dir" $verb -b"$quietm""$showtimem""$plainm""$loggedm""$extm"T "$TEST" 2>/dev/null ; exit "$?")
-        record_res="$?"
-        if [[ $record_res -eq 69 ]]; then {
-          log_cl "[PANIC]    Unsupported: a test call returned 69. Will do the same.\n" error &&
-          echo_timer "$amboso_start_time"  "Record Test call returned 69" "1"
-          exit 69
-        }
-        fi
-        end_t=$(date +%s.%N)
-        runtime=$( printf "$end_t - $start_t\n" | bc -l )
-        printf "\n[TEST]    took $runtime s ( $TEST )\n" >&2
+      local curr_test_count=0
+      for curr_test in "${supported_tests[@]}"; do {
+          log_cl "Recording test ($curr_test_count/$tot_tests):" debug
+          amboso_test_step "$curr_test" "$kazoj_dir" "$cases_dir" "$errors_dir" "read_tests_files" "read_errortests_files"
+          local curr_test_res="$?"
+          if [[ $curr_test_res -eq 69 ]]; then {
+            log_cl "[PANIC]    Unsupported: a test call returned 69. Will do the same.\n" error
+            echo_timer "$amboso_start_time"  "Record Test call returned 69" "1"
+            return 69
+          }
+          fi
+          curr_test_count="$(($curr_test_count+1))"
       }
       done
-      #init_all_tests "$relative_testpath"
-    } elif [[ $purge_flag -gt 0 ]] ; then {
-      :
-      #echo "[TEST]    Deleting ALL: ( $relative_testpath )."
-      #purge_all_tests "$relative_testpath"
-    }
-    fi
-    if [[ -z $relative_testpath && $init_flag -eq 0 ]] ; then {
-      #Exit 0 as intended behaviour FIXME
-      log_cl "[TEST]    Can't proceed further with no valid target path, query was ( $query )." warn
-      log_cl "[TEST]    Supported tests:\n" info
-      echo_tests_info "$kazoj_dir"
-      log_cl "[TEST]    Quitting." error
-      echo_timer "$amboso_start_time"  "Invalid target path [$relative_testpath]" "1"
-      exit 1
-    }
-    fi
-    if [[ -z $relative_testpath && $init_flag -eq 1 && ! -z $query ]] ; then {
-      #Exit 0 as intended behaviour FIXME
-      log_cl "Can't proceed even with -i flag, with no testpath. ( p: $relative_testpath ) can't be be ( q: $query )." error
-      echo_timer "$amboso_start_time"  "Invalid target path (-i) [$relative_testpath]" "1"
-      exit 0
-    }
-    fi
-    if [[ -z $relative_testpath && $init_flag -eq 1 && -z $query ]] ; then {
-      log_cl "Can't proceed with no query.  ( q: $query, p: $relative_testpath )." error
-      echo_timer "$amboso_start_time"  "Empty test query [$query]" "1"
-      exit 1
-    }
-    fi
-    run_tmp_out="$(mktemp)"
-    run_tmp_escout="$(mktemp)"
-    run_tmp_err="$(mktemp)"
-    run_tmp_escerr="$(mktemp)"
-    [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Created tempfiles." debug >&2
-    log_cl "[TEST]    Running:    \"$relative_testpath\"" debug
-    run_test "$relative_testpath" >>"$run_tmp_out" 2>>"$run_tmp_err"
-    ran_res="$?"
-
-    if [[ $ran_res -eq 69 ]] ; then {
-      log_cl "Test call returned 69, we clean tmpfiles and follow suit." warn
-      #Delete tmpfiles
-      rm -f "$run_tmp_out" || log_cl "Failed removing tmpfile ($run_tmp_out). Why?\n" error
-      [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Removed tempfile \"$run_tmp_out\"." debug >&2
-      rm -f "$run_tmp_err" || log_cl "Failed removing tmpfile ($run_tmp_err). Why?\n" error
-      [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Removed tempfile \"$run_tmp_err\"." debug >&2
-      rm -f "$run_tmp_escout" || log_cl "Failed removing tmpfile ($run_tmp_escout). Why?\n" error
-      [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Removed tempfile \"$run_tmp_escout\"." debug >&2
-      rm -f "$run_tmp_escerr" || log_cl "Failed removing tmpfile ($run_tmp_escerr). Why?\n" error
-      [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Removed tempfile \"$run_tmp_escerr\".\n" debug >&2
-      log_cl "[PANIC]    Quitting with 69." error
-      echo_timer "$amboso_start_time"  "Test run ended with 69" "1"
-      exit 69
-    }
-    fi
-    #echo "r: $ran_res" >> "$run_tmp_out"
-    escape_colorcodes_tee "$run_tmp_out" "$run_tmp_escout"
-    escape_colorcodes_tee "$run_tmp_err" "$run_tmp_escerr"
-    if [[ $build_flag -gt 0 ]] ; then {
-      cp "$run_tmp_escout" "$relative_testpath.stdout" || printf "Failed replacing stdout with new file.\n"
-      cp "$run_tmp_escerr" "$relative_testpath.stderr" || printf "Failed replacing stderr with new file.\n"
+      return "$?"
     } else {
-      [[ $quiet_flag -eq 0 || $verbose_flag -gt 3 ]] && log_cl "[TEST]    Won't record, no [-b].\n" info
+      amboso_test_step "$query" "$kazoj_dir" "$cases_dir" "$errors_dir" "read_tests_files" "read_errortests_files"
+      return "$?"
     }
     fi
-    rm -f "$run_tmp_out" || log_cl "Failed removing tmpfile ($run_tmp_out). Why?\n" error
-    [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Removed tempfile \"$run_tmp_out\"." debug >&2
-    rm -f "$run_tmp_err" || log_cl "Failed removing tmpfile ($run_tmp_err). Why?\n" error
-    [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Removed tempfile \"$run_tmp_err\"." debug >&2
-    #Testing diff for escaped stdout
-    ( diff "$run_tmp_escout" "$relative_testpath".stdout ) 2>/dev/null 1>&2
-    diff_res="$?"
-    out_res=""
-    if [[ "$diff_res" -eq 0 ]]; then {
-      out_res="pass"
-      if [[ ! -z "$run_tmp_escout" ]] ; then { #FIXME: SC2157 && ! -z "$relative_testpath".stdout ]]; then {
-        #This one doesn't go on stderr since we still want it in recursive calls:
-        [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Pass, both outputs are not empty." debug
-      } elif [[ -z "$run_tmp_escout" ]]; then {
-        [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Pass, current stdout is empty. Is that expected?" info >&2
-      } #FIXME: SC2157 elif [[ -z "$relative_testpath.stdout" ]]; then {
-        #[[ $verbose_flag -gt 0 ]] && printf "\033[0;35m[TEST]    Pass, registered stdout is empty. Is that expected?\e[0m\n" >&2
-      #}
-      fi
-      if [[ $verbose_flag -gt 3 && $quiet_flag -eq 0 ]]; then {
-        log_cl "[TEST]    (stdout) Expected:" info
-        cat "$relative_testpath.stdout"
-        log_cl "[TEST]    (stdout) Found:" info
-        cat "$run_tmp_escout"
-      }
-      fi
-    } else {
-      out_res="fail"
-      if [[ $quiet_flag -eq 0 ]]; then {
-        log_cl "[TEST]    (stdout) Expected:" info
-        cat "$relative_testpath.stdout"
-        log_cl "[TEST]    (stdout) Found:" error
-        cat "$run_tmp_escout"
-      }
-      fi
-      log_cl "[TEST]    Failed: stdout changed." error
-      #cat "$run_tmp_escout"
-    }
-    fi
-    rm -f "$run_tmp_escout" || log_cl "Failed removing tmpfile ($run_tmp_escout). Why?\n" error
-    [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Removed tempfile \"$run_tmp_escout\"." debug >&2
-    #Testing diff for escaped stderr
-    ( diff "$run_tmp_escerr" "$relative_testpath".stderr ) 2>/dev/null 1>&2
-    diff_res="$?"
-    if [[ "$diff_res" -eq 0 ]]; then {
-      err_res="pass"
-      if [[ ! -z "$run_tmp_escerr" ]]; then { #FIXME SC2157 && ! -z "$relative_testpath.stderr" ]]; then {
-        #This one doesn't go on stderr since we still want it in recursive calls:
-        [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Pass, both stderrs are not empty." debug
-      } elif [[ -z "$run_tmp_escerr" ]]; then {
-        [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Pass, current run stderr is empty. Is that expected?" info >&2
-      } #FIXME SC2157 elif [[ -z "$relative_testpath.stderr" ]]; then {
-       # [[ $verbose_flag -gt 0 ]] && printf "\033[0;35m[TEST]    Pass, registered stderr is empty. Is that expected?\e[0m\n" >&2
-      #}
-      fi
-      if [[ $verbose_flag -gt 3 && $quiet_flag -eq 0 ]]; then {
-        log_cl "[TEST]    (stderr) Expected:" info
-        cat "$relative_testpath.stderr"
-        log_cl "[TEST]    (stderr) Found:" info
-        cat "$run_tmp_escerr"
-      }
-      fi
-      #cat "$run_tmp_escerr"
-    } else {
-      err_res="fail"
-      if [[ $quiet_flag -eq 0 ]]; then {
-        log_cl "[TEST]    (stderr) Expected:" info
-        cat "$relative_testpath.stderr"
-        log_cl "[TEST]    (stderr) Found:" error
-        cat "$run_tmp_escerr"
-      }
-      fi
-      log_cl "[TEST]    Failed: stderr changed." error
-      #cat "$run_tmp_escerr"
-    }
-    fi
-    rm -f "$run_tmp_escerr" || log_cl "Failed removing tmpfile ($run_tmp_escerr). Why?\n" error
-    [[ $verbose_flag -gt 3 ]] && log_cl "[TEST]    Removed tempfile \"$run_tmp_escerr\"." debug >&2
-    if [[ $build_flag -gt 0 ]] ; then {
-      #We simulate success since we're recording
-      log_cl "[TEST]    Phony pass (recording)." debug
-      [[ $verbose_flag -gt 3 ]] && log_cl "(out: $out_res)" debug
-      [[ $verbose_flag -gt 3 ]] && log_cl "(err: $err_res)" debug
-      echo_timer "$amboso_start_time"  "Phony test pass" "3"
-      exit 0 #We return earlier
-    } elif [[ $out_res = "pass" && $err_res = "pass" ]]; then {
-      log_cl "[TEST]    Passed." info
-      echo_timer "$amboso_start_time"  "Test pass" "2"
-      exit 0 #We return earlier
-    } elif [[ $out_res = "fail" ]] ; then {
-     : #echo "failed" #We echoed before
-    } elif [[ $err_res = "fail" ]] ; then {
-     : #echo "failed" #We echoed before
-    } else {
-      log_cl "Unexpected values (o:$out_res/e:$err_res) should be either pass or fail. How?" error
-    }
-    fi
-    echo_timer "$amboso_start_time"  "Test fail" "1"
-    exit 1
   }
   fi
   #End of test mode block

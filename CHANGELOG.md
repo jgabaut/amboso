@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.0.11] - Unreleased
+
+### Added
+
+- Add `amboso_test_step()`
+
+### Changed
+
+- Refactor test macro to be iterative
+- Fix `-t` macro index being `i`
+- Refuse `AMBOSO_LVL_REC == 3`
+- Refuse`-Ti` when running as `>=2.0.11`
+- Wrap `-Ti` behaviour as legacy support
+- Fix word splitting in `anvilPy_build_step()`
+- Fix git mode CI:
+  - Specify `fetch-depth` for workflow checkout since tags are needed
+  - Add --detach to the switchback after a checkout coming from detached HEAD
+
 ## [2.0.10] - 2025-03-31
 
 ### Added
