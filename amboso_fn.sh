@@ -674,11 +674,11 @@ set_supported_tests() {
   #echo "version array size is " "${#read_versions[@]}" >&2
   count_tests_names="${#read_tests_files[@]}"
   count_errortests_names="${#read_errortests_files[@]}"
-  for i in $(seq 0 $(($count_tests_names-1))); do
-    supported_tests[i]=${read_tests_files[$i]}
+  for test_name_idx in $(seq 0 $(($count_tests_names-1))); do
+    supported_tests[test_name_idx]=${read_tests_files[$test_name_idx]}
   done
-  for i in $(seq 0 $(($count_errortests_names-1))); do
-    supported_tests[$(($i + $count_tests_names))]=${read_errortests_files[$i]}
+  for test_name_idx in $(seq 0 $(($count_errortests_names-1))); do
+    supported_tests[$(($test_name_idx + $count_tests_names))]=${read_errortests_files[$test_name_idx]}
   done
   tot_tests=${#supported_tests[@]}
   #echo "tot tests: $tot_tests"
@@ -693,8 +693,8 @@ echo_tests_info() {
   log_cl "Cases dir is: ( $echoed_cases_dir )." debug >&2
   log_cl "( $count_tests_names ) cases ready." debug >&2
   if [[ $big_list_flag -gt 0 ]] ; then {
-    for i in $(seq 0 $(($count_tests_names-1))) ; do {
-      log_cl "( ${read_tests_files[$i]} )." debug >&2
+    for test_name_idx in $(seq 0 $(($count_tests_names-1))) ; do {
+      log_cl "( ${read_tests_files[$test_name_idx]} )." debug >&2
     }
     done
   }
@@ -702,8 +702,8 @@ echo_tests_info() {
   log_cl "Errors dir is: ( $echoed_errors_dir )." debug >&2
   log_cl "( $count_errortests_names ) error cases ready." debug >&2
   if [[ $big_list_flag -gt 0 ]] ; then {
-    for i in $(seq 0 $(($count_errortests_names-1))) ; do {
-      log_cl "( ${read_errortests_files[$i]} )." debug >&2
+    for test_name_idx in $(seq 0 $(($count_errortests_names-1))) ; do {
+      log_cl "( ${read_errortests_files[$test_name_idx]} )." debug >&2
     }
     done
   }
@@ -719,18 +719,18 @@ echo_othermode_tags() {
     mode_txt="git"
     printf "  ( $count_git_versions ) supported tags when running in ( $mode_txt ) mode.\n"
     printf "  Run again in ( $mode_txt ) mode to use them.\n"
-    for i in $(seq 0 $(($count_git_versions-1))); do {
-      (( $i % 4 == 0)) && [[ $i -ne 0 ]] && printf "\n"
-      printf "    ${read_git_tags[i]}"
+    for git_tag_idx in $(seq 0 $(($count_git_versions-1))); do {
+      (( $git_tag_idx % 4 == 0)) && [[ $git_tag_idx -ne 0 ]] && printf "\n"
+      printf "    ${read_git_tags[git_tag_idx]}"
     }
     done
   } else {
     mode_txt="base"
     printf "  ( $count_base_versions ) supported tags when running in ( $mode_txt ) mode.\n"
     printf "  Run again in ( $mode_txt ) mode to use them.\n"
-    for i in $(seq 0 $(($count_base_versions-1))); do {
-      (( $i % 4 == 0)) && [[ $i -ne 0 ]] && printf "\n"
-      log_cl "    ${read_base_tags[i]}" info blue
+    for git_tag_idx in $(seq 0 $(($count_base_versions-1))); do {
+      (( $git_tag_idx % 4 == 0)) && [[ $git_tag_idx -ne 0 ]] && printf "\n"
+      log_cl "    ${read_base_tags[git_tag_idx]}" info blue
     }
     done
   }
@@ -742,9 +742,9 @@ echo_supported_tags() {
   mode_txt="git"
   [[ $base_mode_flag -gt 0 ]] && mode_txt="base"
   printf "  ( $tot_vers ) supported tags for current mode ( $mode_txt ).\n"
-  for i in $(seq 0 $(($tot_vers-1))); do { #Print currently supported versions (only ones conforming to mode)
-    (( $i % 4 == 0)) && [[ $i -ne 0 ]] && printf "\n"
-    log_cl "    ${supported_versions[i]}" info blue
+  for tag_idx in $(seq 0 $(($tot_vers-1))); do { #Print currently supported versions (only ones conforming to mode)
+    (( $tag_idx % 4 == 0)) && [[ $tag_idx -ne 0 ]] && printf "\n"
+    log_cl "    ${supported_versions[tag_idx]}" info blue
   }
   done
   printf "\n"
@@ -1556,12 +1556,12 @@ set_amboso_stego_info() {
   #echo "git version array contents are: ( ${read_git_tags[@]} )" >&2
   #echo "version array contents are: ( ${read_versions[@]} )" >&2
   if [[ $base_mode_flag -gt 0 ]] ; then {
-    for i in $(seq 0 $(($count_base_versions-1))); do
-      supported_versions[i]=${read_base_tags[$i]}
+    for base_tag_idx in $(seq 0 $(($count_base_versions-1))); do
+      supported_versions[base_tag_idx]=${read_base_tags[$base_tag_idx]}
     done
   } else {
-    for i in $(seq 0 $(($count_git_versions-1))); do
-      supported_versions[i]=${read_git_tags[$i]}
+    for git_tag_idx in $(seq 0 $(($count_git_versions-1))); do
+      supported_versions[git_tag_idx]=${read_git_tags[$git_tag_idx]}
     done
   }
   fi
@@ -3331,9 +3331,9 @@ amboso_parse_args() {
 
     count_bins=0
     start_t_init=$(date +%s.%N)
-    for i in $(seq 0 $(($tot_vers-1))); do
-      init_vers="${supported_versions[$i]}"
-      [[ $quiet_flag -eq 0 ]] && printf "[INIT]    Trying to build ( $init_vers ) ( $(($i+1)) / $tot_vers )\n" >&2
+    for tag_idx in $(seq 0 $(($tot_vers-1))); do
+      init_vers="${supported_versions[$tag_idx]}"
+      [[ $quiet_flag -eq 0 ]] && printf "[INIT]    Trying to build ( $init_vers ) ( $(($tag_idx+1)) / $tot_vers )\n" >&2
       #Build this vers
       #Init mode ALWAYS tries building, even if we have the binary already ATM
       #Save verbose flag
@@ -3491,7 +3491,7 @@ amboso_parse_args() {
   #check arg num
   # nothing else is allowed
   #shift all the options
-  for i in $(seq 0 $(( $tot_opts - 2 )) ); do {
+  for tot_opts_idx in $(seq 0 $(( $tot_opts - 2 )) ); do {
     shift
   }
   done
@@ -3656,8 +3656,8 @@ amboso_parse_args() {
   }
   fi
   version=""
-  for i in $(seq 0 $(($tot_vers-1))); do
-    [[ $query = "${supported_versions[$i]}" ]] && version="$query" && script_path="${scripts_dir}v${version}"
+  for tag_idx in $(seq 0 $(($tot_vers-1))); do
+    [[ $query = "${supported_versions[$tag_idx]}" ]] && version="$query" && script_path="${scripts_dir}v${version}"
   done
 
   if [[ -z $version ]]; then {
@@ -3839,10 +3839,10 @@ amboso_parse_args() {
     tot_removed=0
     tool_txt="rm"
     has_bin=0
-    for i in $(seq 0 $(($tot_vers-1)) ); do
+    for tag_idx in $(seq 0 $(($tot_vers-1)) ); do
       clean_res=1
       has_makeclean=0
-      purge_vers=${supported_versions[$i]}
+      purge_vers=${supported_versions[$tag_idx]}
       if [[ -x $scripts_dir/v$purge_vers/$exec_entrypoint ]] ; then {
         has_bin=1 #&& [[ $verbose_flag -gt 0 ]] && echo -e "\033[0;32m[DELETE]    $version has an executable.\e[0m\n" >&2
       } else {
@@ -3964,7 +3964,7 @@ lex_legacy_stego() {
     stego_dir="$(dirname "$input")"
     [[ -d "$stego_dir" ]] || { printf "\"%s\" is not a valid dir.\n" "$stego_dir" ; return 1; } ;
 
-    local i=0
+    local line_idx=0
     local kulpo_dir=""
 
 
@@ -3978,14 +3978,14 @@ lex_legacy_stego() {
         }
         fi
 
-        if [[ "$i" -eq "$amboso_lgcy_build_pos" ]]; then {
+        if [[ "$line_idx" -eq "$amboso_lgcy_build_pos" ]]; then {
             printf "Scope: build\n"
-        } elif [[ "$i" -eq "$amboso_lgcy_versions_pos" ]] ; then {
+        } elif [[ "$line_idx" -eq "$amboso_lgcy_versions_pos" ]] ; then {
             printf -- "%s\n" "$amboso_dashline"
             printf "Scope: versions\n"
         } else {
             printf "Variable: "
-            if [[ "$i" -gt "$amboso_lgcy_versions_pos" ]]; then {
+            if [[ "$line_idx" -gt "$amboso_lgcy_versions_pos" ]]; then {
                 printf "versions_"
                 if [[ "$(cut -c1 <<< "$value")" == "?" ]]; then {
                     value="B${value:1}"
@@ -3993,8 +3993,8 @@ lex_legacy_stego() {
                 fi
                 printf "%s, Value: %s\n" "$value" "$comment"
             } else {
-                printf "build_%s, Value: %s\n" "$(int_to_anvilname "$i")" "$value"
-                if [[ "$i" -eq 4 ]] ; then {
+                printf "build_%s, Value: %s\n" "$(int_to_anvilname "$line_idx")" "$value"
+                if [[ "$line_idx" -eq 4 ]] ; then {
                     kulpo_dir="$value" # Save this for later
                 }
                 fi

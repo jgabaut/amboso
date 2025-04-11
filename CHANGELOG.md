@@ -11,6 +11,7 @@
 - Refactor test macro to be iterative
 - Fix `-t` macro using `i` as an index
   - Was being updated by functions called inside
+- Refactor usage of `i` as an index
 - Refuse `AMBOSO_LVL_REC == 3`
 - Refuse`-Ti` when running as `>=2.0.11`
 - Wrap `-Ti` behaviour as legacy support
