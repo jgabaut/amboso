@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.0.11] - Unreleased
+## [2.0.11] - 2025-04-11
 
 ### Added
 
@@ -9,7 +9,8 @@
 ### Changed
 
 - Refactor test macro to be iterative
-- Fix `-t` macro index being `i`
+- Fix `-t` macro using `i` as an index
+  - Was being updated by functions called inside
 - Refuse `AMBOSO_LVL_REC == 3`
 - Refuse`-Ti` when running as `>=2.0.11`
 - Wrap `-Ti` behaviour as legacy support
