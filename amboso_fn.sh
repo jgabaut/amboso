@@ -2854,7 +2854,7 @@ amboso_parse_args() {
   export AMBOSO_LOGGED="${AMBOSO_LOGGED:-0}"
   export AMBOSO_AWK_NAME="${AMBOSO_AWK_NAME:-awk}"
   if [[ "${AMBOSO_LVL_REC}" -lt 2 ]]; then {
-    echo_amboso_splash "$amboso_currvers" "$(basename "$prog_name")"
+    [[ "$quiet_flag" -eq 0 ]] && echo_amboso_splash "$amboso_currvers" "$(basename "$prog_name")"
     if ! command -v "bc" > /dev/null; then
         log_cl "[CRITICAL]    Error: bc is not installed. Please install bc before running this script." error
         exit 8
@@ -2904,7 +2904,7 @@ amboso_parse_args() {
       fi
     }
     fi
-    echo_invil_notice
+    [[ "$quiet_flag" -eq 0 ]] && echo_invil_notice
   }
   fi
   if [[ $quiet_flag -eq 0 && $show_warranty_flag -gt 0 && "${AMBOSO_LVL_REC}" -eq 1 ]]; then {
