@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.0.12] - 2025-06-17
+
+### Changed
+
+- Guard splash and invil notice with quiet flag
+
 ## [2.0.11] - 2025-04-11
 
 ### Added
