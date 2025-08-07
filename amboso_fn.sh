@@ -2045,6 +2045,51 @@ set_amboso_stego_info() {
   return 0
 }
 
+set_amboso_pyproject_info() {
+  # Reads the passed file and sets
+  # - Amboso build info variables
+  # - Version tag variables
+  stego_file="$1"
+  verbose="$2"
+
+  bash_gulp_stego "$stego_file" 0 #&& print_amboso_stego_scopes
+  if [[ ! $? -eq 0 ]]; then {
+    log_cl "Failed parsing stego file at \"$stego_file\"." error
+    exit 7
+  }
+  fi
+  git_tags_count=0
+  base_tags_count=0
+  read_tags=0
+  for ((i=0; i<${#scopes[@]}; i++)); do
+  [[ $verbose -gt 1 ]] && printf "{${variables[i]}} = {${values[i]}}\n"
+  scope="${scopes[i]}"
+  variable="${variables[i]}"
+  value="${values[i]}"
+  #is_noscope=0
+  if [[ -z $scope ]] ; then {
+    :
+    #is_noscope=1
+    #Display scope as "main", even tho it should be equal to ""
+    #printf "\033[1;35mScope:\033[0m \"main\", \033[1;33mVariable:\033[0m \"$variable\", Value: \"\033[1;36m$value\033[0m\"\n\n"
+  } else {
+    #Print values for all scopes
+    #printf "\033[1;34mScope:\033[0m \"$scope\", \033[1;33mVariable:\033[0m \"$variable\", Value: \"\033[1;36m$value\033[0m\"\n\n"
+    if [[ $scope = "project" ]] ; then {
+        declare -g "$variable=$value"
+    } elif [[ $scope = "project_scripts" ]]; then {
+        declare -g "$variable=$value"
+    } elif [[ $scope = "project_urls" ]]; then {
+        declare -g "$variable=$value"
+    } elif [[ $scope = "build_system" ]]; then {
+        declare -g "$variable=$value"
+    }
+    fi
+  }
+  fi
+  done
+}
+
 handle_anvil_arg() {
   local arg="$1"
   if [[ "$arg" =~ $std_amboso_regex ]] ; then {
@@ -2587,17 +2632,8 @@ anvilPy_build_step() {
     }
     fi
 
-    if [[ ! -f "$pyproj_toml_path" ]] ; then {
-        log_cl "Can't find $pyproj_toml_path" error
-        anvilPy_git_restore "$q_tag" "$head_detached"
-        return 1
-    }
-    fi
-
-    #TODO: find a better way to pass main entrypoint name to gen_shim()
-    local main_entry="$(grep "^[[:space:]]*${bin_name}[[:space:]]*=" "$pyproj_toml_path")"
-    local grep_res="$?"
-    [[ "$grep_res" -ne 0 ]] && { log_cl "${FUNCNAME[0]}():    Failed grep of {$pyproj_toml_path} for main entry. Errcode: {$grep_res}" error; anvilPy_git_restore "$q_tag" "$head_detached"; return 1; }
+    local main_entry_name="project_scripts_$bin_name"
+    local main_entry="${!main_entry_name}"
 
     [[ -z "$main_entry" ]] && { log_cl "${FUNCNAME[0]}():    Can't deduce main_entry from {$pyproj_toml_path}" error; anvilPy_git_restore "$q_tag"; return 1; }
 
@@ -3136,7 +3172,7 @@ amboso_parse_args() {
   min_amboso_v_anvilPy_kern="2.1.0"
   min_amboso_v_custom_kern="2.1.0"
   amboso_custom_builder=""
-  min_amboso_v_stegostruct="2.1.0-dev"
+  min_amboso_v_stegostruct="2.1.0"
   long_options_hack="-:" # From https://stackoverflow.com/questions/402377/using-getopts-to-process-long-and-short-command-line-options/7680682#7680682
   while getopts "Z:O:A:M:S:E:D:K:G:Y:x:V:C:a:k:${long_options_hack}wBgbpHhrivdlLtTqszUXWPJRFe" opt; do
     case $opt in
@@ -3712,6 +3748,19 @@ amboso_parse_args() {
         log_cl "Queried kern is empty: {$queried_amboso_kern}" debug
     }
     fi
+  }
+  fi
+
+  #For anvilPy kern, get all info from pyproject.toml
+  if [[ "$std_amboso_kern" = "anvilPy" ]]; then {
+
+    local pyproj_toml_path="$stego_dir/pyproject.toml"
+    if [[ ! -f "$pyproj_toml_path" ]] ; then {
+        log_cl "Can't find $pyproj_toml_path" error
+        return 1
+    }
+    fi
+    set_amboso_pyproject_info "$pyproj_toml_path" 0
   }
   fi
 
