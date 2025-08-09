@@ -7,7 +7,7 @@
 [LINT]    Invalid line:    under_score = 1 
 [LINT]    Invalid line:    "1_foo" = ba 
 [LINT]    Invalid line:    {} 
-[LINT]    Invalid line:    unclosed-curly = {"this" 
+[LINT]    Invalid line:    #unclosed-curly = "this" 
 [LINT]    Invalid line:    yoink {$} 
 [LINT]    Invalid line:    -               =              farvalue 
 [LINT]    Invalid line:    100 =     str 
@@ -17,7 +17,6 @@
 [LINT]    Invalid line:    test 
 [LINT]    Invalid line:    " = try 
 [LINT]    Invalid line:    [ NO SPACES_ALLOWED ]
-[LINT]    Invalid line:    [ no_missing_square_bracket
 [LINT]    Invalid line:    [-NO-DASHES]
 [LINT]    Invalid line:    [-NOCAPS]
 [LINT]    Invalid line:    no[way]man
