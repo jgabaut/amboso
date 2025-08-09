@@ -3689,18 +3689,6 @@ amboso_parse_args() {
   }
   fi
 
-  #For customC kern, we check all needed names even if the current op does not require them
-  if [[ "$std_amboso_kern" = "customC" ]]; then {
-    if [[ -z "${anvil_tools[builder]}" ]]; then {
-      log_cl "[ERROR]    Could not find anvil_tools.builder. Check your stego.lock" error
-      exit 1
-    } else {
-      log_cl "[INFO]    ANVIL_TOOLS.BUILDER: { ${anvil_tools[builder]} }" debug
-    }
-    fi
-  }
-  fi
-
   set_supported_tests "$kazoj_dir"
 
   if [[ $verbose_flag -ge 4 ]]; then {
