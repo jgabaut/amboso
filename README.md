@@ -58,6 +58,17 @@ I did not want to learn how to write nice makefiles or chaining a couple git com
 
 ## Prerequisites <a name = "prerequisites"></a>
 
+To install dependencies:
+
+- Ubuntu/Debian
+  ```console
+    apt install gawk bc
+  ```
+- macOS
+  ```console
+    brew install gawk bc
+  ```
+
 * At the moment the only supported build step command is `make rebuild`. This means you use make to run the target `rebuild`.
   * Running with `-R` turns this back to the original behaviour, running just `make` with no target argument.
 
