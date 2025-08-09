@@ -1654,7 +1654,6 @@ use_anvil_version_arg() {
           :
           ;;
       2.1.0)
-          log_cl "${FUNCNAME[0]}():    Running as 2.1 preview" info
           ;;
       *)
           log_cl "${FUNCNAME[0]}():    Invalid version arg --> {$my_value}" error
@@ -2119,6 +2118,8 @@ handle_anvil_arg() {
        2.0.*)
            std_amboso_version="$arg"
            log_cl "Using {$std_amboso_version} version standard" info
+           ;;
+       2.1.0)
            ;;
        *)
            log_cl "Invalid version arg --> {$arg}" error
@@ -3716,7 +3717,7 @@ amboso_parse_args() {
                 log_cl "\n##\n#\n# The anvilPy kern is experimental.\n#\n##\n" warn
             } else {
                 log_cl "Can't use anvilPy kern while running as {$std_amboso_version}" debug
-                log_cl "Using this function requires running as 2.1.0 preview." debug
+                log_cl "Using this function requires running as 2.1.0." debug
                 return 1
             }
             fi
@@ -3725,7 +3726,7 @@ amboso_parse_args() {
                 log_cl "\n##\n#\n# The custom kern is experimental.\n#\n##\n" warn
             } else {
                 log_cl "Can't use custom kern while running as {$std_amboso_version}" debug
-                log_cl "Using this function requires running as 2.1.0 preview." debug
+                log_cl "Using this function requires running as 2.1.0." debug
                 return 1
             }
             fi
