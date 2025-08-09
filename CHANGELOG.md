@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.1.0] - Unreleased
+
+### Added
+
+- Improved stego parsing, supporting more complex entries
+
+### Changed
+
+- Get all values for anvilPy kern using the new support rather than grepping
+
 ## [2.0.12] - 2025-06-17
 
 ### Changed
