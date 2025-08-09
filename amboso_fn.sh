@@ -2086,13 +2086,13 @@ set_amboso_pyproject_info() {
     #Print values for all scopes
     #printf "\033[1;34mScope:\033[0m \"$scope\", \033[1;33mVariable:\033[0m \"$variable\", Value: \"\033[1;36m$value\033[0m\"\n\n"
     if [[ $scope = "project" ]] ; then {
-        declare -g "$variable=$value"
+        declare -g "anvilpy_$variable=$value"
     } elif [[ $scope = "project_scripts" ]]; then {
-        declare -g "$variable=$value"
+        declare -g "anvilpy_$variable=$value"
     } elif [[ $scope = "project_urls" ]]; then {
-        declare -g "$variable=$value"
+        declare -g "anvilpy_$variable=$value"
     } elif [[ $scope = "build_system" ]]; then {
-        declare -g "$variable=$value"
+        declare -g "anvilpy_$variable=$value"
     }
     fi
   }
@@ -2642,7 +2642,7 @@ anvilPy_build_step() {
     }
     fi
 
-    local main_entry_name="project_scripts_$bin_name"
+    local main_entry_name="anvilpy_project_scripts_$bin_name"
     local main_entry="${!main_entry_name}"
 
     [[ -z "$main_entry" ]] && { log_cl "${FUNCNAME[0]}():    Can't deduce main_entry from {$pyproj_toml_path}" error; anvilPy_git_restore "$q_tag"; return 1; }
