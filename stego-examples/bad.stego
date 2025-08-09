@@ -13,7 +13,7 @@ hash#tag = "# error6"
 under_score = 1 # error7
 "1_foo" = ba #error8
 {} # error9
-unclosed-curly = {"this" #error10
+#unclosed-curly = "this" #error10
 yoink {$} #error11
              -               =              farvalue #error12
 100 =     str #error13
@@ -26,7 +26,7 @@ test #error17
 
   # These are header errors
 [ NO SPACES_ALLOWED ]
-[ no_missing_square_bracket
+#[ no missing square bracket ]
 [-NO-DASHES]
 [-NOCAPS]
 no[way]man

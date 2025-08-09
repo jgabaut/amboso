@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="2.1.0-dev"
+AMBOSO_API_LVL="2.1.0"
 at() {
     #printf -- "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] -> {\n"
     log_cl "{ call: [" debug white
@@ -1436,7 +1436,7 @@ lex_stego_file() {
     ############################################################################
     #
     input="$1"
-    if [[ "$std_amboso_version" < "$min_amboso_v_stegostruct" ]] ; then {
+    if compare_semver "$std_amboso_version" "<" "$min_amboso_v_stegostruct" ; then {
         lex_stego_file_no_arrays "$input"
     } else {
         flat_input="$(flatten_stego "$input")"
@@ -1465,7 +1465,7 @@ parse_lexed_stego() {
           scopes+=("$current_scope")
           variables+=("$variable")
           values+=("$value")
-      elif [[ ! "$std_amboso_version" < "$min_amboso_v_stegostruct" ]] ; then {
+      elif compare_semver "$std_amboso_version" ">=" "$min_amboso_v_stegostruct" ; then {
         if [[ $line =~ ^Array:\ (.+),\ Name:\ (.*)$ ]]; then {
           arr_scoped_name="${BASH_REMATCH[1]}"
           arr_name="${BASH_REMATCH[2]}"
