@@ -825,11 +825,11 @@ amboso_usage() {
   printf "Usage: amboso [OPTIONS] [TAG] [COMMAND]\n"
   printf "    Run with -H for more info about options.\n\n"
   printf "Commands:
-  test     does testing things
-  build    Tries building latest tag
-  init     Prepare a new anvil project
-  version  Prints invil version
-  help     Print this message or the help of the given subcommand(s)\n"
+  test [TESTNAME]    Run all tests or the passed TESTNAME
+  build              Tries building latest tag
+  init               Prepare a new anvil project
+  version            Prints invil version
+  help               Print this message or the help of the given subcommand(s)\n"
 
   printf "Arguments:
   [TAG]  Optional tag argument\n\n"
@@ -4050,6 +4050,16 @@ amboso_parse_args() {
 
   tot_left_args=$(( $# ))
   if [[ $tot_left_args -gt 1 ]]; then {
+    if [[ "$1" = "test" ]]; then {
+        if [[ $tot_lest_args -gt 2 ]] ; then {
+            log_cl "\n    Unknown argument: \"$3\" (ignoring other $(($tot_left_args-2)) args).\n" error
+            amboso_usage
+            echo_timer "$amboso_start_time"  "Unknown arg [$3]" "1"
+            exit 1
+        }
+        fi
+    }
+    fi
     log_cl "\n    Unknown argument: \"$2\" (ignoring other $(($tot_left_args-1)) args).\n" error
     amboso_usage
     echo_timer "$amboso_start_time"  "Unknown arg [$2]" "1"
@@ -4598,6 +4608,26 @@ amboso_main() {
         return
       }
       fi
+      if [[ $cmd = "test" ]] ; then {
+        if [[ $# -gt 1 ]] ; then {
+            log_cl "Running: {$2}" info
+            local to_test="$2"
+            (amboso_parse_args -T "$to_test")
+            unset AMBOSO_LVL_REC
+            unset AMBOSO_COLOR
+            unset AMBOSO_LOGGED
+            unset AMBOSO_AWK_NAME
+            return
+        }
+        fi
+        (amboso_parse_args -t)
+        unset AMBOSO_LVL_REC
+        unset AMBOSO_COLOR
+        unset AMBOSO_LOGGED
+        unset AMBOSO_AWK_NAME
+        return
+      }
+      fi
       if [[ $cmd = "init" ]] ; then {
           (amboso_init_proj "$2" 0)
           #FIXME
@@ -4612,11 +4642,12 @@ amboso_main() {
       fi
       if [[ $cmd = "help" ]] ; then {
         log_cl "[AMBOSO-MAIN]    Quick commands:\n" info
-        printf "    build        Build latest version\n\n"
-        printf "    init         Prepare current dir for an amboso project\n\n"
-        printf "    version      Print amboso version\n\n"
-        printf "    quit         Quit amboso\n\n"
-        printf "    help         Print this message\n\n"
+        printf "    test [TESTNAME]    Run all tests or the passed TESTNAME\n\n"
+        printf "    build              Build latest version\n\n"
+        printf "    init               Prepare current dir for an amboso project\n\n"
+        printf "    version            Print amboso version\n\n"
+        printf "    quit               Quit amboso\n\n"
+        printf "    help               Print this message\n\n"
         log_cl "[AMBOSO-MAIN]    Amboso help (-h):\n" info
         (amboso_parse_args "-Xh")
         unset AMBOSO_LVL_REC
