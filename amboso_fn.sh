@@ -4609,10 +4609,25 @@ amboso_main() {
       }
       fi
       if [[ $cmd = "test" ]] ; then {
+        shift
+        local build_flg=0
+        while getopts "b" opt; do
+            case $opt in
+              b ) build_flg=1; log_cl "Passed  build flag" info;;
+              \? ) log_cl "Invalid option: -$OPTARG. Run with -h for help." error >&2; exit 1;;
+              : ) log_cl "Option -$OPTARG requires an argument. Run with -h for help." error >&2; exit 1;;
+            esac
+          local tot_opts=$OPTIND
+        done
+        OPTIND=1
         if [[ $# -gt 1 ]] ; then {
-            log_cl "Running: {$2}" info
             local to_test="$2"
-            (amboso_parse_args -T "$to_test")
+            if [[ $build_flg -gt 0 ]] ; then {
+                (amboso_parse_args -Tb "$to_test")
+            } else {
+                (amboso_parse_args -T "$to_test")
+            }
+            fi
             unset AMBOSO_LVL_REC
             unset AMBOSO_COLOR
             unset AMBOSO_LOGGED
@@ -4620,7 +4635,12 @@ amboso_main() {
             return
         }
         fi
-        (amboso_parse_args -t)
+        if [[ $build_flg -gt 0 ]] ; then {
+            (amboso_parse_args -tb)
+        } else {
+            (amboso_parse_args -t)
+        }
+        fi
         unset AMBOSO_LVL_REC
         unset AMBOSO_COLOR
         unset AMBOSO_LOGGED
