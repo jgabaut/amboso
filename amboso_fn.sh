@@ -3784,7 +3784,7 @@ amboso_parse_args() {
   fi
 
   #Check if we are printing tag list for current mode and exiting early
-  if [[ $small_list_flag -gt 0 ]]; then {
+  if [[ $small_list_flag -gt 0 && $small_test_mode_flag -eq 0 ]]; then {
     if [[ $git_mode_flag -gt 0 || $base_mode_flag -gt 0 ]] ; then {
       echo_supported_tags
     } elif [[ $test_mode_flag -gt 0 ]]; then {
@@ -3954,6 +3954,14 @@ amboso_parse_args() {
   #If we have -t and not -T, we check all tests and EXIT
   #WIP
   if [[ $small_test_mode_flag -gt 0 && $test_mode_flag -eq 0 ]] ; then {
+    if [[ $small_list_flag -gt 0 ]] ; then {
+        for k in $(seq 0 $(($tot_tests-1))); do {
+            log_cl "${supported_tests[$k]}" info
+        }
+        done
+        exit 0
+    }
+    fi
     if [[ $quiet_flag -eq 0 ]] ; then {
       log_cl "-t assert: shortcut to run \"$prog_name\" with -T" debug
       log_cl "will pass: ( -qVbw ) to subcall, if asserted.\n" debug
@@ -4611,9 +4619,11 @@ amboso_main() {
       if [[ $cmd = "test" ]] ; then {
         shift
         local build_flg=0
-        while getopts "b" opt; do
+        local list_flg=0
+        while getopts "bl" opt; do
             case $opt in
               b ) build_flg=1; log_cl "Passed  build flag" info;;
+              l ) list_flg=1; log_cl "Passed  list flag" info;;
               \? ) log_cl "Invalid option: -$OPTARG. Run with -h for help." error >&2; exit 1;;
               : ) log_cl "Option -$OPTARG requires an argument. Run with -h for help." error >&2; exit 1;;
             esac
@@ -4624,6 +4634,8 @@ amboso_main() {
             local to_test="$2"
             if [[ $build_flg -gt 0 ]] ; then {
                 (amboso_parse_args -Tb "$to_test")
+            } elif [[ $list_flg -gt 0 ]] ; then {
+                (amboso_parse_args -tl)
             } else {
                 (amboso_parse_args -T "$to_test")
             }
@@ -4637,6 +4649,8 @@ amboso_main() {
         fi
         if [[ $build_flg -gt 0 ]] ; then {
             (amboso_parse_args -tb)
+        } elif [[ $list_flg -gt 0 ]] ; then {
+            (amboso_parse_args -tl)
         } else {
             (amboso_parse_args -t)
         }
