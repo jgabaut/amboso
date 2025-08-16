@@ -4628,10 +4628,11 @@ amboso_main() {
               : ) log_cl "Option -$OPTARG requires an argument. Run with -h for help." error >&2; exit 1;;
             esac
           local tot_opts=$OPTIND
+          shift $(( $tot_opts -1 ))
         done
         OPTIND=1
-        if [[ $# -gt 1 ]] ; then {
-            local to_test="$2"
+        if [[ $# -gt 0 ]] ; then {
+            local to_test="$1"
             if [[ $build_flg -gt 0 ]] ; then {
                 (amboso_parse_args -Tb "$to_test")
             } elif [[ $list_flg -gt 0 ]] ; then {
