@@ -780,6 +780,7 @@ amboso_help() {
     amboso_help_string="Options:
   -D, --amboso-dir <BIN_DIR>         Specify the directory to host tags [default: ./bin]
   -O, --stego-dir <STEGO_DIR>        Specify the directory to host stego.lock file [default: wd, BIN_DIR]
+  -I, --builds-dir <BUILDS_DIR>        Specify the directory to host build [default: .]
   -K, --kazoj-dir <TESTS_DIR>        Specify the directory to host tests
   -S, --source <SOURCE_NAME>         Specify the source name
   -E, --execname <EXEC_NAME>         Specify the target executable name
@@ -833,7 +834,7 @@ amboso_usage() {
 
   printf "Arguments:
   [TAG]  Optional tag argument\n\n"
-  printf "Example usage:  $(basename "$prog_name") [(-O|-D|-K|-M|-S|-E|-G|-C|-Z|-x|-V|-Y|-a|-k) <ARG>] [-TBtg] [-bripd] [-hHvlLsqwXWPJRFe] [TAG]\n"
+  printf "Example usage:  $(basename "$prog_name") [(-I|-O|-D|-K|-M|-S|-E|-G|-C|-Z|-x|-V|-Y|-a|-k) <ARG>] [-TBtg] [-bripd] [-hHvlLsqwXWPJRFe] [TAG]\n"
 }
 
 escape_colorcodes_tee() {
