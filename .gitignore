@@ -21,6 +21,8 @@ logic.png
 amboso_cfg.dot
 #ignore bin dir
 bin
+#ignore build dir
+build
 
 #ignore logfile
 anvil.log
