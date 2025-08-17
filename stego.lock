@@ -8,6 +8,7 @@ kern = "amboso-C"
 
 source = "hello_world.c"
 bin = "hello_world"
+dir = "build"
 makevers = "0.3.0"
 automakevers = "3.0.0"
 tests = "kazoj"

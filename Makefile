@@ -2,27 +2,31 @@ export SHELL=/bin/bash
 
 VERSION="2.1.0"
 ANVIL_C_HEADER_VERSION="2.1.0"
+BUILDS_DIR="build"
 
 ECHO_VERSION="./amboso"
 RUN_VERSION := $(shell $(ECHO_VERSION) -qv)
 
-all: hello_world
+all: $(BUILDS_DIR) $(BUILDS_DIR)/hello_world
 	@echo -e "\033[1;32mEnd of build.\e[0m\n"
 .PHONY: all
 
-hello_world: .hello_world.o .anvil__hello_world.o
+$(BUILDS_DIR):
+	mkdir -p $(BUILDS_DIR)
+
+$(BUILDS_DIR)/hello_world: $(BUILDS_DIR)/.hello_world.o $(BUILDS_DIR)/.anvil__hello_world.o
 	@echo -en "Building hello_world for amboso $(VERSION):    "
-	gcc .hello_world.o .anvil__hello_world.o -o hello_world
+	gcc $(BUILDS_DIR)/.hello_world.o $(BUILDS_DIR)/.anvil__hello_world.o -o $(BUILDS_DIR)/hello_world
 	@echo -e "\033[1;33mDone.\e[0m"
 
-.hello_world.o: ./example-src/hello_world.c ./example-src/anvil__hello_world.h ./example-src/anvil__hello_world.c
-	@echo -en "Building .hello_world.o for amboso $(VERSION):    "
-	gcc -c ./example-src/hello_world.c -o .hello_world.o
+$(BUILDS_DIR)/.hello_world.o: ./example-src/hello_world.c ./example-src/anvil__hello_world.h ./example-src/anvil__hello_world.c
+	@echo -en "Building $(BUILDS_DIR)/.hello_world.o for amboso $(VERSION):    "
+	gcc -c ./example-src/hello_world.c -o $(BUILDS_DIR)/.hello_world.o
 	@echo -e "\033[1;33mDone.\e[0m"
 
-.anvil__hello_world.o: ./amboso ./amboso_fn.sh ./example-src/anvil__hello_world.c ./example-src/anvil__hello_world.h
-	@echo -en "Building .anvil__hello_world.o:    "
-	gcc -c ./example-src/anvil__hello_world.c -o .anvil__hello_world.o
+$(BUILDS_DIR)/.anvil__hello_world.o: ./amboso ./amboso_fn.sh ./example-src/anvil__hello_world.c ./example-src/anvil__hello_world.h
+	@echo -en "Building $(BUILDS_DIR)/.anvil__hello_world.o:    "
+	gcc -c ./example-src/anvil__hello_world.c -o $(BUILDS_DIR)/.anvil__hello_world.o
 	@echo -e "\033[1;33mDone.\e[0m"
 
 ./example-src/anvil__hello_world.c: ./amboso_fn.sh ./amboso
@@ -35,17 +39,17 @@ hello_world: .hello_world.o .anvil__hello_world.o
 	-./amboso -qXG ./example-src $(ANVIL_C_HEADER_VERSION)
 	@echo -e "\033[1;33mDone.\e[0m"
 
-check: hello_world
+check: $(BUILDS_DIR)/hello_world
 	@echo -en "Checking amboso local version, expected ($(VERSION)):  got ($(RUN_VERSION))."
 	test $(RUN_VERSION) = $(VERSION) || echo -en '\n    \033[1;31mFailed check for expected local version.\e[0m\n'
 	@echo -e "\n\033[1;32mDone.\e[0m"
 
-distcheck: hello_world
+distcheck: $(BUILDS_DIR)/hello_world
 	@echo -en "Distchecking amboso $(VERSION):    "
 	echo -e "Feeling good.\n"
 	@echo -e "\033[1;32mSuccess.\e[0m"
 
-pack: hello_world
+pack: $(BUILDS_DIR)/hello_world
 	@echo -en "Packing amboso $(VERSION):    "
 	echo -e "Feeling good.\n"
 	@echo -e "\033[1;32mSuccess.\e[0m"

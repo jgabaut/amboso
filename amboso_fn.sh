@@ -1792,6 +1792,8 @@ print_amboso_stego_scopes() {
         printf "ANVIL_SOURCE: {$value}\n"
       } elif [[ $variable = "build_bin" ]]; then {
         printf "ANVIL_BIN: {$value}\n"
+      } elif [[ $variable = "build_dir" ]]; then {
+        printf "ANVIL_BUILDS_DIR: {$value}\n"
       } elif [[ $variable = "build_makevers" ]]; then {
         printf "ANVIL_MAKE_VERS: {$value}\n"
       } elif [[ $variable = "build_automakevers" ]]; then {
@@ -1874,6 +1876,10 @@ set_amboso_stego_info() {
         [[ $verbose -gt 0 ]] && printf "exec_entrypoint: {$value} <- {$exec_entrypoint}\n\n"
         exec_entrypoint="$value"
         sources_info[1]="$exec_entrypoint"
+      } elif [[ $variable = "build_dir" ]]; then {
+        [[ $verbose -gt 0 ]] && printf "ANVIL_BUILDS_DIR: {$value}\n"
+        [[ $verbose -gt 0 ]] && printf "builds_dir: {$value} <- {$builds_dir}\n\n"
+        builds_dir="$value"
       } elif [[ $variable = "build_makevers" ]]; then {
         [[ $verbose -gt 0 ]] && printf "ANVIL_MAKE_VERS: {$value}\n"
         [[ $verbose -gt 0 ]] && printf "makefile_version: {$value} <- {$makefile_version}\n\n"
@@ -2389,11 +2395,11 @@ ambosoC_build_step() {
           }
           fi
           #Output is expected to be in the main dir:
-          if [[ ! -e ./$target_binary ]] ; then {
+          if [[ ! -e $builds_dir/$target_binary ]] ; then {
             log_cl "$target_binary not found at $(pwd)." error #>&2
           } else {
-            mv "./$target_binary" "$target_dir_path" #All files generated during the build should be ignored by the repo, to avoid conflict when checking out
-            [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Moved $target_binary to $target_dir_path." debug #>&2
+            mv "$builds_dir/$target_binary" "$target_dir_path" #All files generated during the build should be ignored by the repo, to avoid conflict when checking out
+            [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Moved $builds_dir/$target_binary to $target_dir_path." debug #>&2
           }
           fi
           amboso_git_switch "$head_detached"
@@ -2770,9 +2776,9 @@ custom_build_step () {
           fi
         fi
         log_cl "[BUILD]    Running custom builder for tag {$q_tag}, output file expected at: {./$bin_name}" info
-        log_cl "[BUILD]    $prog_name will try to mv {./$bin_name} to {$target_d/$bin_name}" debug
+        log_cl "[BUILD]    $prog_name will try to mv {$builds_dir/$bin_name} to {$target_d/$bin_name}" debug
         log_cl "[BUILD]    Running : {$custom_builder $target_d $bin_name $q_tag $stego_dir}" info magenta
-        "$custom_builder" "$target_d" "$bin_name" "$q_tag" "$stego_dir"
+        "$custom_builder" "$target_d" "$builds_dir" "$bin_name" "$q_tag" "$stego_dir"
         local cs_build_res="$?"
         if [[ "$cs_build_res" -ne 0 ]] ; then {
             log_cl "[BUILD]    Custom build step returned {$cs_build_res}" error
@@ -2793,7 +2799,7 @@ custom_build_step () {
             }
             fi
         } else {
-            mv "./$bin_name" "$target_d/" #All files generated during the build should be ignored by the repo, to avoid conflict when checking out
+            mv "$builds_dir/$bin_name" "$target_d/" #All files generated during the build should be ignored by the repo, to avoid conflict when checking out
             [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Moved $bin_name to $target_d." debug #>&2
         }
         fi
@@ -3161,6 +3167,8 @@ amboso_parse_args() {
   extensions_flag=1
   CFLAGS_was_passed=0
   passed_CFLAGS=""
+  builds_dir_flag=0
+  builds_dir=""
   std_amboso_version="${AMBOSO_API_LVL}"
   std_amboso_regex='^([1-9][0-9]*|0)\.([1-9][0-9]*|0)\.([1-9][0-9]*|0)$'
   std_amboso_short_regex='^([1-9][0-9]*)\.([1-9][0-9]*|0)$'
@@ -3185,7 +3193,7 @@ amboso_parse_args() {
   amboso_custom_builder=""
   min_amboso_v_stegostruct="2.1.0"
   long_options_hack="-:" # From https://stackoverflow.com/questions/402377/using-getopts-to-process-long-and-short-command-line-options/7680682#7680682
-  while getopts "Z:O:A:M:S:E:D:K:G:Y:x:V:C:a:k:${long_options_hack}wBgbpHhrivdlLtTqszUXWPJRFe" opt; do
+  while getopts "I:Z:O:A:M:S:E:D:K:G:Y:x:V:C:a:k:${long_options_hack}wBgbpHhrivdlLtTqszUXWPJRFe" opt; do
     case $opt in
       -)
         case "${OPTARG}" in
@@ -3269,6 +3277,7 @@ amboso_parse_args() {
       X ) ignore_git_check_flag=1;;
       G ) handle_genC_arg "$OPTARG";;
       Z ) CFLAGS_was_passed=1; passed_CFLAGS="$OPTARG";;
+      I ) builds_dir_flag=1; builds_dir="$OPTARG";;
       U ) tell_uname_flag=1;;
       z ) pack_flag=1;;
       s ) silent_flag=1;;
@@ -3602,6 +3611,9 @@ amboso_parse_args() {
   #We always notify of missing -D argument
   [[ ! $dir_flag -gt 0 ]] && scripts_dir="./bin/" && log_cl "No -D flag, using ( $scripts_dir ) for target dir. Run with -V <lvl> to see more." debug >&2 #&& usage && exit 1
 
+  #We always notify of missing -I argument
+  [[ ! $builds_dir_flag -gt 0 ]] && builds_dir="." && log_cl "No -I flag, using ( $builds_dir ) for builds dir. Run with -V <lvl> to see more." debug >&2 #&& usage && exit 1
+
   if [[ ! -d "$scripts_dir" ]] ; then {
     if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_treegen" ; then {
         log_cl "Creating scripts_dir: {$scripts_dir}" debug cyan >&2
@@ -3845,6 +3857,7 @@ amboso_parse_args() {
   [[ $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] && [[ ! $vers_make_flag -gt 0 ]] && log_cl "Using tag for make support: ( $makefile_version ) as first tag compiled with make." info >&2
   [[ $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] && [[ ! $vers_autoconf_flag -gt 0 ]] && log_cl "Using tag for automake support: ( $use_autoconf_version ) as first tag compiled with automake." info >&2
   [[ $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] && [[ $test_mode_flag -gt 0 && ! $test_info_was_set -gt 0 ]] && log_cl "Using tests dir: ( $kazoj_dir )." info >&2
+  [[ $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] && [[ ! $builds_dir_flag -gt 0 ]] && log_cl "Using builds dir: ( $builds_dir )." info >&2
 
   #Check if we are doing init and we're not in test mode
   #Which means we want to build all tags
