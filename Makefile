@@ -24,17 +24,17 @@ $(BUILDS_DIR)/.hello_world.o: ./example-src/hello_world.c ./example-src/anvil__h
 	gcc -c ./example-src/hello_world.c -o $(BUILDS_DIR)/.hello_world.o
 	@echo -e "\033[1;33mDone.\e[0m"
 
-$(BUILDS_DIR)/.anvil__hello_world.o: ./amboso ./amboso_fn.sh ./example-src/anvil__hello_world.c ./example-src/anvil__hello_world.h
+$(BUILDS_DIR)/.anvil__hello_world.o: ./amboso ./example-src/anvil__hello_world.c ./example-src/anvil__hello_world.h
 	@echo -en "Building $(BUILDS_DIR)/.anvil__hello_world.o:    "
 	gcc -c ./example-src/anvil__hello_world.c -o $(BUILDS_DIR)/.anvil__hello_world.o
 	@echo -e "\033[1;33mDone.\e[0m"
 
-./example-src/anvil__hello_world.c: ./amboso_fn.sh ./amboso
+./example-src/anvil__hello_world.c: ./amboso
 	@echo -en "Generating C anvil__hello_world for $(VERSION):    "
 	-./amboso -qXG ./example-src $(ANVIL_C_HEADER_VERSION)
 	@echo -e "\033[1;33mDone.\e[0m"
 
-./example-src/anvil__hello_world.h: ./amboso_fn.sh ./amboso
+./example-src/anvil__hello_world.h: ./amboso
 	@echo -en "Generating C anvil__hello_world for $(VERSION):    "
 	-./amboso -qXG ./example-src $(ANVIL_C_HEADER_VERSION)
 	@echo -e "\033[1;33mDone.\e[0m"
@@ -58,14 +58,11 @@ install:
 	@echo -en "Installing amboso $(VERSION) globally as 'anvil':    "
 	install "./amboso" /usr/local/bin/anvil
 	@echo -e "\033[1;33mDone.\e[0m"
-	@echo -en "Installing amboso_fn.sh $(VERSION) globally as inside '/usr/local/bin':    "
-	install "./amboso_fn.sh" /usr/local/bin/
 	@echo -e "\033[1;33mDone.\e[0m"
 
 uninstall:
 	@echo -en "Uninstalling amboso $(VERSION) globally as 'anvil':    "
 	rm /usr/local/bin/anvil
-	rm /usr/local/bin/amboso_fn.sh
 	@echo -e "\033[1;33mDone.\e[0m"
 
 clean:
