@@ -2650,6 +2650,13 @@ anvilPy_build_step() {
     }
     fi
 
+    local build_system="$anvilpy_build_system_build_backend"
+    if [[ ! $build_system = "setuptools.build_meta" ]] ; then {
+        log_cl "Unexpected build system: $build_system" error
+        return 1
+    }
+    fi
+
     local main_entry_name="anvilpy_project_scripts_$bin_name"
     local main_entry="${!main_entry_name}"
 
