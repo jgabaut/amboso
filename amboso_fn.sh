@@ -914,6 +914,29 @@ lex_stego_file_no_arrays() {
         exit 9
     fi
 
+##########################################
+#
+#  akcipitro - https://github.com/jgabaut/akcipitro
+#
+#  Version 0.0.1, commit 1b174ca8b29dac338554cc191d24c41b32542666
+#
+#########################################
+# SPDX-License-Identifier: GPL-3.0-only
+# Copyright (C) 2024  jgabaut
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 3 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#########################################
+
     "${AMBOSO_AWK_NAME}" '{
         # Remove leading and trailing whitespaces
         gsub(/^[ \t]+|[ \t]+$/, "")
@@ -1009,6 +1032,29 @@ lex_stego_file_w_arrays() {
         log_cl "[CRITICAL]    Error: ${AMBOSO_AWK_NAME} is not installed. Please install ${AMBOSO_AWK_NAME} before running this script." error
         exit 9
     fi
+
+##########################################
+#
+#  akcipitro - https://github.com/jgabaut/akcipitro
+#
+#  Version 0.1.0, commit d6c2dc0512db11450d561274931ba729e68fa95f
+#
+#########################################
+# SPDX-License-Identifier: GPL-3.0-only
+# Copyright (C) 2024  jgabaut
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 3 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#########################################
 
     "${AMBOSO_AWK_NAME}" '{
         # Remove leading and trailing whitespaces
