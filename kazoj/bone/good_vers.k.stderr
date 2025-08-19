@@ -1,3 +1,4 @@
+[DEBUG]    No -I flag, using ( . ) for builds dir. Run with -V <lvl> to see more.
 [DEBUG]    No -O flag, using ( . ) for stego dir. Run with -V <lvl> to see more.
 [DEBUG]    To try building, run with -b flag
 
