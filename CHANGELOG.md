@@ -7,16 +7,17 @@
 - Improved stego parsing, supporting more complex entries
 - Add test subcommand
   - Runs all tests or the specified test name
-  - Supports -l for listing all tests, -b to record
-- Add -I to set builds dir - jgabaut
+  - Supports `-l` for listing all tests, `-b` to record
+- Add `-I` to set builds dir
 
 ### Changed
 
+- Drop `amboso_fn.sh` sourcing
 - Get all values for anvilPy kern using the new support rather than grepping
-chore: fix message for custom_build_step() - jgabaut (HEAD -> v2.1-dev, origin/v2.1-dev)
-- Handle -tl to list all test names
-- Check build system for anvilPy
-- Add akcipitro commit mentions
+- Fix message for `custom_build_step()`
+- Handle `-tl` to list all test names
+- Check build system for `anvilPy`
+- Add `akcipitro` commit mentions
 
 ## [2.0.12] - 2025-06-17
 
