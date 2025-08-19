@@ -5220,17 +5220,20 @@ fi
 return "$res"
 }
 
-amboso_start_time=$(date +%s.%N)
-if [ "$(id -u)" -eq 0 ] ; then {
-  printf "[AMBOSO]    Please don't run me as root.\n"
-  exit 3
+if [[ "${BASH_SOURCE[0]}" = "${0}" ]]; then {
+    amboso_start_time=$(date +%s.%N)
+    if [ "$(id -u)" -eq 0 ] ; then {
+      printf "[AMBOSO]    Please don't run me as root.\n"
+      exit 3
+    }
+    fi
+    prog_name="$(readlink -f "$0")"
+    kernel_name="$(uname -s)"
+    kernel_release="$(uname -r)"
+    kernel_version="$(uname -v)"
+    machine_name="$(uname -m)"
+    os_name="$(uname -o)"
+    amboso_currvers="2.1.0"
+    amboso_main "$@"
 }
 fi
-prog_name="$(readlink -f "$0")"
-kernel_name="$(uname -s)"
-kernel_release="$(uname -r)"
-kernel_version="$(uname -v)"
-machine_name="$(uname -m)"
-os_name="$(uname -o)"
-amboso_currvers="2.1.0"
-amboso_main "$@"

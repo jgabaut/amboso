@@ -10,7 +10,7 @@ function hw_amboso {
 }
 
 function hw_prog {
-  cat <( "./hello_world" )
+  cat <( "build/hello_world" )
 }
 
 function give {
