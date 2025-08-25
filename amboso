@@ -2841,7 +2841,7 @@ custom_build_step () {
         }
         fi
         #Output is expected to be in the main dir:
-        if [[ ! -e ./"$bin_name" ]]; then {
+        if [[ ! -e "$builds_dir"/"$bin_name" ]]; then {
             if [[ ! -e "$target_d/$bin_name" ]]; then {
                 log_cl "[BUILD]    Can't find {./$bin_name} after running {$custom_builder} command" error
                 anvilPy_git_restore "$q_tag" "$head_detached"
