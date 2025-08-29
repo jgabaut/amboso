@@ -10,7 +10,8 @@
   - Supports `-l` for listing all tests, `-b` to record
 - Add `-I` to set builds dir
 - Support `-k` in init subcommand
-  - ATM only for anvilPy
+  - `anvilPy` kern: `main.py` and `pyproject.toml`
+  - `custom` kern: copy a template project by name from `~/.anvil/templates/TEMPLATE`
 
 ### Changed
 

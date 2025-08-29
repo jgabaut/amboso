@@ -459,8 +459,44 @@ echo_tag_info() {
 }
 
 amboso_init_proj() {
-    target_dir="$1"
-    local is_strict="$2"
+    local kern="$1"
+    local target_dir="$2"
+    local is_strict="$3"
+    local template_name="$4"
+
+    case "$kern" in
+        "custom") {
+            if [[ -z "$template_name" ]] ; then {
+                log_cl "Missing template name for custom init" error
+                return 1
+            }
+            fi
+            local matched=0;
+            for TEMPLATE in "$HOME"/.anvil/templates/*; do {
+                if [[ -d "$TEMPLATE" ]] ; then {
+                    log_cl "Found dir: {$TEMPLATE}" debug
+                    local name="$(basename "$TEMPLATE")"
+                    log_cl "Dir name: {$name}" debug
+                    if [[ "$template_name" = "$name" ]] ; then {
+                        matched=1;
+                        break;
+                    }
+                    fi
+                }
+                fi
+            }
+            done
+            if [[ "$matched" -eq 0 ]] ; then {
+                log_cl "Could not find a matching template for {$template_name}" error
+                log_cl "Check your {$HOME/.anvil/templates directory" error
+                return 1
+            }
+            fi
+        }
+        ;;
+    esac
+
+    log_cl "Using kern: {$kern}" info
 
     if [[ ! -d "$target_dir" ]] ; then {
         log_cl "Invalid dir: {$target_dir}." error
@@ -486,6 +522,16 @@ amboso_init_proj() {
         is_strict=0
     }
     fi
+    case "$kern" in
+        "amboso-C" | "anvilPy") {
+            mkdir -p "$target_dir"/bin
+            mkdir -p "${target_dir}/bin/v0.1.0"
+            mkdir -p "$target_dir"/tests
+            mkdir -p "$target_dir"/tests/ok
+            mkdir -p "$target_dir"/tests/errors
+        }
+        ;;
+    esac
 
     local dir_basename="$(basename "$target_dir")"
     local caps_dir_basename="${dir_basename^^}" # Needs bash >=4.0, see: https://stackoverflow.com/questions/11392189/how-can-i-convert-a-string-from-uppercase-to-lowercase-in-bash
@@ -519,21 +565,6 @@ amboso_init_proj() {
     fi
     log_cl "[PREP]    New amboso project in {$target_dir}" info
 
-    mkdir -p "$target_dir"/bin
-    mkdir -p "${target_dir}/bin/v0.1.0"
-    mkdir -p "$target_dir"/tests
-    mkdir -p "$target_dir"/tests/ok
-    mkdir -p "$target_dir"/tests/errors
-
-    local kern=""
-    if [[ -z "$queried_amboso_kern" ]] ; then {
-        kern="amboso-C"
-    } else {
-        kern="$queried_amboso_kern";
-    }
-    fi
-    log_cl "Using kern: {$kern}" info
-
     case "$kern" in
         "amboso-C") {
             mkdir -p "$target_dir"/src
@@ -558,8 +589,9 @@ amboso_init_proj() {
         }
         ;;
         "custom") {
-            log_cl "TODO: custom init section" error
-            return 1
+                log_cl "Doing init for template {$template_name}" info
+                cp -rd "$HOME"/.anvil/templates/"$template_name"/* "$target_dir"
+                return "$?"
         }
         ;;
         *) {
@@ -4803,10 +4835,33 @@ amboso_main() {
             shift $(( $tot_opts -1 ))
           done
           OPTIND=1
-          (amboso_init_proj "$1" 0)
-          #FIXME
-          #We pass 0 to NOT have strict behaviour anymore. Currently, we can't actually pass --strict in any way.
-          #This changes from 2.0.0, but we can't run the backwards-compatible code without refactoring the logic to pass in flags with subcommands
+          local kern=""
+          if [[ -z "$queried_amboso_kern" ]] ; then {
+              kern="amboso-C"
+          } else {
+              kern="$queried_amboso_kern";
+          }
+          fi
+          if [[ "$kern" = "custom" ]] ; then {
+              if [[ $# -gt 1 ]] ; then {
+                  (amboso_init_proj "$kern" "$1" 0 "$2")
+                  #FIXME
+                  #We pass 0 to NOT have strict behaviour anymore. Currently, we can't actually pass --strict in any way.
+                  #This changes from 2.0.0, but we can't run the backwards-compatible code without refactoring the logic to pass in flags with subcommands
+              } else {
+                  log_cl "Missing template name" error
+                  log_cl "Usage: amboso init -k custom $1 <TEMPLATE>" error
+              }
+              fi
+          } else {
+
+            (amboso_init_proj "$kern" "$1" 0)
+            #FIXME
+            #We pass 0 to NOT have strict behaviour anymore. Currently, we can't actually pass --strict in any way.
+            #This changes from 2.0.0, but we can't run the backwards-compatible code without refactoring the logic to pass in flags with subcommands
+          }
+          fi
+
         unset AMBOSO_LVL_REC
         unset AMBOSO_COLOR
         unset AMBOSO_LOGGED
