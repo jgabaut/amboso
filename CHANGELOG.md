@@ -9,6 +9,8 @@
   - Runs all tests or the specified test name
   - Supports `-l` for listing all tests, `-b` to record
 - Add `-I` to set builds dir
+- Support `-k` in init subcommand
+  - ATM only for anvilPy
 
 ### Changed
 
