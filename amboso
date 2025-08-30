@@ -4193,7 +4193,7 @@ amboso_parse_args() {
   tot_left_args=$(( $# ))
   if [[ $tot_left_args -gt 1 ]]; then {
     if [[ "$1" = "test" ]]; then {
-        if [[ $tot_lest_args -gt 2 ]] ; then {
+        if [[ $tot_left_args -gt 2 ]] ; then {
             log_cl "\n    Unknown argument: \"$3\" (ignoring other $(($tot_left_args-2)) args).\n" error
             amboso_usage
             echo_timer "$amboso_start_time"  "Unknown arg [$3]" "1"
