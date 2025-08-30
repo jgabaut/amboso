@@ -2090,17 +2090,17 @@ set_amboso_stego_info() {
       exit 2
   }
   fi
-  if [[ -z $makefile_version ]] ; then {
+  if [[ -z $makefile_version && "$queried_amboso_kern" = "amboso-C" ]] ; then {
       log_cl "Missing first version using make." error
       exit 3
   }
   fi
-  if [[ -z $use_automake_version ]] ; then {
+  if [[ -z $use_automake_version && "$queried_amboso_kern" = "amboso-C" ]] ; then {
       log_cl "Missing first version using automake." error
       exit 4
   }
   fi
-  if [[ -z $use_autoconf_version ]] ; then {
+  if [[ -z $use_autoconf_version && "$queried_amboso_kern" = "amboso-C" ]] ; then {
       log_cl "Missing first version using autoconf." error
       exit 5
   }
@@ -3944,7 +3944,7 @@ amboso_parse_args() {
   fi
 
   #If version for makefile support was not specified, we notify in verbose mode or not in quiet mode
-  if [[ -z $makefile_version ]] ; then {
+  if [[ -z $makefile_version && "$queried_amboso_kern" = "amboso-C" ]] ; then {
     [[ $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] && log_cl "[ASSERT-FALSE]    makefile_version was empty" error >&2
     exit 1
   }
@@ -3965,7 +3965,7 @@ amboso_parse_args() {
   fi
 
   #We notify of missing -A argument if we're in verbose mode or not in quiet mode
-  if [[ -z $use_autoconf_version ]] ; then {
+  if [[ -z $use_autoconf_version && "$queried_amboso_kern" = "amboso-C" ]] ; then {
     [[ $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] && log_cl "[ASSERT-FALSE]    use_autoconf_version was empty." error >&2
     exit 1
   }
