@@ -894,11 +894,11 @@ amboso_usage() {
   printf "Usage: amboso [OPTIONS] [TAG] [COMMAND]\n"
   printf "    Run with -H for more info about options.\n\n"
   printf "Commands:
-  test [TESTNAME]    Run all tests or the passed TESTNAME
-  build              Tries building latest tag
-  init               Prepare a new anvil project
-  version            Prints invil version
-  help               Print this message or the help of the given subcommand(s)\n"
+  test [-b|-l] [TESTNAME]           Run all tests or the passed TESTNAME
+  build                             Tries building latest tag
+  init [-k <KERN>] [TEMPLATE]       Prepare a new anvil project
+  version                           Prints invil version
+  help                              Print this message or the help of the given subcommand(s)\n"
 
   printf "Arguments:
   [TAG]  Optional tag argument\n\n"
