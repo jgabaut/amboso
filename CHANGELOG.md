@@ -12,6 +12,7 @@
 - Support `-k` in init subcommand
   - `anvilPy` kern: `main.py` and `pyproject.toml`
   - `custom` kern: copy a template project by name from `~/.anvil/templates/TEMPLATE`
+- Support `anvilPy` in `-G` mode
 
 ### Changed
 
