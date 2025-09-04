@@ -22,6 +22,7 @@
 - Handle `-tl` to list all test names
 - Check build system for `anvilPy`
 - Add `akcipitro` commit mentions
+- Handle dashes in dir name for `init` subcommand
 
 ## [2.0.12] - 2025-06-17
 
