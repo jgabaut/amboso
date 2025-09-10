@@ -13,6 +13,7 @@
   - `anvilPy` kern: `main.py` and `pyproject.toml`
   - `custom` kern: copy a template project by name from `~/.anvil/templates/TEMPLATE`
 - Support `anvilPy` in `-G` mode
+- Pass extra arguments to build step in `amboso-C`, `custom` kern
 
 ### Changed
 
