@@ -14,6 +14,7 @@
   - `custom` kern: copy a template project by name from `~/.anvil/templates/TEMPLATE`
 - Support `anvilPy` in `-G` mode
 - Pass extra arguments to build step in `amboso-C`, `custom` kern
+- Add `utils/anvil_args.h` for build scripts in C that want to use the `custom` kern passed args
 
 ### Changed
 
