@@ -2510,8 +2510,10 @@ ambosoC_build_step() {
         cd "$target_dir_path" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4 ; };
         if [[ "$enable_make_rebuild_flag" -gt 0 ]] ; then {
           if [[ ! -z "$extra_args" ]] ; then {
-              log_cl "Running \"make $extra_args rebuild\"" debug
-              make "$extra_args" rebuild >&2
+              # Convert string into an array
+              read -r -a args_array <<< "$extra_args"
+              log_cl "Running \"make ${args_array[*]} rebuild\"" debug
+              make "${args_array[@]}" rebuild >&2
               comp_res=$?
           } else {
               log_cl "Running \"make rebuild\"" debug
@@ -2521,8 +2523,10 @@ ambosoC_build_step() {
           fi
         } else {
           if [[ ! -z "$extra_args" ]] ; then {
-              log_cl "Running \"make $extra_args\"" debug
-              make "$extra_args" >&2
+              # Convert string into an array
+              read -r -a args_array <<< "$extra_args"
+              log_cl "Running \"make ${args_array[*]}\"" debug
+              make "${args_array[@]}" >&2
               comp_res=$?
           } else {
               log_cl "Running \"make\"" debug
@@ -2549,8 +2553,10 @@ ambosoC_build_step() {
           #Never try to build if checkout fails
           if [[ "$enable_make_rebuild_flag" -gt 0 ]] ; then {
             if [[ ! -z "$extra_args" ]] ; then {
-                log_cl "Running \"make $extra_args rebuild\"" debug
-                make $extra_args rebuild >&2
+                # Convert string into an array
+                read -r -a args_array <<< "$extra_args"
+                log_cl "Running \"make ${args_array[*]} rebuild\"" debug
+                make "${args_array[@]}" rebuild >&2
                 comp_res=$?
             } else {
                 log_cl "Running \"make rebuild\"" debug
@@ -2560,8 +2566,10 @@ ambosoC_build_step() {
             fi
           } else {
             if [[ ! -z "$extra_args" ]] ; then {
-                log_cl "Running \"make $extra_args\"" debug
-                make "$extra_args" >&2
+                # Convert string into an array
+                read -r -a args_array <<< "$extra_args"
+                log_cl "Running \"make ${args_array[*]}\"" debug
+                make "${args_array[@]}" >&2
                 comp_res=$?
             } else {
                 log_cl "Running \"make\"" debug
@@ -2966,7 +2974,14 @@ custom_build_step () {
         log_cl "[BUILD]    Running custom builder for tag {$q_tag}, output file expected at: {./$bin_name}" info
         log_cl "[BUILD]    $prog_name will try to mv {$builds_dir/$bin_name} to {$target_d/$bin_name}" debug
         log_cl "[BUILD]    Running : {$custom_builder $target_d $builds_dir $bin_name $q_tag $stego_dir}" info magenta
-        "$custom_builder" "$target_d" "$builds_dir" "$bin_name" "$q_tag" "$stego_dir"
+        if [[ -z "$extra_args" ]] ; then {
+            "$custom_builder" "$target_d" "$builds_dir" "$bin_name" "$q_tag" "$stego_dir"
+        } else {
+            # Convert string into an array
+            read -r -a args_array <<< "$extra_args"
+            "$custom_builder" "$target_d" "$builds_dir" "$bin_name" "$q_tag" "$stego_dir" "${args_array[@]}"
+        }
+        fi
         local cs_build_res="$?"
         if [[ "$cs_build_res" -ne 0 ]] ; then {
             log_cl "[BUILD]    Custom build step returned {$cs_build_res}" error
