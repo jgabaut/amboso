@@ -2451,6 +2451,10 @@ ambosoC_build_step() {
     local config_script_arg="$6"
     local has_CFLAGS="$7"
     local arg_CFLAGS="$8"
+    local extra_args="$9"
+    if [[ ! -z "$extra_args" ]] ; then
+        log_cl "Extra args: {$extra_args}" info
+    fi
     if [[ ! -d "$target_dir_path" ]] ; then
       if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_treegen" ; then {
         [[ "$base_mode_flag" -gt 0 ]] && { log_cl "Base mode, can't find target dir {$target_dir_path}." error >&2; return 1; } ;
@@ -2505,13 +2509,27 @@ ambosoC_build_step() {
         [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Running in base mode, expecting full source in $target_dir_path." debug #>&2
         cd "$target_dir_path" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4 ; };
         if [[ "$enable_make_rebuild_flag" -gt 0 ]] ; then {
-          log_cl "Running \"make rebuild\"" debug
-          make rebuild >&2
-          comp_res=$?
+          if [[ ! -z "$extra_args" ]] ; then {
+              log_cl "Running \"make $extra_args rebuild\"" debug
+              make "$extra_args" rebuild >&2
+              comp_res=$?
+          } else {
+              log_cl "Running \"make rebuild\"" debug
+              make rebuild >&2
+              comp_res=$?
+          }
+          fi
         } else {
-          log_cl "Running \"make\"" debug
-          make >&2
-          comp_res=$?
+          if [[ ! -z "$extra_args" ]] ; then {
+              log_cl "Running \"make $extra_args\"" debug
+              make "$extra_args" >&2
+              comp_res=$?
+          } else {
+              log_cl "Running \"make\"" debug
+              make >&2
+              comp_res=$?
+          }
+          fi
         }
         fi
       } else { #Building in git mode, we checkout the tag and move the binary after the build
@@ -2530,13 +2548,27 @@ ambosoC_build_step() {
           git submodule update --init --recursive #We set all submodules to commit state
           #Never try to build if checkout fails
           if [[ "$enable_make_rebuild_flag" -gt 0 ]] ; then {
-            log_cl "Running \"make rebuild\"" debug
-            make rebuild >&2
-            comp_res=$?
+            if [[ ! -z "$extra_args" ]] ; then {
+                log_cl "Running \"make $extra_args rebuild\"" debug
+                make $extra_args rebuild >&2
+                comp_res=$?
+            } else {
+                log_cl "Running \"make rebuild\"" debug
+                make rebuild >&2
+                comp_res=$?
+            }
+            fi
           } else {
-            log_cl "Running \"make\"" debug
-            make >&2
-            comp_res=$?
+            if [[ ! -z "$extra_args" ]] ; then {
+                log_cl "Running \"make $extra_args\"" debug
+                make "$extra_args" >&2
+                comp_res=$?
+            } else {
+                log_cl "Running \"make\"" debug
+                make >&2
+                comp_res=$?
+            }
+            fi
           }
           fi
           #Output is expected to be in the main dir:
@@ -2884,6 +2916,10 @@ custom_build_step () {
     local bin_name="$3"
     local stego_dir="$4"
     local custom_builder="$5"
+    local extra_args="$6"
+    if [[ ! -z "$extra_args" ]] ; then
+        log_cl "Extra args: {$extra_args}" info
+    fi
     if [[ -z "$custom_builder" ]]; then {
         log_cl "[BUILD]    anvil_custombuilder was not set. Check your stego file." error
         return 1
@@ -4049,13 +4085,13 @@ amboso_parse_args() {
             }
             fi
 
-            ambosoC_build_step "${scripts_dir}v${init_vers}" "$init_vers" "$exec_entrypoint" "$source_name" "$pass_autoconf_arg_flag" "$passed_autoconf_arg" "$CFLAGS_was_passed" "$passed_CFLAGS"
+            ambosoC_build_step "${scripts_dir}v${init_vers}" "$init_vers" "$exec_entrypoint" "$source_name" "$pass_autoconf_arg_flag" "$passed_autoconf_arg" "$CFLAGS_was_passed" "$passed_CFLAGS" "$*"
             ;;
         "anvilPy")
             anvilPy_build_step "${scripts_dir}v${init_vers}" "$init_vers" "$exec_entrypoint" "$stego_dir"
             ;;
         "custom")
-            custom_build_step "${scripts_dir}v${init_vers}" "$init_vers" "$exec_entrypoint" "$stego_dir" "$amboso_custom_builder"
+            custom_build_step "${scripts_dir}v${init_vers}" "$init_vers" "$exec_entrypoint" "$stego_dir" "$amboso_custom_builder" "$*"
             ;;
         *)
             log_cl "[BUILD]    Invalid kern: {$std_amboso_kern}" error
@@ -4202,16 +4238,11 @@ amboso_parse_args() {
 
   # $0 is now target version, at position 1 in the array ??
   v_pos=1
-  if [[ $# -eq 1 ]] ; then {
-    query="${!v_pos}"
-    if [[ $query = "latest" ]] ; then {
-        #TODO: calling the check slows down everything, with the advantage of offering a "working" build command
-        check_tags
-        query="$latest_version"
-    }
-    fi
-  } else {
-    query=""
+  query="${!v_pos}"
+  if [[ $query = "latest" ]] ; then {
+      #TODO: calling the check slows down everything, with the advantage of offering a "working" build command
+      check_tags
+      query="$latest_version"
   }
   fi
 
@@ -4220,22 +4251,26 @@ amboso_parse_args() {
   }
   fi
 
+  if [[ "$1" = "test" ]]; then {
+      if [[ $tot_left_args -gt 2 ]] ; then {
+          log_cl "\n    Unknown argument: \"$3\" (ignoring other $(($tot_left_args-2)) args).\n" error
+          amboso_usage
+          echo_timer "$amboso_start_time"  "Unknown arg [$3]" "1"
+          exit 1
+      }
+      fi
+  }
+  fi
+  shift # Shift over query
   tot_left_args=$(( $# ))
-  if [[ $tot_left_args -gt 1 ]]; then {
-    if [[ "$1" = "test" ]]; then {
-        if [[ $tot_left_args -gt 2 ]] ; then {
-            log_cl "\n    Unknown argument: \"$3\" (ignoring other $(($tot_left_args-2)) args).\n" error
-            amboso_usage
-            echo_timer "$amboso_start_time"  "Unknown arg [$3]" "1"
-            exit 1
-        }
-        fi
-    }
-    fi
-    log_cl "\n    Unknown argument: \"$2\" (ignoring other $(($tot_left_args-1)) args).\n" error
-    amboso_usage
-    echo_timer "$amboso_start_time"  "Unknown arg [$2]" "1"
-    exit 1
+  if [[ $tot_left_args -gt 0 ]]; then {
+    if [[ $1 = "--" ]]; then shift; fi
+
+    log_cl "    Args for build command: \"$*\"\n" info
+    #log_cl "\n    Unknown argument: \"$2\" (ignoring other $(($tot_left_args-1)) args).\n" error
+    #amboso_usage
+    #echo_timer "$amboso_start_time"  "Unknown arg [$2]" "1"
+    #exit 1
   }
   fi
 
@@ -4459,13 +4494,13 @@ amboso_parse_args() {
     } else {
         case "$std_amboso_kern" in
             "amboso-C")
-                ambosoC_build_step "$script_path" "$version" "$exec_entrypoint" "$source_name" "$pass_autoconf_arg_flag" "$passed_autoconf_arg" "$CFLAGS_was_passed" "$passed_CFLAGS"
+                ambosoC_build_step "$script_path" "$version" "$exec_entrypoint" "$source_name" "$pass_autoconf_arg_flag" "$passed_autoconf_arg" "$CFLAGS_was_passed" "$passed_CFLAGS" "$*"
                 ;;
             "anvilPy")
                 anvilPy_build_step "$script_path" "$version" "$exec_entrypoint" "$stego_dir"
                 ;;
             "custom")
-                custom_build_step "$script_path" "$version" "$exec_entrypoint" "$stego_dir" "$amboso_custom_builder"
+                custom_build_step "$script_path" "$version" "$exec_entrypoint" "$stego_dir" "$amboso_custom_builder" "$*"
                 ;;
             *)
                 log_cl "[BUILD]    Invalid kern: {$std_amboso_kern}" error
