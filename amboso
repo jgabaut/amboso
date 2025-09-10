@@ -4276,9 +4276,9 @@ amboso_parse_args() {
       fi
   }
   fi
-  shift # Shift over query
   tot_left_args=$(( $# ))
-  if [[ $tot_left_args -gt 0 ]]; then {
+  shift # Shift over query
+  if [[ $tot_left_args -gt 1 ]]; then {
     if [[ $1 = "--" ]]; then shift; fi
 
     log_cl "    Args for build command: \"$*\"\n" info
