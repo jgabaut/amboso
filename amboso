@@ -4295,7 +4295,21 @@ amboso_parse_args() {
         "amboso-C")
             try_doing_make
             ;;
-        "anvilPy" | "custom")
+        "anvilPy")
+            python -m build
+            ;;
+        "custom")
+            local custom_builder="$amboso_custom_builder"
+            if [[ -z "$extra_args" ]] ; then {
+                "$custom_builder" "" "$builds_dir" "$exec_entrypoint" "" "$stego_dir"
+            } else {
+                # Convert string into an array
+                read -r -a args_array <<< "$extra_args"
+                "$custom_builder" "" "$builds_dir" "$exec_entrypoint" "" "$stego_dir" "${args_array[@]}"
+            }
+            fi
+            ;;
+            *)
             log_cl "Missing query." error
             log_cl "           Run with -h for help." info
             echo_timer "$amboso_start_time"  "Missing query" "1"

@@ -25,6 +25,7 @@
 - Check build system for `anvilPy`
 - Add `akcipitro` commit mentions
 - Handle dashes in dir name for `init` subcommand
+- Handle no op specified for `anvilPy`, `custom` kern
 
 ## [2.0.12] - 2025-06-17
 
