@@ -21,6 +21,9 @@ typedef struct Anvil_Info {
 } Anvil_Info;
 
 bool parse_anvil_args(int argc, char** argv, Anvil_Info* info);
+#define ANVIL_INFO_FMT "{target dir: %s, builds_dir: %s, bin_name: %s, tag: %s, stego_dir: %s}"
+#define ANVIL_INFO_ARG(x) (x).target_dir, (x).builds_dir, (x).bin_name, (x).tag, (x).stego_dir
+void debug_anvil_args(Anvil_Info info);
 
 #endif // ANVIL_ARGS_H_
 
@@ -68,5 +71,10 @@ bool parse_anvil_args(int argc, char** argv, Anvil_Info* info) {
     }
 
     return true;
+}
+
+void debug_anvil_args(Anvil_Info info)
+{
+    fprintf(stderr, "Anvil_Info: " ANVIL_INFO_FMT "\n", ANVIL_INFO_ARG(info));
 }
 #endif // ANVIL_ARGS_IMPLEMENTATION
