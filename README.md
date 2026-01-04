@@ -72,7 +72,7 @@ To install dependencies:
 * At the moment the only supported build step command is `make rebuild`. This means you use make to run the target `rebuild`.
   * Running with `-R` turns this back to the original behaviour, running just `make` with no target argument.
 
-* You definitely need `bash`, I'm using version `5.1.x` but for now I don't know about incompatible features used here.
+* You need `bash`, I'm using version `5.1.x` but for now I think `>=4.3` may work. More testing is needed.
   * For macOS users: check this issue for unexpected behaviour on bash `3.x`. [#21](/../../issues/21)
 
 * You need `gawk` installed. While work to support `nawk` and `mawk` will be coming, it's not a priority as of now.
