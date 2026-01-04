@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="2.1.0"
+AMBOSO_API_LVL="2.1.1"
 at() {
     #printf -- "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] -> {\n"
     log_cl "{ call: [" debug white
@@ -1624,7 +1624,8 @@ parse_lexed_stego() {
           #printf "Arrvar: {$arr_var} arrval: {$arr_val} arrval_idx: {$arr_val_idx}\n"
           if [[ "$arr_var" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]] && [[ "$arr_val_idx" =~ ^[0-9]+$ ]]; then
             # Safe assignment using eval after validation
-            eval "${arr_var}[$arr_val_idx]=\"$(printf '%q' "$arr_val")\""
+            local -n curr_arr="$arr_var"
+            curr_arr["$arr_val_idx"]=\"$(printf '%q' "$arr_val")\"
             #"${arr_var}"["$arr_val_idx"]=\""$arr_val"\"
           else
             echo "Invalid array variable or index."
@@ -1643,7 +1644,8 @@ parse_lexed_stego() {
           #printf "Structvar: {$struct_var_name} struct_val: {$struct_val}\n"
           if [[ "$struct_name" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]] && [[ "$struct_var_name" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
             # Safe assignment using eval after validation
-            eval "${struct_name}[$struct_var_name]=\"$(printf '%q' "$struct_val")\""
+            local -n curr_struct="$struct_name"
+            struct_name[$struct_var_name]=\"$(printf '%q' "$struct_val")\"
             #"${struct_name}"["$struct_var_name"]=\""$struct_val"\"
           else
             echo "Invalid struct name or variable."
@@ -1798,7 +1800,7 @@ use_anvil_version_arg() {
       2.0.*)
           :
           ;;
-      2.1.0)
+      2.1.*)
           ;;
       *)
           log_cl "${FUNCNAME[0]}():    Invalid version arg --> {$my_value}" error
@@ -2270,7 +2272,7 @@ handle_anvil_arg() {
            std_amboso_version="$arg"
            log_cl "Using {$std_amboso_version} version standard" info
            ;;
-       2.1.0)
+       2.1.*)
            ;;
        *)
            log_cl "Invalid version arg --> {$arg}" error
@@ -3375,7 +3377,7 @@ amboso_parse_args() {
   std_amboso_version="${AMBOSO_API_LVL}"
   std_amboso_regex='^([1-9][0-9]*|0)\.([1-9][0-9]*|0)\.([1-9][0-9]*|0)$'
   std_amboso_short_regex='^([1-9][0-9]*)\.([1-9][0-9]*|0)$'
-  std_amboso_version_list=("2.0.0" "2.0.*" "1.*" "2.1.0")
+  std_amboso_version_list=("2.0.0" "2.0.*" "1.*" "2.1.0" "2.1.*")
   std_amboso_short_version_list=("2.0" "2.1" "1.*")
   std_amboso_kern="amboso-C"
   queried_amboso_kern=""
@@ -5465,7 +5467,7 @@ if [[ "${BASH_SOURCE[0]}" = "${0}" ]]; then {
     kernel_version="$(uname -v)"
     machine_name="$(uname -m)"
     os_name="$(uname -o)"
-    amboso_currvers="2.1.0"
+    amboso_currvers="2.1.1"
     std_amboso_kern_list=("amboso-C" "anvilPy" "custom")
     amboso_main "$@"
 }
