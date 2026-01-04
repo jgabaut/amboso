@@ -3651,8 +3651,15 @@ amboso_parse_args() {
         log_cl "Bash version: {$BASH_VERSION} is less than 4\n" warn
         log_cl "amboso may not work as expected. See issue: https://github.com/jgabaut/amboso/issues/21\n" warn
     } elif [[ "${BASH_VERSINFO:-0}" -eq "4" ]] ; then {
-        log_cl "Bash version: {$BASH_VERSION} is less than 5\n" warn
-        log_cl "amboso may not work as expected.\n" warn
+        if [[ "${BASH_VERSINFO[1]:-0}" -lt "3" ]] ; then {
+            log_cl "Bash version: {$BASH_VERSION} is less than 4.3\n" warn
+            log_cl "Missing support for \'local -n\'\n" warn
+            log_cl "amboso may not work as expected.\n" warn
+        } else {
+            log_cl "Bash version: {$BASH_VERSION} is less than 5\n" warn
+            log_cl "amboso may not work as expected.\n" warn
+        }
+        fi
     }
     fi
   }
