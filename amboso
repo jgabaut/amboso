@@ -452,7 +452,7 @@ echo_tag_info() {
 	tag=$1
 	tag_date="$(git show -q --clear-decorations --format="%at" "$tag" 2>/dev/null)"
 	tag_author="$(git show -q --clear-decorations "$tag" 2>/dev/null | grep Author | cut -f2 -d':' | awk -F" " '{print $1}')"
-    tag_txt="$(git show -q --clear-decorations "$tag" 2>/dev/null | grep commit | awk -F" " '{print $2}' | cut -c 1-8)"
+    tag_txt="$(git show -q --clear-decorations "$tag" 2>/dev/null | head -n1 | awk -F" " '{print $2}' | cut -c 1-8)"
 	log_cl "[AMBOSO]    Tag text was:  [$tag_txt]" info
 	log_cl "[AMBOSO]    Tag author was:  [$tag_author ]" info
 	log_cl "[AMBOSO]    Tag date was:  [$tag_date]" info
@@ -596,7 +596,7 @@ amboso_init_proj() {
         }
         ;;
         *) {
-            log_cl "Unexpected kern: {$queried_amboso_kern}" error
+            log_cl "Unexpected kern: {$kern}" error
             return 1
         }
         ;;
@@ -629,7 +629,7 @@ gen_C_headers() {
 	c_headername="anvil__$execname.c"
 	tag_date="$(git show -q --clear-decorations --format="%at" "$tag" 2>/dev/null)"
 	tag_author="$(git show -q --clear-decorations "$tag" 2>/dev/null | grep Author | cut -f2 -d':' | awk -F" " '{printf $1}')"
-    tag_txt="$(git show -q --clear-decorations "$tag" 2>/dev/null | grep commit | awk -F" " '{print $2}' | cut -c 1-8)"
+    tag_txt="$(git show -q --clear-decorations "$tag" 2>/dev/null | head -n1 | awk -F" " '{print $2}' | cut -c 1-8)"
 	log_cl "[AMBOSO]    Gen C header for ($execname), v($tag) to dir ($target_dir)" info
 	log_cl "[AMBOSO]    Reset file ($target_dir/$headername)" info
 	printf "" > "$target_dir/$headername"
@@ -673,7 +673,7 @@ gen_anvilPy_headers() {
 	headername="anvil__$execname.py"
 	tag_date="$(git show -q --clear-decorations --format="%at" "$tag" 2>/dev/null)"
 	tag_author="$(git show -q --clear-decorations "$tag" 2>/dev/null | grep Author | cut -f2 -d':' | awk -F" " '{printf $1}')"
-    tag_txt="$(git show -q --clear-decorations "$tag" 2>/dev/null | grep commit | awk -F" " '{print $2}' | cut -c 1-8)"
+    tag_txt="$(git show -q --clear-decorations "$tag" 2>/dev/null | head -n1 | awk -F" " '{print $2}' | cut -c 1-8)"
 	log_cl "[AMBOSO]    Gen python header for ($execname), v($tag) to dir ($target_dir)" info
 	log_cl "[AMBOSO]    Reset file ($target_dir/$headername)" info
 	printf "" > "$target_dir/$headername"
@@ -4034,7 +4034,7 @@ amboso_parse_args() {
   fi
 
   #If version for makefile support was not specified, we notify in verbose mode or not in quiet mode
-  if [[ -z $makefile_version && "$queried_amboso_kern" = "amboso-C" ]] ; then {
+  if [[ -z $makefile_version && "$std_amboso_kern" = "amboso-C" ]] ; then {
     [[ $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] && log_cl "[ASSERT-FALSE]    makefile_version was empty" error >&2
     exit 1
   }
@@ -4055,7 +4055,7 @@ amboso_parse_args() {
   fi
 
   #We notify of missing -A argument if we're in verbose mode or not in quiet mode
-  if [[ -z $use_autoconf_version && "$queried_amboso_kern" = "amboso-C" ]] ; then {
+  if [[ -z $use_autoconf_version && "$std_amboso_kern" = "amboso-C" ]] ; then {
     [[ $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] && log_cl "[ASSERT-FALSE]    use_autoconf_version was empty." error >&2
     exit 1
   }
@@ -4479,7 +4479,7 @@ amboso_parse_args() {
 
   if [[ $gen_headers_set -gt 0 && $gen_headers_flag -gt 0 ]]; then {
       log_cl "[AMBOSO]    Generate header for [$version]." info >&2
-      case "$queried_amboso_kern" in
+      case "$std_amboso_kern" in
           "amboso-C")
               gen_C_headers "$gen_headers_destdir" "$version" "$query" "$exec_entrypoint"
           ;;
