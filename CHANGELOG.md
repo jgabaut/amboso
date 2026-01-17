@@ -8,6 +8,7 @@
   - Needs `local -n`, available with `bash 4.3+`
 - Fix usage of `queried_amboso_kern` after setting `std_amboso_kern`
 - Change `tag_txt` extraction to use `head -n1`
+- Bump `akcipitro` to `0.2.0`
 
 ## [2.1.0] - 2025-12-17
 
