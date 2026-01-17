@@ -3,7 +3,7 @@
 [LINT]    Invalid line:    \mine = evl 
 [LINT]    Invalid line:    - "# error4"
 [LINT]    Invalid line:    hey "# error5"
-[LINT]    Invalid left side (contains spaces or disallowed characters):    hash#tag
+[LINT]    Invalid line:    hash#tag = "# error6"
 [LINT]    Invalid line:    under_score = 1 
 [LINT]    Invalid line:    "1_foo" = ba 
 [LINT]    Invalid line:    {} 
@@ -23,4 +23,5 @@
 [LINT]    Invalid line:    no  =  "[way] man"
 [LINT]    Invalid line:    [oh[no]]
 [LINT]    Invalid line:    [oh]=no
+[LINT]    Invalid line:    [oh=man]
 [LEX]    Errors while lexing.

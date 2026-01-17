@@ -36,8 +36,6 @@ man = "bar"
 foo = "bar"
 foo = "bar"
    foo2 =  "bar"
-[oh=man]
-100 =     "str"
 
 [ definitely_no_dashes ]
 [    white ]
