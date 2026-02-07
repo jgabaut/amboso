@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.1.2] - Unreleased
+
+### Changed
+
+- Fix wrong usage of `local -n`
+
 ## [2.1.1] - 2026-01-28
 
 ### Changed
