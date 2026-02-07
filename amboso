@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="2.1.1"
+AMBOSO_API_LVL="2.1.2"
 at() {
     #printf -- "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] -> {\n"
     log_cl "{ call: [" debug white
@@ -1696,7 +1696,7 @@ parse_lexed_stego() {
           if [[ "$struct_name" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]] && [[ "$struct_var_name" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
             # Safe assignment using eval after validation
             local -n curr_struct="$struct_name"
-            struct_name[$struct_var_name]=\"$(printf '%q' "$struct_val")\"
+            curr_struct[$struct_var_name]=\"$(printf '%q' "$struct_val")\"
             #"${struct_name}"["$struct_var_name"]=\""$struct_val"\"
           else
             echo "Invalid struct name or variable."
@@ -5525,7 +5525,7 @@ if [[ "${BASH_SOURCE[0]}" = "${0}" ]]; then {
     kernel_version="$(uname -v)"
     machine_name="$(uname -m)"
     os_name="$(uname -o)"
-    amboso_currvers="2.1.1"
+    amboso_currvers="2.1.2"
     std_amboso_kern_list=("amboso-C" "anvilPy" "custom")
     amboso_main "$@"
 }
