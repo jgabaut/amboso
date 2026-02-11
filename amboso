@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="2.1.2"
+AMBOSO_API_LVL="2.2.0"
 at() {
     #printf -- "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] -> {\n"
     log_cl "{ call: [" debug white
@@ -1646,6 +1646,70 @@ lex_stego_file() {
     fi
 }
 
+# Usage: sort_anvil_recipe <array_name>
+# Example: sort_anvil_recipe anvil_recipe
+sort_anvil_recipe() {
+    local arr_name="$1"
+    local -n arr="$arr_name"
+
+    # Collect indices and versions
+    local tmp_list=()
+    for key in "${!arr[@]}"; do
+        if [[ $key =~ ^vers_([0-9]+)$ ]]; then
+            local idx="${BASH_REMATCH[1]}"
+            tmp_list+=("${arr[vers_$idx]}:$idx")
+        fi
+    done
+
+    # Sort by version (semantic sort)
+    IFS=$'\n' read -r -d '' -a sorted_list < <(printf "%s\n" "${tmp_list[@]}" | sort -t: -k1,1rV && printf '\0')
+
+    # Reindex slots in sorted order
+    local -A new_arr
+    local new_idx=0
+    for item in "${sorted_list[@]}"; do
+        local old_idx="${item#*:}"
+        for field in vers build conf; do
+            local old_key="${field}_$old_idx"
+            local new_key="${field}_$new_idx"
+            new_arr[$new_key]="${arr[$old_key]}"
+        done
+        ((new_idx++))
+    done
+
+    # Overwrite original array
+    arr=()
+    for k in "${!new_arr[@]}"; do
+        arr[$k]="${new_arr[$k]}"
+    done
+    log_cl "Sorted array {$arr_name}" debug
+}
+
+find_anvil_recipe() {
+    if ! declare -p "anvil_recipe" &>/dev/null; then {
+        log_cl "Could not find anvil_recipe definition" error
+        return 1
+    }
+    fi
+    local target="$1"
+    local -n output="$2"
+
+    for k in "${!anvil_recipe[@]}"; do
+        if [[ $k =~ ^vers_ ]]; then {
+            local vers="${anvil_recipe[$k]#\"}"
+            vers="${vers%\"}"
+            if compare_semver "$target" ">=" "$vers"; then {
+                log_cl "Found recipe for $target: ${anvil_recipe[$k]}" debug
+                output="$k"
+                return 0
+            }
+            fi
+        }
+        fi
+    done
+    return 1
+}
+
 parse_lexed_stego() {
   # Parse "scopes", "variables", "values" from stego lexed tokens
   # Expects format described in lex_stego_file()
@@ -1697,6 +1761,26 @@ parse_lexed_stego() {
             # Safe assignment using eval after validation
             local -n curr_struct="$struct_name"
             curr_struct[$struct_var_name]=\"$(printf '%q' "$struct_val")\"
+            #"${struct_name}"["$struct_var_name"]=\""$struct_val"\"
+          else
+            echo "Invalid struct name or variable."
+            return 1
+          fi
+        } elif [[ $line =~ ^In-Arr\ Structvalue:\ (.+)_([^_[]+)\[([^]]+)\],\ Value:\ (.*)$ ]]; then {
+          struct_name="${BASH_REMATCH[1]}"
+          struct_arr_idx="${BASH_REMATCH[2]}"
+          struct_var_name="${BASH_REMATCH[3]}"
+          struct_val="${BASH_REMATCH[4]}"
+          #printf "Structname: {$struct_name} Struct arr idx: {$struct_arr_idx} Structvar: {$struct_var_name} struct_val: {$struct_val}\n"
+          if [[ "$struct_name" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]] && [[ "$struct_var_name" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+            if ! declare -p "$struct_name" &>/dev/null; then {
+                declare -gA "$struct_name"
+                #log_cl "Declared associative array {$struct_name}" debug
+            }
+            fi
+            # Safe assignment using eval after validation
+            local -n curr_struct="$struct_name"
+            curr_struct[${struct_var_name}_${struct_arr_idx}]=\"$(printf '%q' "$struct_val")\"
             #"${struct_name}"["$struct_var_name"]=\""$struct_val"\"
           else
             echo "Invalid struct name or variable."
@@ -1852,6 +1936,8 @@ use_anvil_version_arg() {
           :
           ;;
       2.1.*)
+          ;;
+      2.2.*)
           ;;
       *)
           log_cl "${FUNCNAME[0]}():    Invalid version arg --> {$my_value}" error
@@ -2324,6 +2410,12 @@ handle_anvil_arg() {
            log_cl "Using {$std_amboso_version} version standard" info
            ;;
        2.1.*)
+           std_amboso_version="$arg"
+           log_cl "Using {$std_amboso_version} version standard" info
+           ;;
+       2.2.*)
+           std_amboso_version="$arg"
+           log_cl "Using {$std_amboso_version} version standard" info
            ;;
        *)
            log_cl "Invalid version arg --> {$arg}" error
@@ -2350,7 +2442,11 @@ handle_anvil_arg() {
            log_cl "Using {$std_amboso_version} version standard (patch level: $(cut -f3 -d'.' <<< "$std_amboso_version"))" info
            ;;
        2.1)
-           #We don't update the std_amboso_version yet, since this version is in development
+           std_amboso_version="${arg}.0"
+           log_cl "Using {$std_amboso_version} version standard" info
+           ;;
+       2.2)
+           std_amboso_version="${arg}.0"
            log_cl "Using {$std_amboso_version} version standard" info
            ;;
        *)
@@ -2981,9 +3077,32 @@ custom_build_step () {
     if [[ ! -z "$extra_args" ]] ; then
         log_cl "Extra args: {$extra_args}" info
     fi
-    if [[ -z "$custom_builder" ]]; then {
-        log_cl "[BUILD]    anvil_custombuilder was not set. Check your stego file." error
-        return 1
+    if compare_semver "$std_amboso_version" ">=" "2.2.0" ; then {
+        local recipe_idx=-1
+        find_anvil_recipe "$q_tag" "recipe_idx"
+        if [[ $? -ne 0 ]] ; then {
+            log_cl "Could not find recipe for $q_tag" error
+            return 1
+        } else {
+            log_cl "Found recipe for $q_tag at idx $recipe_idx" debug
+        }
+        fi
+        local builder="${anvil_recipe[build_$recipe_idx]#\"}"
+        builder="${builder%\"}"
+        if [[ -z "$builder" ]] ; then {
+            local -n recipe_vers="${anvil_recipe[vers_$recipe_idx]}"
+            log_cl "Builder for $recipe_vers is empty" error
+            return 1
+        }
+        fi
+        log_cl "Using builder {$builder}" debug
+        custom_builder="$builder"
+    } else {
+        if [[ -z "$custom_builder" ]]; then {
+            log_cl "[BUILD]    anvil_custombuilder was not set. Check your stego file." error
+            return 1
+        }
+        fi
     }
     fi
     local head_detached=0
@@ -3428,8 +3547,8 @@ amboso_parse_args() {
   std_amboso_version="${AMBOSO_API_LVL}"
   std_amboso_regex='^([1-9][0-9]*|0)\.([1-9][0-9]*|0)\.([1-9][0-9]*|0)$'
   std_amboso_short_regex='^([1-9][0-9]*)\.([1-9][0-9]*|0)$'
-  std_amboso_version_list=("2.0.0" "2.0.*" "1.*" "2.1.0" "2.1.*")
-  std_amboso_short_version_list=("2.0" "2.1" "1.*")
+  std_amboso_version_list=("2.0.0" "2.0.*" "1.*" "2.1.0" "2.1.*" "2.2.*")
+  std_amboso_short_version_list=("2.0" "2.1" "2.2" "1.*")
   std_amboso_kern="amboso-C"
   queried_amboso_kern=""
   min_amboso_v_kern="2.0.2"
@@ -3438,6 +3557,7 @@ amboso_parse_args() {
   min_amboso_v_fix_awk="2.0.3"
   stego_dir=""
   stego_dir_flag=0
+  dry_run_flag=0
   min_amboso_v_stegodir="2.0.3"
   min_amboso_v_treegen="2.0.4"
   min_amboso_v_morekern="2.0.9"
@@ -3448,7 +3568,7 @@ amboso_parse_args() {
   amboso_custom_builder=""
   min_amboso_v_stegostruct="2.1.0"
   long_options_hack="-:" # From https://stackoverflow.com/questions/402377/using-getopts-to-process-long-and-short-command-line-options/7680682#7680682
-  while getopts "I:Z:O:A:M:S:E:D:K:G:Y:x:V:C:a:k:${long_options_hack}wBgbpHhrivdlLtTqszUXWPJRFe" opt; do
+  while getopts "I:Z:O:A:M:S:E:D:K:G:Y:x:V:C:a:k:${long_options_hack}nwBgbpHhrivdlLtTqszUXWPJRFe" opt; do
     case $opt in
       -)
         case "${OPTARG}" in
@@ -3500,6 +3620,7 @@ amboso_parse_args() {
           force) force_build_flag=1;;
           no-rebuild) enable_make_rebuild_flag=0;;
           strict) extensions_flag=0;;
+          dry-run) dry_run_flag=1;;
           help) smallhelp_flag=1;;
         *)
           if [ "$OPTERR" = 1 ] && [ "${optspec:0:1}" != ":" ]; then
@@ -3560,11 +3681,17 @@ amboso_parse_args() {
       b ) build_flag=1;;
       d ) delete_flag=1 ;;
       i ) init_flag=1;;
+      n ) dry_run_flag=1;;
       \? ) log_cl "Invalid option: -$OPTARG. Run with -h for help." error >&2; exit 1;;
       : ) log_cl "Option -$OPTARG requires an argument. Run with -h for help." error >&2; exit 1;;
     esac
   tot_opts=$OPTIND
   done
+
+  if [[ $dry_run_flag -eq 1 ]] ; then {
+      log_cl "Doing dry run" info
+  }
+  fi
 
   if [[ $version_flag -eq 1 ]] ; then {
     echo_amboso_version_short
@@ -4024,6 +4151,12 @@ amboso_parse_args() {
   }
   fi
 
+  #For custom kern, sort recipes
+  if [[ "$std_amboso_kern" = "custom" ]]; then {
+    sort_anvil_recipe "anvil_recipe"
+  }
+  fi
+
   #For anvilPy kern, get all info from pyproject.toml
   if [[ "$std_amboso_kern" = "anvilPy" ]]; then {
 
@@ -4360,6 +4493,19 @@ amboso_parse_args() {
             ;;
         "custom")
             local custom_builder="$amboso_custom_builder"
+            if compare_semver "$std_amboso_version" ">=" "2.2.0" ; then {
+                local builder="${anvil_recipe[build_0]#\"}"
+                builder="${builder%\"}"
+                if [[ -z "$builder" ]] ; then {
+                    local recipe_vers="${anvil_recipe[vers_0]}"
+                    log_cl "Builder for $recipe_vers is empty" error
+                    return 1
+                }
+                fi
+                log_cl "Using builder {$builder}" debug
+                custom_builder="$builder"
+            }
+            fi
             if [[ -z "$extra_args" ]] ; then {
                 "$custom_builder" "" "$builds_dir" "$exec_entrypoint" "" "$stego_dir"
             } else {
@@ -5525,7 +5671,7 @@ if [[ "${BASH_SOURCE[0]}" = "${0}" ]]; then {
     kernel_version="$(uname -v)"
     machine_name="$(uname -m)"
     os_name="$(uname -o)"
-    amboso_currvers="2.1.2"
+    amboso_currvers="2.2.0"
     std_amboso_kern_list=("amboso-C" "anvilPy" "custom")
     amboso_main "$@"
 }
