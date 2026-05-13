@@ -1,0 +1,320 @@
+.Dd May 13, 2026
+.Dt ANVIL 1
+.Os
+
+.Sh NAME
+.Nm anvil
+.Nd reference build system specification for invil/amboso
+
+.Sh SYNOPSIS
+.Nm
+.Op Ar options
+.Op Ar tag
+.Op Ar extra_args ...
+.Op Ar command
+
+.Sh DESCRIPTION
+.Nm
+is a tag-driven build system specification implemented by two compatible
+frontends:
+
+.Bl -tag -width "invil"
+.It Sy amboso
+POSIX shell reference implementation.
+.It Sy invil
+Rust canonical implementation.
+.El
+
+.Pp
+.Nm
+orchestrates builds, tests, and project initialization on top of
+.Xr make 1 ,
+.Xr git 1 ,
+and optional build kernels.
+
+.Pp
+A build is defined by:
+
+.Bl -tag -width "kern"
+.It Sy tag
+Optional identifier for a build configuration.
+.It Sy mode
+Execution mode.
+Supported modes include:
+.Sy base ,
+.Sy git ,
+.Sy test ,
+and
+.Sy testmacro .
+.It Sy kern
+Build backend selector.
+Supported kernels include:
+.Sy anvilC ,
+.Sy anvilPy ,
+and
+.Sy custom .
+.El
+
+.Pp
+If
+.Ar tag
+is omitted, the latest available tag is selected using
+implementation-defined ordering.
+
+.Sh OPTIONS
+
+.Ss Core directories
+
+.Bl -tag -width "--stego-dir"
+
+.It Fl D Ar dir , Fl -amboso-dir Ns = Ns Ar dir
+Directory for tag artifacts.
+Default:
+.Pa ./bin
+
+.It Fl O Ar dir , Fl -stego-dir Ns = Ns Ar dir
+Directory containing
+.Pa stego.lock .
+Default: current directory.
+
+.It Fl I Ar dir , Fl -builds-dir Ns = Ns Ar dir
+Build output directory.
+Default: current directory.
+
+.It Fl K Ar dir , Fl -kazoj-dir Ns = Ns Ar dir
+Test directory root.
+.El
+
+.Ss Build configuration
+
+.Bl -tag -width "--execname"
+
+.It Fl S Ar name , Fl -source Ns = Ns Ar name
+Set source name.
+
+.It Fl E Ar name , Fl -execname Ns = Ns Ar name
+Set output executable name.
+
+.It Fl M Ar tag , Fl -maketag Ns = Ns Ar tag
+Minimum tag requiring make-based build.
+.El
+
+.Ss Versioning
+
+.Bl -tag -width "--anvil-version"
+
+.It Fl a Ar version , Fl -anvil-version Ns = Ns Ar version
+Set compatibility version.
+Default:
+.Sy 2.1.2
+
+.It Fl k Ar kern , Fl -anvil-kern Ns = Ns Ar kern
+Set build kernel.
+Default:
+.Sy amboso-C
+.El
+
+.Ss Code generation
+
+.Bl -tag -width "--gen-c-header"
+
+.It Fl G Ar dir , Fl -gen-c-header Ns = Ns Ar dir
+Generate C header with build metadata and system information.
+.El
+
+.Ss Modes
+
+.Bl -tag -width "--testmacro"
+
+.It Fl T , Fl -test
+Enable test mode.
+
+.It Fl B , Fl -base
+Enable base mode.
+
+.It Fl g , Fl -git
+Enable git mode.
+
+.It Fl t , Fl -testmacro
+Enable test macro mode.
+.El
+
+.Ss Actions
+
+.Bl -tag -width "--list-all"
+
+.It Fl i , Fl -init
+Initialize or build all tags for current mode.
+
+.It Fl p , Fl -purge
+Remove all build artifacts for current mode.
+
+.It Fl d , Fl -delete
+Delete artifact for specified tag.
+
+.It Fl b , Fl -build
+Build specified tag.
+
+.It Fl r , Fl -run
+Run built artifact for specified tag.
+
+.It Fl l , Fl -list
+List tags for current mode.
+
+.It Fl L , Fl -list-all
+List tags for all modes.
+.El
+
+.Ss Output control
+
+.Bl -tag -width "--verbose"
+
+.It Fl q , Fl -quiet
+Reduce output verbosity.
+
+.It Fl s , Fl -silent
+Suppress most output.
+
+.It Fl V Ar level , Fl -verbose Ns = Ns Ar level
+Set verbosity level.
+Default:
+.Sy 3
+
+.It Fl w , Fl -watch
+Report execution timing.
+
+.It Fl J , Fl -logged
+Write output to
+.Pa anvil.log .
+
+.It Fl P , Fl -no-color
+Disable colored output.
+.El
+
+.Ss Build control
+
+.Bl -tag -width "--no-rebuild"
+
+.It Fl F , Fl -force
+Force rebuild.
+
+.It Fl R , Fl -no-rebuild
+Disable automatic
+.Sy make rebuild
+step.
+
+.It Fl C Ar arg , Fl -config Ns = Ns Ar arg
+Pass configuration argument to build system.
+
+.It Fl Z Ar flags , Fl -cflags Ns = Ns Ar flags
+Pass compiler flags for single-file builds.
+.El
+
+.Ss Compatibility
+
+.Bl -tag -width "--ignore-gitcheck"
+
+.It Fl e , Fl -strict
+Disable extensions beyond amboso 2.0 semantics.
+
+.It Fl X , Fl -ignore-gitcheck
+Ignore git mode validation.
+.El
+
+.Ss Miscellaneous
+
+.Bl -tag -width "--warranty"
+
+.It Fl v , Fl -version
+Print version and exit.
+
+.It Fl h , Fl -help
+Print help and exit.
+
+.It Fl W , Fl -warranty
+Print warranty information.
+
+.It Fl Y Ar time
+Set explicit start timestamp.
+
+.It Fl z
+Run
+.Sy make pack
+target.
+.El
+
+.Sh COMMANDS
+
+.Bl -tag -width "version"
+
+.It Sy test Op Ar testname
+Run all tests or a specific test.
+
+.It Sy build
+Build latest or selected tag.
+
+.It Sy init
+Initialize a new project.
+
+.It Sy version
+Print version information.
+.El
+
+.Sh BEHAVIOR
+
+.Bl -tag -width "Strict mode"
+
+.It Sy Rebuild policy
+Build invokes
+.Sy "make rebuild"
+by default unless disabled with
+.Fl -no-rebuild .
+
+.It Sy Logging
+When
+.Fl -logged
+is enabled, output is written to
+.Pa anvil.log .
+
+.It Sy Strict mode
+When
+.Fl -strict
+is enabled, extensions beyond amboso 2.0 semantics are disabled.
+
+.It Sy Config precedence
+Command-line options override configuration file values.
+.El
+
+.Sh FILES
+
+.Bl -tag -width "stego.lock"
+
+.It Pa ./bin/
+Default directory for build artifacts.
+
+.It Pa stego.lock
+Project configuration file.
+
+.It Pa anvil.log
+Log output file.
+.El
+
+.Sh COMPATIBILITY
+
+.Bl -tag -width "amboso"
+
+.It Sy amboso
+Reference shell implementation defining baseline behavior.
+
+.It Sy invil
+Canonical Rust implementation defining extended behavior.
+.El
+
+.Pp
+Divergence between implementations is permitted only when explicitly
+specified in this specification.
+
+.Sh SEE ALSO
+.Xr anvil.conf 5 ,
+.Xr make 1 ,
+.Xr git 1
