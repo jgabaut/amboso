@@ -1,0 +1,168 @@
+.Dd May 13, 2026
+.Dt ANVIL.CONF 5
+.Os
+
+.Sh NAME
+.Nm anvil.conf ,
+.Nm stego.lock
+.Nd configuration file for the anvil build system
+
+.Sh DESCRIPTION
+The
+.Nm
+configuration file defines persistent build configuration,
+test layout, and version metadata.
+
+.Pp
+The file uses TOML syntax and is typically stored as:
+
+.Bd -literal -offset indent
+stego.lock
+.Ed
+
+.Pp
+The configuration is divided into four logical sections:
+
+.Bl -tag -width "[versions]"
+
+.It Sy [anvil]
+Tool configuration.
+
+.It Sy [build]
+Build configuration.
+
+.It Sy [tests]
+Test directory layout.
+
+.It Sy [versions]
+Tag metadata registry.
+.El
+
+.Sh SECTIONS
+
+.Ss [anvil]
+
+Global tool configuration.
+
+.Bl -tag -width "custombuilder"
+
+.It Sy kern
+Build backend selector.
+
+Supported values include:
+
+.Bl -tag -width "anvilPy"
+.It Sy anvilC
+Default C build pipeline.
+.It Sy anvilPy
+Python project backend.
+.It Sy custom
+User-defined build pipeline.
+.El
+
+.It Sy version
+Compatibility version for toolchain behavior.
+
+.It Sy custombuilder
+Path to external builder script.
+Only valid when
+.Sy kern
+is set to
+.Sy custom .
+.El
+
+.Ss [build]
+
+Defines build inputs and output artifacts.
+
+.Bl -tag -width "automakevers"
+
+.It Sy source
+Primary source file or entry point.
+
+.It Sy bin
+Output executable name.
+
+.It Sy makevers
+Minimum tag version requiring make-based builds.
+
+.It Sy automakevers
+Minimum tag version requiring automake-based builds.
+
+.It Sy tests
+Optional test suite identifier or directory reference.
+.El
+
+.Ss [tests]
+
+Defines test directory layout.
+
+.Bl -tag -width "errortestsdir"
+
+.It Sy testsdir
+Directory containing standard tests.
+
+.It Sy errortestsdir
+Directory containing error or negative tests.
+.El
+
+.Ss [versions]
+
+Mapping of build tags to human-readable descriptions.
+
+.Pp
+Each entry associates a tag identifier with a release description.
+
+.Pp
+Entries in this section are informational and do not affect execution.
+
+.Sh BEHAVIOR
+
+.Bl -tag -width "Evaluation timing"
+
+.It Sy Precedence
+Command-line options override configuration values.
+
+.It Sy Defaults
+Missing fields are replaced with implementation-defined defaults.
+
+.It Sy Unknown fields
+Unknown fields are ignored unless strict mode is enabled.
+
+.It Sy Evaluation timing
+Configuration is read before build execution begins.
+.El
+
+.Sh FILE RESOLUTION
+
+The configuration file is resolved using the following order:
+
+.Bl -enum
+.It
+Current working directory.
+
+.It
+Path specified via
+.Fl -stego-dir .
+
+.It
+Implementation-defined project root.
+.El
+
+.Sh COMPATIBILITY
+
+.Bl -tag -width "Extension behavior"
+
+.It Sy Legacy formats
+Compatible with earlier
+.Nm
+formats used in amboso.
+
+.It Sy Extension behavior
+invil extends parsing behavior while maintaining backward compatibility.
+.El
+
+.Sh SEE ALSO
+.Xr anvil 1 ,
+.Xr make 1 ,
+.Xr git 1
