@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="2.1.2"
+AMBOSO_API_LVL="2.1.3"
 at() {
     #printf -- "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] -> {\n"
     log_cl "{ call: [" debug white
@@ -5527,7 +5527,7 @@ if [[ "${BASH_SOURCE[0]}" = "${0}" ]]; then {
     kernel_version="$(uname -v)"
     machine_name="$(uname -m)"
     os_name="$(uname -o)"
-    amboso_currvers="2.1.2"
+    amboso_currvers="2.1.3"
     std_amboso_kern_list=("amboso-C" "anvilPy" "custom")
     amboso_main "$@"
 }
