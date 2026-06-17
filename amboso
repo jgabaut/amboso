@@ -714,6 +714,7 @@ set_supported_tests() {
     return 1
   }
   fi
+  declare -gA read_tests_files
   for FILE in "$cases_path"/* ; do {
     [[ -e "$FILE" ]] || { log_cl "{$FILE} did not exist." warn ; continue ;}
       test_fp="$cases_path/$(basename "$FILE")"
@@ -742,6 +743,7 @@ set_supported_tests() {
   }
   done
   #errors loop
+  declare -gA read_errortests_files
   for FILE in "$errorcases_path"/* ; do {
     [[ -e "$FILE" ]] || { log_cl "{$FILE} did not exist." warn ; continue ;}
     test_fp="$errorcases_path/$(basename "$FILE")"
