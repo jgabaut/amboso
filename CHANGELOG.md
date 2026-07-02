@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.1.3] - 2026-07-02
+
+### Added
+
+- Add `man/` dir with manpages
+
+### Changed
+
+- Declare test arrays for `homebrew` `bash`
+
 ## [2.1.2] - 2026-03-11
 
 ### Changed
