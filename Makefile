@@ -8,7 +8,7 @@ ECHO_VERSION="./amboso"
 RUN_VERSION := $(shell $(ECHO_VERSION) -qv)
 
 all: $(BUILDS_DIR) $(BUILDS_DIR)/hello_world
-	@echo -e "\033[1;32mEnd of build.\e[0m\n"
+	@echo -e "\033[1;32mEnd of build.\033[0m\n"
 .PHONY: all
 
 $(BUILDS_DIR):
@@ -17,66 +17,66 @@ $(BUILDS_DIR):
 $(BUILDS_DIR)/hello_world: $(BUILDS_DIR)/.hello_world.o $(BUILDS_DIR)/.anvil__hello_world.o
 	@echo -en "Building hello_world for amboso $(VERSION):    "
 	gcc $(BUILDS_DIR)/.hello_world.o $(BUILDS_DIR)/.anvil__hello_world.o -o $(BUILDS_DIR)/hello_world
-	@echo -e "\033[1;33mDone.\e[0m"
+	@echo -e "\033[1;33mDone.\033[0m"
 
 $(BUILDS_DIR)/.hello_world.o: ./example-src/hello_world.c ./example-src/anvil__hello_world.h ./example-src/anvil__hello_world.c
 	@echo -en "Building $(BUILDS_DIR)/.hello_world.o for amboso $(VERSION):    "
 	gcc -c ./example-src/hello_world.c -o $(BUILDS_DIR)/.hello_world.o
-	@echo -e "\033[1;33mDone.\e[0m"
+	@echo -e "\033[1;33mDone.\033[0m"
 
 $(BUILDS_DIR)/.anvil__hello_world.o: ./amboso ./example-src/anvil__hello_world.c ./example-src/anvil__hello_world.h
 	@echo -en "Building $(BUILDS_DIR)/.anvil__hello_world.o:    "
 	gcc -c ./example-src/anvil__hello_world.c -o $(BUILDS_DIR)/.anvil__hello_world.o
-	@echo -e "\033[1;33mDone.\e[0m"
+	@echo -e "\033[1;33mDone.\033[0m"
 
 ./example-src/anvil__hello_world.c: ./amboso
 	@echo -en "Generating C anvil__hello_world for $(VERSION):    "
 	-./amboso -qXG ./example-src $(ANVIL_C_HEADER_VERSION)
-	@echo -e "\033[1;33mDone.\e[0m"
+	@echo -e "\033[1;33mDone.\033[0m"
 
 ./example-src/anvil__hello_world.h: ./amboso
 	@echo -en "Generating C anvil__hello_world for $(VERSION):    "
 	-./amboso -qXG ./example-src $(ANVIL_C_HEADER_VERSION)
-	@echo -e "\033[1;33mDone.\e[0m"
+	@echo -e "\033[1;33mDone.\033[0m"
 
 check: $(BUILDS_DIR)/hello_world
 	@echo -en "Checking amboso local version, expected ($(VERSION)):  got ($(RUN_VERSION))."
-	test $(RUN_VERSION) = $(VERSION) || echo -en '\n    \033[1;31mFailed check for expected local version.\e[0m\n'
-	@echo -e "\n\033[1;32mDone.\e[0m"
+	test $(RUN_VERSION) = $(VERSION) || echo -en '\n    \033[1;31mFailed check for expected local version.\033[0m\n'
+	@echo -e "\n\033[1;32mDone.\033[0m"
 
 distcheck: $(BUILDS_DIR)/hello_world
 	@echo -en "Distchecking amboso $(VERSION):    "
 	echo -e "Feeling good.\n"
-	@echo -e "\033[1;32mSuccess.\e[0m"
+	@echo -e "\033[1;32mSuccess.\033[0m"
 
 pack: $(BUILDS_DIR)/hello_world
 	@echo -en "Packing amboso $(VERSION):    "
 	echo -e "Feeling good.\n"
-	@echo -e "\033[1;32mSuccess.\e[0m"
+	@echo -e "\033[1;32mSuccess.\033[0m"
 
 install:
 	@echo -en "Installing amboso $(VERSION) globally as 'anvil':    "
 	install "./amboso" /usr/local/bin/anvil
-	@echo -e "\033[1;33mDone.\e[0m"
-	@echo -e "\033[1;33mDone.\e[0m"
+	@echo -e "\033[1;33mDone.\033[0m"
+	@echo -e "\033[1;33mDone.\033[0m"
 
 uninstall:
 	@echo -en "Uninstalling amboso $(VERSION) globally as 'anvil':    "
 	rm /usr/local/bin/anvil
-	@echo -e "\033[1;33mDone.\e[0m"
+	@echo -e "\033[1;33mDone.\033[0m"
 
 clean:
 	@echo -en "Cleaning build artifacts:    "
 	-rm \.*.o hello_world
 	-rm ./example-src/*.o
 	-rm ./example-src/anvil__hello_world.*
-	@echo -e "\033[1;33mDone.\e[0m"
+	@echo -e "\033[1;33mDone.\033[0m"
 
 cleanob:
 	@echo -en "Cleaning object build artifacts:    "
 	-rm \.*.o
 	-rm ./example-src/*.o
-	@echo -e "\033[1;33mDone.\e[0m"
+	@echo -e "\033[1;33mDone.\033[0m"
 
 rebuild: clean all
 
