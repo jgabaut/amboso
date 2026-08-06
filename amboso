@@ -1648,7 +1648,7 @@ lex_stego_file() {
     fi
 }
 
-check_anvil_recipe_versions() {
+check_anvil_recipe() {
     local -n a=$1      # nameref to the associative array
     local key idx
     local -A seen=()
@@ -1664,6 +1664,11 @@ check_anvil_recipe_versions() {
             log_cl "Group $idx is missing version key" error
             return 1
         fi
+        if [[ ! -v "a[build_$idx]" ]]; then
+            log_cl "Group $idx is missing build key" error
+            return 1
+        fi
+    done
     done
     return 0
 }
@@ -4179,7 +4184,7 @@ amboso_parse_args() {
 
   #For custom kern, sort recipes
   if [[ "$std_amboso_kern" = "custom" ]]; then {
-    check_anvil_recipe_versions "anvil_recipe"
+    check_anvil_recipe "anvil_recipe"
     if [[ $? -ne 0 ]] ; then {
         log_cl "Failed anvil_recipe version keys check" error
         return 1
