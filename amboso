@@ -3115,6 +3115,18 @@ custom_build_step () {
             log_cl "Found recipe for $q_tag at idx $recipe_idx" debug
         }
         fi
+
+        local confer="${anvil_recipe[conf_$recipe_idx]#\"}"
+        confer="${confer%\"}"
+        if [[ -z "$confer" ]] ; then {
+            local -n recipe_vers="${anvil_recipe[vers_$recipe_idx]}"
+            log_cl "Configurer for $recipe_vers is empty" debug
+        } else {
+           log_cl "Using configurer {$confer}" debug
+        }
+        fi
+        custom_confer="$confer"
+
         local builder="${anvil_recipe[build_$recipe_idx]#\"}"
         builder="${builder%\"}"
         if [[ -z "$builder" ]] ; then {
@@ -3151,6 +3163,33 @@ custom_build_step () {
         #Checkout successful, we build
         git submodule update --init --recursive #We set all submodules to commit state
         #Never try to build if checkout fails
+    }
+    fi
+
+    if [[ ! -z "$custom_confer" ]]; then {
+        if [[ ! -x "$custom_confer" ]]; then {
+            log_cl "[BUILD]    Configurer {$custom_confer} is not an executable file." error
+            anvilPy_git_restore "$q_tag" "$head_detached"
+            return 1
+        }
+        fi
+        log_cl "[BUILD]    Running custom configurer for tag {$q_tag}" info
+        log_cl "[BUILD]    Running : {$custom_confer $target_d $builds_dir $bin_name $q_tag $stego_dir}" info magenta
+        if [[ -z "$extra_args" ]] ; then {
+            "$custom_confer" "$target_d" "$builds_dir" "$bin_name" "$q_tag" "$stego_dir"
+        } else {
+            # Convert string into an array
+            read -r -a args_array <<< "$extra_args"
+            "$custom_confer" "$target_d" "$builds_dir" "$bin_name" "$q_tag" "$stego_dir" "${args_array[@]}"
+        }
+        fi
+        local cs_conf_res="$?"
+        if [[ "$cs_conf_res" -ne 0 ]] ; then {
+            log_cl "[BUILD]    Custom config step returned {$cs_conf_res}" error
+            anvilPy_git_restore "$q_tag" "$head_detached"
+        	return "$cs_conf_res"
+        }
+	    fi
     }
     fi
 
