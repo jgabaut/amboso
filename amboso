@@ -1669,7 +1669,6 @@ check_anvil_recipe() {
             return 1
         fi
     done
-    done
     return 0
 }
 # Usage: sort_anvil_recipe <array_name>
