@@ -1648,6 +1648,25 @@ lex_stego_file() {
     fi
 }
 
+check_anvil_recipe_versions() {
+    local -n a=$1      # nameref to the associative array
+    local key idx
+    local -A seen=()
+
+    # Collect all group indices
+    for key in "${!a[@]}"; do
+        [[ $key =~ _([0-9]+)$ ]] || continue
+        seen["${BASH_REMATCH[1]}"]=1
+    done
+    # Check that each group has a vers_n entry
+    for idx in "${!seen[@]}"; do
+        if [[ ! -v "a[vers_$idx]" ]]; then
+            log_cl "Group $idx is missing version key" error
+            return 1
+        fi
+    done
+    return 0
+}
 # Usage: sort_anvil_recipe <array_name>
 # Example: sort_anvil_recipe anvil_recipe
 sort_anvil_recipe() {
@@ -4160,6 +4179,12 @@ amboso_parse_args() {
 
   #For custom kern, sort recipes
   if [[ "$std_amboso_kern" = "custom" ]]; then {
+    check_anvil_recipe_versions "anvil_recipe"
+    if [[ $? -ne 0 ]] ; then {
+        log_cl "Failed anvil_recipe version keys check" error
+        return 1
+    }
+    fi
     sort_anvil_recipe "anvil_recipe"
   }
   fi
