@@ -4569,6 +4569,17 @@ amboso_parse_args() {
         "custom")
             local custom_builder="$amboso_custom_builder"
             if compare_semver "$std_amboso_version" ">=" "2.2.0" ; then {
+                local confer="${anvil_recipe[conf_0]#\"}"
+                confer="${confer%\"}"
+                if [[ -z "$confer" ]] ; then {
+                    local recipe_vers="${anvil_recipe[vers_0]}"
+                    log_cl "Configurer for $recipe_vers is empty" debug
+                } else {
+                   log_cl "Using configurer {$confer}" debug
+                }
+                fi
+                custom_confer="$confer"
+
                 local builder="${anvil_recipe[build_0]#\"}"
                 builder="${builder%\"}"
                 if [[ -z "$builder" ]] ; then {
@@ -4579,6 +4590,17 @@ amboso_parse_args() {
                 fi
                 log_cl "Using builder {$builder}" debug
                 custom_builder="$builder"
+            }
+            fi
+            if [[ ! -z "$custom_confer" ]]; then {
+                if [[ -z "$extra_args" ]] ; then {
+                    "$custom_confer" "" "$builds_dir" "$exec_entrypoint" "" "$stego_dir"
+                } else {
+                    # Convert string into an array
+                    read -r -a args_array <<< "$extra_args"
+                    "$custom_confer" "" "$builds_dir" "$exec_entrypoint" "" "$stego_dir" "${args_array[@]}"
+                }
+                fi
             }
             fi
             if [[ -z "$extra_args" ]] ; then {
