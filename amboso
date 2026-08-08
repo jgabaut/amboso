@@ -3101,7 +3101,9 @@ custom_build_step () {
     local bin_name="$3"
     local stego_dir="$4"
     local custom_builder="$5"
-    local extra_args="$6"
+    local has_config_script_args="$6"
+    local config_script_arg="$7"
+    local extra_args="$8"
     if [[ ! -z "$extra_args" ]] ; then
         log_cl "Extra args: {$extra_args}" info
     fi
@@ -3174,13 +3176,19 @@ custom_build_step () {
         }
         fi
         log_cl "[BUILD]    Running custom configurer for tag {$q_tag}" info
-        log_cl "[BUILD]    Running : {$custom_confer $target_d $builds_dir $bin_name $q_tag $stego_dir}" info magenta
-        if [[ -z "$extra_args" ]] ; then {
-            "$custom_confer" "$target_d" "$builds_dir" "$bin_name" "$q_tag" "$stego_dir"
+        local confer_arg=""
+        if [[ "$has_config_script_args" -eq 1 ]] ; then {
+            if [[ "${AMBOSO_CONFIG_FLAG_ARG_ISFILE:-1}" -ne 0 ]]; then { #Isfile defaults to 1 to start with backwards compatibility
+                confer_arg="$(cat "$config_script_arg")"
+            } else {
+                confer_arg="$config_script_arg"
+            }
+            fi
+            log_cl "[CONF]    Running \"$custom_confer $confer_arg\"" debug
+            "$custom_confer" "$confer_arg"
         } else {
-            # Convert string into an array
-            read -r -a args_array <<< "$extra_args"
-            "$custom_confer" "$target_d" "$builds_dir" "$bin_name" "$q_tag" "$stego_dir" "${args_array[@]}"
+            log_cl "[CONF]    Running {$custom_confer}" info magenta
+            "$custom_confer"
         }
         fi
         local cs_conf_res="$?"
@@ -4374,7 +4382,7 @@ amboso_parse_args() {
             anvilPy_build_step "${scripts_dir}v${init_vers}" "$init_vers" "$exec_entrypoint" "$stego_dir"
             ;;
         "custom")
-            custom_build_step "${scripts_dir}v${init_vers}" "$init_vers" "$exec_entrypoint" "$stego_dir" "$amboso_custom_builder" "$*"
+            custom_build_step "${scripts_dir}v${init_vers}" "$init_vers" "$exec_entrypoint" "$stego_dir" "$amboso_custom_builder" "$pass_autoconf_arg_flag" "$passed_autoconf_arg" "$*"
             ;;
         *)
             log_cl "[BUILD]    Invalid kern: {$std_amboso_kern}" error
@@ -4593,12 +4601,19 @@ amboso_parse_args() {
             }
             fi
             if [[ ! -z "$custom_confer" ]]; then {
-                if [[ -z "$extra_args" ]] ; then {
-                    "$custom_confer" "" "$builds_dir" "$exec_entrypoint" "" "$stego_dir"
+                local confer_arg=""
+                if [[ "$pass_autoconf_arg_flag" -eq 1 ]]; then {
+                    if [[ "${AMBOSO_CONFIG_FLAG_ARG_ISFILE:-1}" -ne 0 ]]; then { #Isfile defaults to 1 to start with backwards compatibility
+                        confer_arg="$(cat "$passed_autoconf_arg")"
+                    } else {
+                        confer_arg="$passed_autoconf_arg"
+                    }
+                    fi
+                    log_cl "[CONF]    Running \"$custom_confer $confer_arg\"" debug
+                    "$custom_confer" "$confer_arg"
                 } else {
-                    # Convert string into an array
-                    read -r -a args_array <<< "$extra_args"
-                    "$custom_confer" "" "$builds_dir" "$exec_entrypoint" "" "$stego_dir" "${args_array[@]}"
+                    log_cl "[CONF]    Running {$custom_confer}" info magenta
+                    "$custom_confer"
                 }
                 fi
             }
@@ -4832,7 +4847,7 @@ amboso_parse_args() {
                 anvilPy_build_step "$script_path" "$version" "$exec_entrypoint" "$stego_dir"
                 ;;
             "custom")
-                custom_build_step "$script_path" "$version" "$exec_entrypoint" "$stego_dir" "$amboso_custom_builder" "$*"
+                custom_build_step "$script_path" "$version" "$exec_entrypoint" "$stego_dir" "$amboso_custom_builder" "$pass_autoconf_arg_flag" "$passed_autoconf_arg" "$*"
                 ;;
             *)
                 log_cl "[BUILD]    Invalid kern: {$std_amboso_kern}" error
