@@ -3119,7 +3119,7 @@ custom_build_step () {
         local confer="${anvil_recipe[conf_$recipe_idx]#\"}"
         confer="${confer%\"}"
         if [[ -z "$confer" ]] ; then {
-            local -n recipe_vers="${anvil_recipe[vers_$recipe_idx]}"
+            local recipe_vers="${anvil_recipe[vers_$recipe_idx]}"
             log_cl "Configurer for $recipe_vers is empty" debug
         } else {
            log_cl "Using configurer {$confer}" debug
@@ -3130,7 +3130,7 @@ custom_build_step () {
         local builder="${anvil_recipe[build_$recipe_idx]#\"}"
         builder="${builder%\"}"
         if [[ -z "$builder" ]] ; then {
-            local -n recipe_vers="${anvil_recipe[vers_$recipe_idx]}"
+            local recipe_vers="${anvil_recipe[vers_$recipe_idx]}"
             log_cl "Builder for $recipe_vers is empty" error
             return 1
         }
