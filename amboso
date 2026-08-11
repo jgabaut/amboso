@@ -1634,7 +1634,7 @@ lex_stego_file() {
     ############################################################################
     #
     input="$1"
-    if compare_semver "$std_amboso_version" "<" "$min_amboso_v_stegostruct" ; then {
+    if compare_semver "$std_amboso_version" "<" "${amboso_v2_1_guards[stegostruct]}" ; then {
         lex_stego_file_no_arrays "$input"
     } else {
         flat_input="$(flatten_stego "$input")"
@@ -1663,7 +1663,7 @@ parse_lexed_stego() {
           scopes+=("$current_scope")
           variables+=("$variable")
           values+=("$value")
-      elif compare_semver "$std_amboso_version" ">=" "$min_amboso_v_stegostruct" ; then {
+      elif compare_semver "$std_amboso_version" ">=" "${amboso_v2_1_guards[stegostruct]}" ; then {
         if [[ $line =~ ^Array:\ (.+),\ Name:\ (.*)$ ]]; then {
           arr_scoped_name="${BASH_REMATCH[1]}"
           arr_name="${BASH_REMATCH[2]}"
@@ -2145,7 +2145,7 @@ set_amboso_stego_info() {
           }
           fi
         } elif [[ $variable = "anvil_custombuilder" ]] ; then {
-            if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_custom_kern" ; then {
+            if compare_semver "$std_amboso_version" ">=" "${amboso_v2_1_guards[custom_kern]}" ; then {
                 handle_custombuilder_arg "$value"
                 local chk_res="$?"
                 [[ "$chk_res" -ne 0 ]] && { log_cl "anvil_custombuilder --> {$value}" error; exit 1; }
@@ -3446,10 +3446,11 @@ amboso_parse_args() {
   amboso_v2_0_guards[morekern]="2.0.9"
   amboso_v2_0_guards[refuseTi]="2.0.11"
   amboso_v2_0_guards[check_detached]="2.0.11"
-  min_amboso_v_anvilPy_kern="2.1.0"
-  min_amboso_v_custom_kern="2.1.0"
   amboso_custom_builder=""
-  min_amboso_v_stegostruct="2.1.0"
+  declare -gA amboso_v2_1_guards 
+  amboso_v2_1_guards[anvilPy_kern]="2.1.0"
+  amboso_v2_1_guards[custom_kern]="2.1.0"
+  amboso_v2_1_guards[stegostruct]="2.1.0"
   long_options_hack="-:" # From https://stackoverflow.com/questions/402377/using-getopts-to-process-long-and-short-command-line-options/7680682#7680682
   while getopts "I:Z:O:A:M:S:E:D:K:G:Y:x:V:C:a:k:${long_options_hack}wBgbpHhrivdlLtTqszUXWPJRFe" opt; do
     case $opt in
@@ -3990,7 +3991,7 @@ amboso_parse_args() {
         fi
 
         if [[ "$queried_amboso_kern" = "anvilPy" ]]; then {
-            if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_anvilPy_kern" ; then {
+            if compare_semver "$std_amboso_version" ">=" "${amboso_v2_1_guards[anvilPy_kern]}" ; then {
                 log_cl "\n##\n#\n# The anvilPy kern is experimental.\n#\n##\n" warn
             } else {
                 log_cl "Can't use anvilPy kern while running as {$std_amboso_version}" debug
@@ -3999,7 +4000,7 @@ amboso_parse_args() {
             }
             fi
         } elif [[ "$queried_amboso_kern" = "custom" ]]; then {
-            if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_custom_kern" ; then {
+            if compare_semver "$std_amboso_version" ">=" "${amboso_v2_1_guards[custom_kern]}" ; then {
                 log_cl "\n##\n#\n# The custom kern is experimental.\n#\n##\n" warn
             } else {
                 log_cl "Can't use custom kern while running as {$std_amboso_version}" debug
