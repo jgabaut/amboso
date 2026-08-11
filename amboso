@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="2.1.3"
+AMBOSO_API_LVL="2.1.4"
 at() {
     #printf -- "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] -> {\n"
     log_cl "{ call: [" debug white
@@ -1866,9 +1866,9 @@ use_anvil_version_arg() {
           ;;
     esac
     [[ "$verbose_flag" -ge 4 ]] && log_cl "${FUNCNAME[0]}():  Using ANVIL_VERSION: {$my_value}\n" info
-    if compare_semver "$std_amboso_version" "<" "$min_amboso_v_stego_noforce" ; then {
+    if compare_semver "$std_amboso_version" "<" "${amboso_v2_0_guards[stego_noforce]}" ; then {
         log_cl "Taken legacy path: stego.lock defined value always overrides current std_amboso_version." warn cyan
-        log_cl "Current: {$std_amboso_version}, min needed: {$min_amboso_v_stego_noforce}" warn
+        log_cl "Current: {$std_amboso_version}, min needed: {${amboso_v2_0_guards[stego_noforce]}}" warn
         if compare_semver "$std_amboso_version" "<=" "${AMBOSO_API_LVL}" ; then {
           # This check was not present originally.
           std_amboso_version="$my_value"
@@ -1927,7 +1927,7 @@ set_anvil_conf_info() {
         if [[ $variable = "anvil_version" ]] ; then {
           use_anvil_version_arg "$value"
         } elif [[ $variable = "anvil_kern" ]] ; then {
-          if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_kern" ; then {
+          if compare_semver "$std_amboso_version" ">=" "${amboso_v2_0_guards[kern]}" ; then {
             handle_kern_arg "$value"
           } else {
             if [[ "${AMBOSO_LVL_REC}" -eq 1 || "$verbose_flag" -gt 3 ]] ; then {
@@ -2022,7 +2022,7 @@ print_amboso_stego_scopes() {
         if [[ $variable = "anvil_version" ]] ; then {
           printf "ANVIL_VERSION: {$value}\n"
         } elif [[ $variable = "anvil_kern" ]] ; then {
-          if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_kern" ; then {
+          if compare_semver "$std_amboso_version" ">=" "${amboso_v2_0_guards[kern]}" ; then {
               printf "ANVIL_KERN: {$value}\n"
           }
           fi
@@ -2133,7 +2133,7 @@ set_amboso_stego_info() {
         if [[ $variable = "anvil_version" ]] ; then {
           use_anvil_version_arg "$value"
         } elif [[ $variable = "anvil_kern" ]] ; then {
-          if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_kern" ; then {
+          if compare_semver "$std_amboso_version" ">=" "${amboso_v2_0_guards[kern]}" ; then {
             #log_cl "Checking stego kern value: {$value}" debug
             handle_kern_arg "$value"
           } else {
@@ -2478,7 +2478,7 @@ amboso_git_switch() {
 }
 
 amboso_is_head_detached() {
-    if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_check_detached"; then {
+    if compare_semver "$std_amboso_version" ">=" "${amboso_v2_0_guards[check_detached]}"; then {
         #From https://stackoverflow.com/questions/17322876/how-to-tell-if-your-head-is-detached-in-git
         local cur_head_str="$(git rev-parse --abbrev-ref --symbolic-full-name HEAD)"
         if [[ "$cur_head_str" = "HEAD" ]]; then {
@@ -2511,7 +2511,7 @@ ambosoC_build_step() {
         log_cl "Extra args: {$extra_args}" info
     fi
     if [[ ! -d "$target_dir_path" ]] ; then
-      if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_treegen" ; then {
+      if compare_semver "$std_amboso_version" ">=" "${amboso_v2_0_guards[treegen]}" ; then {
         [[ "$base_mode_flag" -gt 0 ]] && { log_cl "Base mode, can't find target dir {$target_dir_path}." error >&2; return 1; } ;
         log_cl "Creating target_dir_path {$target_dir_path}" debug cyan >&2
         mkdir "$target_dir_path" || { log_cl "Failed creating target_dir_path: {$target_dir_path}" error >&2 ; return 1; } ;
@@ -2913,7 +2913,7 @@ anvilPy_build_step() {
     log_cl "[BUILD]    Extracted main name: {$main_name}" info
 
     if [[ ! -d "$target_d" ]] ; then
-      if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_treegen" ; then {
+      if compare_semver "$std_amboso_version" ">=" "${amboso_v2_0_guards[treegen]}" ; then {
         [[ "$base_mode_flag" -gt 0 ]] && { log_cl "Base mode, can't find target dir {$target_d}." error >&2; anvilPy_git_restore "$q_tag"; return 1; } ;
         log_cl "Creating target_d {$target_d}" debug cyan >&2
         mkdir "$target_d" || { log_cl "Failed creating target_d: {$target_d}" error >&2 ; anvilPy_git_restore "$q_tag"; return 1; } ;
@@ -3015,7 +3015,7 @@ custom_build_step () {
         return 1
     } else {
         if [[ ! -d "$target_d" ]] ; then
-          if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_treegen" ; then {
+          if compare_semver "$std_amboso_version" ">=" "${amboso_v2_0_guards[treegen]}" ; then {
             [[ "$base_mode_flag" -gt 0 ]] && { log_cl "Base mode, can't find target dir {$target_d}." error >&2; return 1; } ;
             log_cl "Creating target_d {$target_d}" debug cyan >&2
             mkdir "$target_d" || { log_cl "Failed creating target_d: {$target_d}" error >&2 ; return 1; } ;
@@ -3434,17 +3434,18 @@ amboso_parse_args() {
   std_amboso_short_version_list=("2.0" "2.1" "1.*")
   std_amboso_kern="amboso-C"
   queried_amboso_kern=""
-  min_amboso_v_kern="2.0.2"
-  min_amboso_v_extensions="2.0.1"
-  min_amboso_v_stego_noforce="2.0.3"
-  min_amboso_v_fix_awk="2.0.3"
   stego_dir=""
   stego_dir_flag=0
-  min_amboso_v_stegodir="2.0.3"
-  min_amboso_v_treegen="2.0.4"
-  min_amboso_v_morekern="2.0.9"
-  min_amboso_v_refuseTi="2.0.11"
-  min_amboso_v_check_detached="2.0.11"
+  declare -gA amboso_v2_0_guards 
+  amboso_v2_0_guards[kern]="2.0.2"
+  amboso_v2_0_guards[extensions]="2.0.1"
+  amboso_v2_0_guards[stego_noforce]="2.0.3"
+  amboso_v2_0_guards[fix_awk]="2.0.3"
+  amboso_v2_0_guards[stegodir]="2.0.3"
+  amboso_v2_0_guards[treegen]="2.0.4"
+  amboso_v2_0_guards[morekern]="2.0.9"
+  amboso_v2_0_guards[refuseTi]="2.0.11"
+  amboso_v2_0_guards[check_detached]="2.0.11"
   min_amboso_v_anvilPy_kern="2.1.0"
   min_amboso_v_custom_kern="2.1.0"
   amboso_custom_builder=""
@@ -3513,7 +3514,7 @@ amboso_parse_args() {
           ;;
         esac;;
       O )
-        if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_stegodir" ; then {
+        if compare_semver "$std_amboso_version" ">=" "${amboso_v2_0_guards[stegodir]}" ; then {
           stego_dir="$OPTARG"
           stego_dir_flag=1
         } else {
@@ -3615,7 +3616,7 @@ amboso_parse_args() {
   }
   fi
 
-  if [[ "$extensions_flag" -ne 0 ]] && compare_semver "$std_amboso_version" "<" "$min_amboso_v_extensions" ; then {
+  if [[ "$extensions_flag" -ne 0 ]] && compare_semver "$std_amboso_version" "<" "${amboso_v2_0_guards[extensions]}" ; then {
     # Turn off extensions when below 2.0.1
     log_cl "${FUNCNAME[0]}():    Turning off extensions flag" info
     extensions_flag=0
@@ -3666,7 +3667,7 @@ amboso_parse_args() {
       log_cl "When running as >=2.0.3, a direct invocation of gawk is performed later." debug
       if [[ "$is_mawk" = "yes" ]] ; then {
         log_cl "awk seems to be mawk. The script may fail unexpectedly. See issue: https://github.com/jgabaut/amboso/issues/58" warn
-        if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_fix_awk" ; then {
+        if compare_semver "$std_amboso_version" ">=" "${amboso_v2_0_guards[fix_awk]}" ; then {
             log_cl "Trying to use gawk instead.\n" warn magenta
             AMBOSO_AWK_NAME="gawk"
         }
@@ -3675,7 +3676,7 @@ amboso_parse_args() {
         log_cl "awk seems to be nawk. The script may fail unexpectedly. See issues:" warn
         log_cl "https://github.com/jgabaut/amboso/issues/58" warn
         log_cl "https://github.com/jgabaut/amboso/issues/100" warn
-        if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_fix_awk" ; then {
+        if compare_semver "$std_amboso_version" ">=" "${amboso_v2_0_guards[fix_awk]}" ; then {
             log_cl "Trying to use gawk instead.\n" warn magenta
             AMBOSO_AWK_NAME="gawk"
         }
@@ -3879,7 +3880,7 @@ amboso_parse_args() {
   [[ ! $builds_dir_flag -gt 0 ]] && builds_dir="." && log_cl "No -I flag, using ( $builds_dir ) for builds dir. Run with -V <lvl> to see more." debug >&2 #&& usage && exit 1
 
   if [[ ! -d "$scripts_dir" ]] ; then {
-    if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_treegen" ; then {
+    if compare_semver "$std_amboso_version" ">=" "${amboso_v2_0_guards[treegen]}" ; then {
         log_cl "Creating scripts_dir: {$scripts_dir}" debug cyan >&2
         mkdir "$scripts_dir" || { log_cl "Failed creating scripts_dir: {$scripts_dir}" error; return 1; } ;
     } else {
@@ -3889,7 +3890,7 @@ amboso_parse_args() {
   }
   fi
 
-  if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_stegodir" ; then {
+  if compare_semver "$std_amboso_version" ">=" "${amboso_v2_0_guards[stegodir]}" ; then {
     #We always notify of missing -O argument
     [[ ! $stego_dir_flag -gt 0 ]] && stego_dir="." && log_cl "No -O flag, using ( $stego_dir ) for stego dir. Run with -V <lvl> to see more." debug >&2
 
@@ -3906,7 +3907,7 @@ amboso_parse_args() {
 
   #We always notify of missing -K argument, if in test mode
   if [[ $test_mode_flag -gt 0 && ! $testdir_flag -gt 0 ]] ; then {
-    if compare_semver "$std_amboso_version" "<" "$min_amboso_v_stegodir" ; then {
+    if compare_semver "$std_amboso_version" "<" "${amboso_v2_0_guards[stegodir]}" ; then {
         log_cl "Using legacy method, scripts_dir contains stego.lock\n" debug
         set_amboso_stego_info "$scripts_dir/stego.lock" "$verbose_flag"
     } else {
@@ -3953,7 +3954,7 @@ amboso_parse_args() {
   fi
 
   #Syncpoint: we assert we know these names after this. WIP
-  if compare_semver "$std_amboso_version" "<" "$min_amboso_v_stegodir" ; then {
+  if compare_semver "$std_amboso_version" "<" "${amboso_v2_0_guards[stegodir]}" ; then {
     log_cl "Using legacy method, scripts_dir contains stego.lock\n" debug
     set_amboso_stego_info "$scripts_dir/stego.lock" "$verbose_flag"
   } else {
@@ -3975,9 +3976,9 @@ amboso_parse_args() {
   fi
 
   # Check queried kern
-  if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_kern" ; then {
+  if compare_semver "$std_amboso_version" ">=" "${amboso_v2_0_guards[kern]}" ; then {
     if [[ ! -z "$queried_amboso_kern" ]] ; then {
-        if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_morekern" ; then {
+        if compare_semver "$std_amboso_version" ">=" "${amboso_v2_0_guards[morekern]}" ; then {
             :
         } elif [[ ! "$queried_amboso_kern" = "amboso-C" ]]; then { # Legacy path: Refuse kern as unknown
             log_cl "Invalid kern argument --> {$queried_amboso_kern}" error
@@ -4017,7 +4018,7 @@ amboso_parse_args() {
   } else {
     log_cl "${FUNCNAME[0]}():    Can't use queried amboso kern: {$queried_amboso_kern}" info
     if [[ ! -z "$queried_amboso_kern" ]] ; then {
-        log_cl "Running as: {$std_amboso_version}, less than {$min_amboso_v_kern}" warn
+        log_cl "Running as: {$std_amboso_version}, less than {${amboso_v2_0_guards[kern]}}" warn
         log_cl "Ignoring query for kern {$queried_amboso_kern}" warn
     } else {
         log_cl "Queried kern is empty: {$queried_amboso_kern}" debug
@@ -4201,7 +4202,7 @@ amboso_parse_args() {
   fi
 
   if [[ $init_flag -gt 0 && $test_mode_flag -gt 0 ]] && [[ $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] ; then {
-    if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_refuseTi"; then {
+    if compare_semver "$std_amboso_version" ">=" "${amboso_v2_0_guards[refuseTi]}"; then {
         log_cl "Invalid usage: -Ti." error
         log_cl "To record all tests, use -tb instead." error
         return 1
@@ -4390,7 +4391,7 @@ amboso_parse_args() {
   } elif [[ $tot_left_args -lt 1 && $test_mode_flag -gt 0 ]] ; then {
     #If in test mode, we still whine about a target test
     if [[ $init_flag -gt 0 ]]; then {
-      if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_refuseTi"; then {
+      if compare_semver "$std_amboso_version" ">=" "${amboso_v2_0_guards[refuseTi]}"; then {
         log_cl "Invalid usage: -Ti." error
         log_cl "To record all tests, use -tb instead." error
         return 1
@@ -4413,7 +4414,7 @@ amboso_parse_args() {
   #Check if we are doing a test
   if [[ $test_mode_flag -gt 0 ]]; then {
     if [[ $init_flag -gt 0 ]]; then {
-      if compare_semver "$std_amboso_version" ">=" "$min_amboso_v_refuseTi"; then {
+      if compare_semver "$std_amboso_version" ">=" "${amboso_v2_0_guards[refuseTi]}"; then {
         log_cl "Invalid usage: -Ti." error
         log_cl "To record all tests, use -tb instead." error
         return 1
@@ -5527,7 +5528,7 @@ if [[ "${BASH_SOURCE[0]}" = "${0}" ]]; then {
     kernel_version="$(uname -v)"
     machine_name="$(uname -m)"
     os_name="$(uname -o)"
-    amboso_currvers="2.1.3"
+    amboso_currvers="2.1.4"
     std_amboso_kern_list=("amboso-C" "anvilPy" "custom")
     amboso_main "$@"
 }

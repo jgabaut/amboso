@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.1.4] - Unreleased
+
+### Added
+
+- Collect `2.0` extensions under `amboso_v2_0_guards`
+
 ## [2.1.3] - 2026-07-02
 
 ### Added
