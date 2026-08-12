@@ -6,6 +6,7 @@
 
 - Collect `2.0` extensions under `amboso_v2_0_guards`
 - Collect `2.1` extensions under `amboso_v2_1_guards`
+- Collect exit codes under `amboso_exit_codes`
 
 ## [2.1.3] - 2026-07-02
 

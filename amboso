@@ -87,7 +87,7 @@ compare_semver() {
         "<=") want_equal=0; want_lesser=0 ;;
         *)
             log_cl "Invalid op in compare_semver: $op" error
-            exit 1
+            exit "${amboso_exit_codes[invalid_arg]}"
             ;;
     esac
 
@@ -194,7 +194,7 @@ log_cl() {
             ;;
         *)
             printf "${FUNCNAME[0]}(): unexpected lvl => {$lvl}\n"
-            exit 1
+            exit "${amboso_exit_codes[invalid_arg]}"
             ;;
     esac
     case $thick in
@@ -209,7 +209,7 @@ log_cl() {
             ;;
         *)
             printf "${FUNCNAME[0]}(): unexpected thickness => {$thick}\n"
-            exit 1
+            exit "${amboso_exit_codes[invalid_arg]}"
             ;;
     esac
     case $color in
@@ -242,7 +242,7 @@ log_cl() {
             ;;
         *)
             printf "${FUNCNAME[0]}(): unexpected color => {$color}\n"
-            exit 1
+            exit "${amboso_exit_codes[invalid_arg]}"
             ;;
     esac
 
@@ -861,7 +861,7 @@ git_mode_check() {
         return 0
     } else {
         log_cl "Not running in a git repo. Try running with -B to use base mode.\n" error
-        exit 1
+        exit "${amboso_exit_codes[outside_git_repo]}"
     }
     fi
   }
@@ -1004,14 +1004,14 @@ delete_test() {
 lex_stego_file_no_arrays() {
     if [[ ! -f $1 ]] ; then {
       log_cl "${FUNCNAME[0]}(): \"$1\" is not a valid file." error
-      exit 8
+      exit "${amboso_exit_codes[invalid_file]}"
     }
     fi
     input_file="$1"
     # Check if awk is available
     if ! command -v "${AMBOSO_AWK_NAME}" > /dev/null; then
         log_cl "[CRITICAL]    Error: ${AMBOSO_AWK_NAME} is not installed. Please install ${AMBOSO_AWK_NAME} before running this script." error
-        exit 9
+        exit "${amboso_exit_codes[missing_awk_dep]}"
     fi
 
 ##########################################
@@ -1130,7 +1130,7 @@ lex_stego_file_w_arrays() {
     # Check if awk is available
     if ! command -v "${AMBOSO_AWK_NAME}" > /dev/null; then
         log_cl "[CRITICAL]    Error: ${AMBOSO_AWK_NAME} is not installed. Please install ${AMBOSO_AWK_NAME} before running this script." error
-        exit 9
+        exit "${amboso_exit_codes[missing_awk_dep]}"
     fi
 
 ##########################################
@@ -1556,14 +1556,14 @@ lex_stego_file_w_arrays() {
 flatten_stego() {
     if [[ ! -f $1 ]] ; then {
       log_cl "${FUNCNAME[0]}(): \"$1\" is not a valid file." error
-      exit 8
+      exit "${amboso_exit_codes[invalid_file]}"
     }
     fi
     input_file="$1"
     # Check if awk is available
     if ! command -v "${AMBOSO_AWK_NAME}" > /dev/null; then
         log_cl "[CRITICAL]    Error: ${AMBOSO_AWK_NAME} is not installed. Please install ${AMBOSO_AWK_NAME} before running this script." error
-        exit 9
+        exit "${amboso_exit_codes[missing_awk_dep]}"
     fi
 
     "${AMBOSO_AWK_NAME}" 'BEGIN {
@@ -1714,7 +1714,7 @@ parse_lexed_stego() {
 try_parsing_anvil_conf() {
   if [[ ! -f $1 ]] ; then {
     log_cl "${FUNCNAME[0]}(): \"$1\" is not a valid file." error
-    exit 9
+    exit "${amboso_exit_codes[try_parsing_anvil_conf_except]}"
   }
   fi
   input="$1"
@@ -1738,7 +1738,7 @@ lint_stego_file() {
   #If lex output is empty, return 1.
   if [[ ! -f $1 ]] ; then {
     log_cl "${FUNCNAME[0]}(): \"$1\" is not a valid file." error
-    exit 8
+    exit "${amboso_exit_codes[invalid_file]}"
   }
   fi
 
@@ -1764,7 +1764,7 @@ try_parsing_stego() {
   # Upon return, arrays "scopes", "variables", "values" are set.
   if [[ ! -f $1 ]] ; then {
     log_cl "${FUNCNAME[0]}(): \"$1\" is not a valid file." error
-    exit 8
+    exit "${amboso_exit_codes[invalid_file]}"
   }
   fi
   input="$1"
@@ -1799,7 +1799,7 @@ bash_gulp_anvil_conf() {
   local input="$1"
   if [[ ! -f "$input" ]] ; then {
     log_cl "${FUNCNAME[0]}(): \"$input\" is not a valid file." error
-    exit 8
+    exit "${amboso_exit_codes[invalid_file]}"
   }
   fi
 
@@ -1831,7 +1831,7 @@ use_anvil_version_arg() {
               log_cl "    $v" info
           done
           log_cl "}" error
-          exit 1
+          exit "${amboso_exit_codes[invalid_arg]}"
           ;;
       1.9.*)
           log_cl "Invalid version arg --> {$my_value}" error
@@ -1840,7 +1840,7 @@ use_anvil_version_arg() {
               log_cl "    $v" info
           done
           log_cl "}" error
-          exit 1
+          exit "${amboso_exit_codes[invalid_arg]}"
           ;;
       1.*)
           log_cl "${FUNCNAME[0]}():    Turning off extensions flag" info
@@ -1862,7 +1862,7 @@ use_anvil_version_arg() {
               log_cl "    $v" info
           done
           log_cl "}" error
-          exit 1
+          exit "${amboso_exit_codes[invalid_arg]}"
           ;;
     esac
     [[ "$verbose_flag" -ge 4 ]] && log_cl "${FUNCNAME[0]}():  Using ANVIL_VERSION: {$my_value}\n" info
@@ -1892,7 +1892,7 @@ use_anvil_version_arg() {
   } else {
     log_cl "${FUNCNAME[0]}():  Invalid version standard --> {$my_value}" error
     log_cl "Not matching regex --> \'$anvil_version_regex\'" error
-    exit 1
+    exit "${amboso_exit_codes[invalid_arg]}"
   }
   fi
 }
@@ -1906,7 +1906,7 @@ set_anvil_conf_info() {
   bash_gulp_anvil_conf "$anvil_file" 0 #&& print_amboso_stego_scopes
   if [[ ! $? -eq 0 ]]; then {
     log_cl "Failed parsing conf file at \"$anvil_file\"." error
-    exit 10
+    exit "${amboso_exit_codes[amboso_fail_conf_parse]}"
   }
   fi
   for ((i=0; i<${#scopes[@]}; i++)); do
@@ -1953,7 +1953,7 @@ bash_gulp_stego() {
   input="$1"
   if [[ ! -f "$input" ]] ; then {
     log_cl "${FUNCNAME[0]}(): \"$input\" is not a valid file." error
-    exit 8
+    exit "${amboso_exit_codes[invalid_file]}"
   }
   fi
 
@@ -2045,7 +2045,7 @@ set_amboso_stego_info() {
   bash_gulp_stego "$stego_file" 0 #&& print_amboso_stego_scopes
   if [[ ! $? -eq 0 ]]; then {
     log_cl "Failed parsing stego file at \"$stego_file\"." error
-    exit 7
+    exit "${amboso_exit_codes[failed_parsing_stego]}"
   }
   fi
   git_tags_count=0
@@ -2167,32 +2167,32 @@ set_amboso_stego_info() {
   count_source_infos="${#sources_info[@]}"
   if [[ -z $exec_entrypoint ]] ; then {
       log_cl "Missing binary name." error
-      exit 1
+      exit "${amboso_exit_codes[missing_binary_name]}"
   }
   fi
   if [[ -z $source_name ]] ; then {
       log_cl "${FUNCNAME[0]}(): Missing source name." error
-      exit 2
+      exit "${amboso_exit_codes[missing_source_name]}"
   }
   fi
   if [[ -z $makefile_version && "$queried_amboso_kern" = "amboso-C" ]] ; then {
       log_cl "Missing first version using make." error
-      exit 3
+      exit "${amboso_exit_codes[missing_make_vers]}"
   }
   fi
   if [[ -z $use_automake_version && "$queried_amboso_kern" = "amboso-C" ]] ; then {
       log_cl "Missing first version using automake." error
-      exit 4
+      exit "${amboso_exit_codes[missing_automake_vers]}"
   }
   fi
   if [[ -z $use_autoconf_version && "$queried_amboso_kern" = "amboso-C" ]] ; then {
       log_cl "Missing first version using autoconf." error
-      exit 5
+      exit "${amboso_exit_codes[missing_autoconf_vers]}"
   }
   fi
   if [[ -z $kazoj_dir ]] ; then {
       log_cl "Missing tests dir." error
-      exit 6
+      exit "${amboso_exit_codes[missing_tests_dir]}"
   }
   fi
   [[ $verbose -gt 0 ]] && log_cl "Read {$count_source_infos} amboso params." info
@@ -2209,7 +2209,7 @@ set_amboso_stego_info() {
         }
         fi
         log_cl "Invalid key: {$gt}" error
-        exit 1
+        exit "${amboso_exit_codes[invalid_arg]}"
       }
       fi
   }
@@ -2221,7 +2221,7 @@ set_amboso_stego_info() {
         }
         fi
         log_cl "Invalid key: {$bt}" error
-        exit 1
+        exit "${amboso_exit_codes[invalid_arg]}"
       }
       fi
   }
@@ -2270,7 +2270,7 @@ set_amboso_pyproject_info() {
   bash_gulp_stego "$stego_file" 0 #&& print_amboso_stego_scopes
   if [[ ! $? -eq 0 ]]; then {
     log_cl "Failed parsing stego file at \"$stego_file\"." error
-    exit 7
+    exit "${amboso_exit_codes[failed_parsing_stego]}"
   }
   fi
   git_tags_count=0
@@ -2334,7 +2334,7 @@ handle_anvil_arg() {
                log_cl "    $v" info
            done
            log_cl "}" error
-           exit 1
+           exit "${amboso_exit_codes[invalid_arg]}"
            ;;
      esac
    } elif [[ "$arg" =~ $std_amboso_short_regex ]] ; then {
@@ -2362,7 +2362,7 @@ handle_anvil_arg() {
                log_cl "    $v" info
            done
            log_cl "}" error
-           exit 1
+           exit "${amboso_exit_codes[invalid_arg]}"
            ;;
      esac
 
@@ -2370,7 +2370,7 @@ handle_anvil_arg() {
    } else {
      log_cl "Invalid version standard --> {$arg}" error
      log_cl "Not matching regex --> \'$std_amboso_regex\'" error
-     exit 1
+     exit "${amboso_exit_codes[invalid_arg]}"
    }
    fi
 }
@@ -2389,7 +2389,7 @@ handle_kern_arg() {
            log_cl "    $v" info
        done
        log_cl "}" error
-       exit 1
+       exit "${amboso_exit_codes[invalid_arg]}"
        ;;
   esac
 }
@@ -2412,7 +2412,7 @@ handle_verbose_arg() {
   if ! [[ "$requested_lvl" =~ $verbose_lvl_re ]]; then {
       log_cl "Invalid verbose lvl: {$requested_lvl}" error
       amboso_help
-      exit 1
+      exit "${amboso_exit_codes[invalid_arg]}"
   } else {
   verbose_flag="$( printf "$requested_lvl\n" | awk -F" " '{print $1}')"
   }
@@ -2422,15 +2422,15 @@ handle_verbose_arg() {
 handle_nohyphen_flags_arg() {
     local arg="$1"
     local flag="$2"
-    [[ -z "$arg" ]] && { log_cl "Invalid empty arg for flag --$flag" error; amboso_usage; exit 1; }
+    [[ -z "$arg" ]] && { log_cl "Invalid empty arg for flag --$flag" error; amboso_usage; exit "${amboso_exit_codes[invalid_arg]}"; }
     [[ "${AMBOSO_ALLOW_FLAGS_HYPHEN_ARG:-0}" -gt 0 ]] && return #We skip the hyphen check. Someone may not want it?
-    [[ "$arg" == -* ]] && { log_cl "Flag arguments should not start with -:  -$flag $arg" error; amboso_usage; exit 1; }
+    [[ "$arg" == -* ]] && { log_cl "Flag arguments should not start with -:  -$flag $arg" error; amboso_usage; exit "${amboso_exit_codes[invalid_arg]}"; }
 }
 
 handle_config_arg() {
     local arg="$1"
     local flag="$2"
-    [[ -z "$arg" ]] && { log_cl "Invalid empty arg for flag -$flag" error; amboso_usage; exit 1; }
+    [[ -z "$arg" ]] && { log_cl "Invalid empty arg for flag -$flag" error; amboso_usage; exit "${amboso_exit_codes[invalid_arg]}"; }
     if [[ "${AMBOSO_CONFIG_FLAG_ARG_ISFILE:-1}" -ne 0 ]]; then { #Isfile defaults to 1 to start with backwards compatibility
         #We expect the argument to be a filename
         #Note that setting AMBOSO_ALLOW_FLAGS_HYPHEN_ARG >0 is also needed if the filename starts with -
@@ -2562,7 +2562,7 @@ ambosoC_build_step() {
       start_t=$(date +%s.%N)
       if [[ $git_mode_flag -eq 0 && $base_mode_flag -eq 1 ]] ; then { #Building in base mode, we cd into target directory before make
         [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Running in base mode, expecting full source in $target_dir_path." debug #>&2
-        cd "$target_dir_path" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4 ; };
+        cd "$target_dir_path" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit "${amboso_exit_codes[critical_error]}" ; };
         if [[ "$enable_make_rebuild_flag" -gt 0 ]] ; then {
           if [[ ! -z "$extra_args" ]] ; then {
               # Convert string into an array
@@ -2647,7 +2647,7 @@ ambosoC_build_step() {
           if [[ $switch_res -gt 0 ]]; then {
             log_cl "\nCan't finish checking out ($target_tag).\n    You may have a dirty index and may need to run \"git restore .\".\n Quitting.\n" error
             echo_timer "$amboso_start_time"  "Failed checkout" "1"
-            exit 1
+            exit "${amboso_exit_codes[failed_checkout]}"
           }
           fi
           git submodule update --init --recursive #We set all submodules to commit state
@@ -2658,7 +2658,7 @@ ambosoC_build_step() {
       fi
       end_t=$(date +%s.%N)
       runtime=$( printf "$end_t - $start_t\n" | bc -l )
-      cd "$curr_dir" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4; };
+      cd "$curr_dir" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit "${amboso_exit_codes[critical_error]}"; };
     } else { #Straight gcc mode
       [[ $verbose_flag -gt 3 ]] && log_cl "[MODE]    target ( $target_tag ) < ( $makefile_version ), single file build with gcc." debug >&2
       [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Building ( $target_tag ), using gcc call." debug >&2
@@ -2667,7 +2667,7 @@ ambosoC_build_step() {
         log_cl "[WTF-ERROR]    Missing source file name. ( $target_tag ).\n" error
         amboso_usage
         echo_timer "$amboso_start_time"  "Missing source name for [$target_tag]" "1"
-        exit 1
+        exit "${amboso_exit_codes[missing_source_name]}"
       }
       fi
       [[ $pack_flag -gt 0 ]] && log_cl "[PACK]    -z is not supported for ($tool_txt). TAG < ($makefile_version).\n\n    Current: ($target_tag @ $target_source).\n" error
@@ -2723,7 +2723,7 @@ ambosoC_build_step() {
           if [[ $switch_res -gt 0 ]]; then {
             log_cl "Can't finish checking out ($target_tag). Quitting." error
             echo_timer "$amboso_start_time"  "Failed checkout for [$target_tag]" "1"
-            exit 1
+            exit "${amboso_exit_codes[failed_checkout]}"
           }
           fi
           [[ $verbose_flag -gt 3 ]] && log_cl "[BUILD]    Switched back to starting commit." debug >&2
@@ -2760,10 +2760,10 @@ ambosoC_delete_step() {
           log_cl "'$delete_path' is not a valid directory.\n    Check your supported versions for details on ( $target_tag ).\n" error #>&2
         } elif [[ -x $target_dir_path/v$target_tag/$target_binary ]] ; then { #Executable exists
           has_bin=1 && log_cl "[DELETE]   ( $target_tag ) has an executable.\n" info >&2
-          cd "$delete_path" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4 ;};
+          cd "$delete_path" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit "${amboso_exit_codes[critical_error]}" ;};
           make clean 2>/dev/null #1>&2
           clean_res=$?
-          cd "$curr_dir" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4 ;};
+          cd "$curr_dir" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit "${amboso_exit_codes[critical_error]}" ;};
           echo_timer "$amboso_start_time"  "Did delete, res was [$clean_res]" "3"
           exit "$clean_res"
         } else {
@@ -2833,7 +2833,7 @@ anvilPy_git_restore() {
     if [[ $switch_res -gt 0 ]]; then {
       log_cl "\nCan't finish checking out ($q_tag).\n    You may have a dirty index and may need to run \"git restore .\".\n Quitting.\n" error
       echo_timer "$amboso_start_time"  "Failed checkout" "1"
-      exit 1
+      exit "${amboso_exit_codes[failed_checkout]}"
     }
     fi
     git submodule update --init --recursive #We set all submodules to commit state
@@ -3155,7 +3155,7 @@ amboso_test_step() {
       }
       fi
       printf "${FUNCNAME[0]}():    UNREACHABLE.\n"
-      exit 1
+      exit "${amboso_exit_codes[unreachable]}"
     } elif [[ -z $test_path && ! -z $target_test ]] ; then {
       [[ $quiet_flag -eq 0 ]] && log_cl "[VERB]    testpath was empty, query was not empty: ( $target_test )." info >&2
       keep_run_txt=""
@@ -3192,7 +3192,7 @@ amboso_test_step() {
     #delete_test "$relative_testpath"
   } elif [[ $init_flag -gt 0 ]] ; then {
     echo "UNREACHABLE."
-    exit 1
+    exit "${amboso_exit_codes[unreachable]}"
     #init_all_tests "$relative_testpath"
   } elif [[ $purge_flag -gt 0 ]] ; then {
     :
@@ -3366,11 +3366,11 @@ amboso_parse_args() {
   # check recursion
   if [[ "${AMBOSO_LVL_REC}" -le "2" ]]; then
     PARENT_COMMAND="$(ps -o comm= $PPID)"
-    [[ "$PARENT_COMMAND" = "$prog_name" ]] && log_cl "Unexpected result while checking amboso recursion level." error && exit 1
+    [[ "$PARENT_COMMAND" = "$prog_name" ]] && log_cl "Unexpected result while checking amboso recursion level." error && exit "${amboso_exit_codes[assertion_fail]}"
   else
     log_cl "[AMBOSO]    Exceeded depth for recursion ( nested ${AMBOSO_LVL_REC} times).\n" error
     echo_timer "$amboso_start_time"  "Excessive recursion" "1"
-    exit 69
+    exit "${amboso_exit_codes[exceeded_recursion_level]}"
   fi
 
   #Prepare flag values to default value
@@ -3510,7 +3510,7 @@ amboso_parse_args() {
             log_cl "Unknown option --${OPTARG}" error
             amboso_usage
             log_cl "Run with -h, --help to see available long options" info
-            exit 1
+            exit "${amboso_exit_codes[invalid_arg]}"
           fi
           ;;
         esac;;
@@ -3564,8 +3564,8 @@ amboso_parse_args() {
       b ) build_flag=1;;
       d ) delete_flag=1 ;;
       i ) init_flag=1;;
-      \? ) log_cl "Invalid option: -$OPTARG. Run with -h for help." error >&2; exit 1;;
-      : ) log_cl "Option -$OPTARG requires an argument. Run with -h for help." error >&2; exit 1;;
+      \? ) log_cl "Invalid option: -$OPTARG. Run with -h for help." error >&2; exit "${amboso_exit_codes[invalid_arg]}";;
+      : ) log_cl "Option -$OPTARG requires an argument. Run with -h for help." error >&2; exit "${amboso_exit_codes[invalid_arg]}";;
     esac
   tot_opts=$OPTIND
   done
@@ -3586,7 +3586,7 @@ amboso_parse_args() {
     if [[ $AMBOSO_LVL_REC -gt 1 ]] ; then {
       printf "[AMBOSO]    can't ask for help on a recursive call, try running \"$prog_name -h\" from a shell. ( depth $((${AMBOSO_LVL_REC}-1)) )\n\n        args: (\"$*\")\n" >&2
       echo_timer "$amboso_start_time"  "Recursive help?" "1"
-      exit 1
+      exit "${amboso_exit_codes[assertion_failure]}"
     }
     fi
     echo_amboso_version "$amboso_currvers" "$std_amboso_version"
@@ -3607,7 +3607,7 @@ amboso_parse_args() {
     if [[ $AMBOSO_LVL_REC -gt 1 ]] ; then {
       printf "[AMBOSO]    can't ask for help on a recursive call, try running \"$prog_name -H\" from a shell. ( depth $((${AMBOSO_LVL_REC}-1)) )\n\n        args: (\"$*\")\n" >&2
       echo_timer "$amboso_start_time"  "Recursive bighelp?" "1"
-      exit 1
+      exit "${amboso_exit_codes[assertion_failure]}"
     }
     fi
     echo_amboso_version "$amboso_currvers" "$std_amboso_version"
@@ -3625,7 +3625,7 @@ amboso_parse_args() {
   fi
 
   if [[ "${AMBOSO_CONFIG_FLAG_ARG_ISFILE:-1}" -ne 0 && "$pass_autoconf_arg_flag" -gt 0 ]] ; then { #Isfile defaults to 1 to start with backwards compatibility
-    [[ -f "$passed_autoconf_arg" ]] || { log_cl "Invalid file for configure argument: {$passed_autoconf_arg}" error ; exit 1 ; } ;
+    [[ -f "$passed_autoconf_arg" ]] || { log_cl "Invalid file for configure argument: {$passed_autoconf_arg}" error ; exit "${amboso_exit_codes[invalid_file]}" ; } ;
   }
   fi
 
@@ -3639,7 +3639,7 @@ amboso_parse_args() {
     [[ "$quiet_flag" -eq 0 ]] && echo_amboso_splash "$amboso_currvers" "$(basename "$prog_name")"
     if ! command -v "bc" > /dev/null; then
         log_cl "[CRITICAL]    Error: bc is not installed. Please install bc before running this script." error
-        exit 8
+        exit "${amboso_exit_codes[missing_bc_dep]}"
     fi
     local awk_check="$("${AMBOSO_AWK_NAME}" --version 2>/dev/null)"
     local awk_check_res="$?"
@@ -3757,8 +3757,8 @@ amboso_parse_args() {
       echo_active_flags >&2
     } elif [[ $AMBOSO_LVL_REC -gt 2 ]] ; then {
       [[ $test_info_was_set -eq 1 ]] && log_cl "[AMBOSO]    Deep recursion (>1), are you calling \"$prog_name\" in a test? ;)" debug >&2
-      #[[ $small_test_mode_flag -gt 0 ]] && echo "[ERROR]    Can't proceed and macro -t for -T on all tags." && exit 69
-      #[[ $test_mode_flag -gt 0 ]] && echo "[ERROR]    Can't proceed with test mode." && exit 69
+      #[[ $small_test_mode_flag -gt 0 ]] && echo "[ERROR]    Can't proceed and macro -t for -T on all tags." && exit "${amboso_exit_codes[exceeded_recursion_level]}"
+      #[[ $test_mode_flag -gt 0 ]] && echo "[ERROR]    Can't proceed with test mode." && exit "${amboso_exit_codes[exceeded_recursion_level]}"
     }
     fi
   } elif [[ $AMBOSO_LVL_REC -eq 1 ]] ; then {
@@ -3771,7 +3771,7 @@ amboso_parse_args() {
   if [[ $be_stego_parser_flag -eq 1 ]] ; then {
       filepath="$queried_stego_filepath"
 
-      [[ -f "$filepath" ]] || { log_cl "\"$filepath\" was not a valid file." error ; exit 1 ; }
+      [[ -f "$filepath" ]] || { log_cl "\"$filepath\" was not a valid file." error ; exit "${amboso_exit_codes[invalid_file]}" ; }
 
       if [[ $ignore_git_check_flag -eq 1 ]]; then {
           log_cl "EXPERIMENTAL:    Running as Makefile parser." debug >&2
@@ -3933,7 +3933,7 @@ amboso_parse_args() {
       [[ ! -z $errors_dir ]] && log_cl "       kulpo dir: ( $errors_dir )" debug >&2 #&& usage && exit 1
       log_cl "[PANIC]    Running  as \"$prog_name\" in test mode is not supported. Quitting with 69.\n" error #&& usage && exit 1
       echo_timer "$amboso_start_time"  "Test calling \"$(basename "$prog_name")\" in test mode to run a test with..." "1"
-      exit 69
+      exit "${amboso_exit_codes[exceeded_recursion_level]}"
       #We return 69 and will check for this somewhere
     }
     fi
@@ -3948,7 +3948,7 @@ amboso_parse_args() {
 
       log_cl "[PANIC]    Running  \"$(basename "$prog_name")\" using test mode in a program that will be called by test mode is not supported.\n" error >&2 #&& usage && exit 1
       echo_timer "$amboso_start_time"  "Test calling \"$(basename "$prog_name")\" in test mode to run a test with..." "1"
-      exit 1
+      exit "${amboso_exit_codes[assertion_fail]}"
     }
     fi
   }
@@ -3964,7 +3964,7 @@ amboso_parse_args() {
   fi
   if [[ ! $? -eq 0 ]] ; then {
     log_cl "[CRITICAL]    Could not set amboso stego info." error
-    exit 1
+    exit "${amboso_exit_codes[assertion_fail]}"
   }
   fi
 
@@ -3986,7 +3986,7 @@ amboso_parse_args() {
             log_cl "Hint: Use one of these: --> {" error
             log_cl "    amboso-C" info
             log_cl "}" error
-            exit 1
+            exit "${amboso_exit_codes[invalid_arg]}"
         }
         fi
 
@@ -4057,7 +4057,7 @@ amboso_parse_args() {
   if [[ -z $kazoj_dir && $test_mode_flag -gt 0 ]] ; then {
     #TODO Do we need to do further checks for amboso_testflag_version?
     log_cl "kazoj_dir was not set, while in test mode." error
-    exit 3
+    exit "${amboso_exit_codes[missing_kazoj_in_test_mode]}"
   }
   fi
 
@@ -4091,28 +4091,28 @@ amboso_parse_args() {
   #If version for makefile support was not specified, we notify in verbose mode or not in quiet mode
   if [[ -z $makefile_version && "$std_amboso_kern" = "amboso-C" ]] ; then {
     [[ $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] && log_cl "[ASSERT-FALSE]    makefile_version was empty" error >&2
-    exit 1
+    exit "${amboso_exit_codes[assertion_fail]}"
   }
   fi
 
   #We notify of missing -E argument if we're in verbose mode or not in quiet mode
   if [[ -z $exec_entrypoint ]] ; then {
     [[ $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] && log_cl "[ASSERT-FALSE]    exec_entrypoint was empty." error >&2
-    exit 1
+    exit "${amboso_exit_codes[assertion_fail]}"
   }
   fi
 
   #We notify of missing -S argument if we're in verbose mode or not in quiet mode
   if [[ -z $source_name ]] ; then {
     [[ $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] && log_cl "[ASSERT-FALSE]    source_name was empty." error >&2
-    exit 1
+    exit "${amboso_exit_codes[assertion_fail]}"
   }
   fi
 
   #We notify of missing -A argument if we're in verbose mode or not in quiet mode
   if [[ -z $use_autoconf_version && "$std_amboso_kern" = "amboso-C" ]] ; then {
     [[ $verbose_flag -gt 3 || $quiet_flag -eq 0 ]] && log_cl "[ASSERT-FALSE]    use_autoconf_version was empty." error >&2
-    exit 1
+    exit "${amboso_exit_codes[assertion_fail]}"
   }
   fi
 
@@ -4131,7 +4131,7 @@ amboso_parse_args() {
   if [[ $init_flag -gt 0 && $test_mode_flag -eq 0 && $small_test_mode_flag -eq 0 ]] ; then {
     if [[ ! "$std_amboso_kern" = "amboso-C" ]] ; then { # Can't init outside of amboso-C kern yet
         log_cl "[INIT]    Todo: Implement init op for { $std_amboso_kern }" info
-        exit 1
+        exit "${amboso_exit_codes[assertion_fail]}"
     }
     fi
     if [[ $quiet_flag -eq 0 && $verbose_flag -ge 4 ]]; then { #WIP
@@ -4174,7 +4174,7 @@ amboso_parse_args() {
             ;;
         *)
             log_cl "[BUILD]    Invalid kern: {$std_amboso_kern}" error
-            exit 1
+            exit "${amboso_exit_codes[invalid_arg]}"
             ;;
       esac
       if [[ $? -eq 0 ]] ; then {
@@ -4248,7 +4248,7 @@ amboso_parse_args() {
     fi
     if [[ $init_flag -gt 0 ]]; then {
         log_cl "Recording all tests with -ti is deprecated." error
-        exit 2
+        exit "${amboso_exit_codes[refuseTi]}"
     }
     fi
 
@@ -4268,7 +4268,7 @@ amboso_parse_args() {
       if [[ $retcod -eq 69 ]] ; then {
         log_cl "[PANIC]    A test call returned 69 while in macro mode. Doing the same.\n" error
         echo_timer "$amboso_start_time"  "Test returned 69" "1"
-        exit 69
+        exit "${amboso_exit_codes[exceeded_recursion_level]}"
       }
       fi
       end_t_curr_test=$(date +%s.%N)
@@ -4300,7 +4300,7 @@ amboso_parse_args() {
   } elif [[ $small_test_mode_flag -gt 0 && $test_mode_flag -gt 0 ]] ; then {
     log_cl "[PANIC]    [-t] used with [-T].\n\n        -t is a shortcut to run as -T on all tests found.\n" info
     echo_timer "$amboso_start_time"  "Wrong test flag usage" "1"
-    exit 1
+    exit "${amboso_exit_codes[invalid_arg]}"
   }
   fi
 
@@ -4335,7 +4335,7 @@ amboso_parse_args() {
           log_cl "\n    Unknown argument: \"$3\" (ignoring other $(($tot_left_args-2)) args).\n" error
           amboso_usage
           echo_timer "$amboso_start_time"  "Unknown arg [$3]" "1"
-          exit 1
+          exit "${amboso_exit_codes[invalid_arg]}"
       }
       fi
   }
@@ -4349,7 +4349,7 @@ amboso_parse_args() {
     #log_cl "\n    Unknown argument: \"$2\" (ignoring other $(($tot_left_args-1)) args).\n" error
     #amboso_usage
     #echo_timer "$amboso_start_time"  "Unknown arg [$2]" "1"
-    #exit 1
+    #exit "${amboso_exit_codes[invalid_arg]}"
   }
   fi
 
@@ -4381,7 +4381,7 @@ amboso_parse_args() {
             ;;
         *)
             log_cl "[BUILD]    Invalid kern: {$std_amboso_kern}" error
-            exit 1
+            exit "${amboso_exit_codes[invalid_arg]}"
             ;;
     esac
     make_res="$?"
@@ -4479,7 +4479,7 @@ amboso_parse_args() {
               ;;
           *)
               log_cl "[BUILD]    Invalid kern: {$std_amboso_kern}" error
-              exit 1
+              exit "${amboso_exit_codes[invalid_arg]}"
               ;;
       esac
       make_res="$?"
@@ -4508,20 +4508,20 @@ amboso_parse_args() {
       log_cl "( $query ) is not a supported tag.\n" error
       log_cl "       Run with -h for help.\n" error
       echo_timer "$amboso_start_time"  "Invalid query [$query]" "1"
-      exit 1
+      exit "${amboso_exit_codes[invalid_arg]}"
     } elif [[ ! -z $query && $test_mode_flag -gt 0 ]] ; then { #If we're in test mode, gently tell the user that the version is not supported
       keep_run_txt=""
       [[ $init_flag -gt 0 ]] && keep_run_txt="${mode_txt}[INIT]"
       [[ $purge_flag -gt 0 ]] && keep_run_txt="${mode_txt}[PURGE]"
       log_cl "( $query ) is not a supported test. $keep_run_txt." debug >&2
       echo_timer "$amboso_start_time"  "Invalid test query [$query]" "1"
-      exit 1;
+      exit "${amboso_exit_codes[invalid_arg]}"
     } elif [[ $gen_headers_set -gt 0 ]] ; then { #If we're in header gen mode, we swap the query for HEAD
       if [[ -z "$query" ]]; then {
           log_cl "( $query ) is not a supported tag.\n" error
           log_cl "       Run with -h for help.\n" error
           echo_timer "$amboso_start_time"  "Invalid query [$query]" "1"
-          exit 1
+          exit "${amboso_exit_codes[invalid_arg]}"
       }
       fi
       log_cl "( $query ) is not a supported tag. Retrying using HEAD\n" warn
@@ -4597,7 +4597,7 @@ amboso_parse_args() {
                 ;;
             *)
                 log_cl "[BUILD]    Invalid kern: {$std_amboso_kern}" error
-                exit 1
+                exit "${amboso_exit_codes[invalid_arg]}"
                 ;;
         esac
         local build_step_res="$?"
@@ -4658,7 +4658,7 @@ amboso_parse_args() {
     #fi
 
     log_cl "\n    Running script $script_path/$exec_entrypoint" debug
-    ( cd "$script_path" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit 4 ;} ; ./"$exec_entrypoint" )
+    ( cd "$script_path" || { log_cl "[CRITICAL]    cd failed. Quitting." error ; exit "${amboso_exit_codes[critical_error]}" ;} ; ./"$exec_entrypoint" )
   } elif [[ ! -z $version && $run_flag -eq 0  ]] ; then {
     log_cl "Running without -r flag, won't run." debug >&2
   } elif [[ -z $version && $run_flag -gt 0 ]] ; then {
@@ -4678,7 +4678,7 @@ amboso_parse_args() {
             ;;
         *)
             log_cl "[BUILD]    Invalid kern: {$std_amboso_kern}" error
-            exit 1
+            exit "${amboso_exit_codes[invalid_arg]}"
             ;;
     esac
     local del_res="$?"
@@ -4694,7 +4694,7 @@ amboso_parse_args() {
   if [[ purge_flag -gt 0 ]]; then
     if [[ ! "$std_amboso_kern" = "amboso-C" ]] ; then { # Can't purge outside of amboso-C kern yet
         log_cl "[INIT]    Todo: Implement purge op for { $std_amboso_kern }" info
-        exit 1
+        exit "${amboso_exit_codes[assertion_fail]}"
     }
     fi
     tot_removed=0
@@ -4726,7 +4726,7 @@ amboso_parse_args() {
               ;;
           *)
               log_cl "[BUILD]    Invalid kern: {$std_amboso_kern}" error
-              exit 1
+              exit "${amboso_exit_codes[invalid_arg]}"
               ;;
       esac
       clean_res="$?"
@@ -4877,6 +4877,29 @@ lex_legacy_stego() {
 }
 
 amboso_main() {
+  declare -gA amboso_exit_codes
+  amboso_exit_codes[amboso_fail_conf_parse]=10
+  amboso_exit_codes[missing_autoconf_vers]=5
+  amboso_exit_codes[missing_tests_dir]=6
+  amboso_exit_codes[missing_source_name]=2
+  amboso_exit_codes[refuseTi]=2
+  amboso_exit_codes[failed_parsing_stego]=7
+  amboso_exit_codes[missing_make_vers]=3
+  amboso_exit_codes[refuse_root]=3
+  amboso_exit_codes[missing_kazoj_in_test_mode]=3
+  amboso_exit_codes[missing_awk_dep]=9
+  amboso_exit_codes[try_parsing_anvil_conf_except]=9
+  amboso_exit_codes[exceeded_recursion_level]=69
+  amboso_exit_codes[missing_automake_vers]=4
+  amboso_exit_codes[critical_error]=4
+  amboso_exit_codes[invalid_file]=8
+  amboso_exit_codes[missing_bc_dep]=8
+  amboso_exit_codes[invalid_arg]=1
+  amboso_exit_codes[outside_git_repo]=1
+  amboso_exit_codes[missing_binary_name]=1
+  amboso_exit_codes[failed_checkout]=1
+  amboso_exit_codes[unreachable]=1
+  amboso_exit_codes[assertion_fail]=1
   if [[ ! $# -eq 0 ]] ; then {
     local cmd="$(printf -- "$1" | cut -f1 -d'-')"
     if [[ ! -z $cmd ]] ; then {
@@ -4927,8 +4950,8 @@ amboso_main() {
             case $opt in
               b ) build_flg=1; log_cl "Passed  build flag" info;;
               l ) list_flg=1; log_cl "Passed  list flag" info;;
-              \? ) log_cl "Invalid option: -$OPTARG. Run with -h for help." error >&2; exit 1;;
-              : ) log_cl "Option -$OPTARG requires an argument. Run with -h for help." error >&2; exit 1;;
+              \? ) log_cl "Invalid option: -$OPTARG. Run with -h for help." error >&2; exit "${amboso_exit_codes[invalid_arg]}";;
+              : ) log_cl "Option -$OPTARG requires an argument. Run with -h for help." error >&2; exit "${amboso_exit_codes[invalid_arg]}";;
               -)
                 case "${OPTARG}" in
                   build) build_flg=1;;
@@ -4938,7 +4961,7 @@ amboso_main() {
                     log_cl "Unknown option --${OPTARG}" error
                     amboso_usage
                     log_cl "Run with -h, --help to see available long options" info
-                    exit 1
+                    exit "${amboso_exit_codes[invalid_arg]}"
                   fi
                   ;;
                 esac;;
@@ -4984,8 +5007,8 @@ amboso_main() {
           while getopts "k:-:" opt; do
               case $opt in
                 k ) handle_kern_arg "$OPTARG";;
-                \? ) log_cl "Invalid option: -$OPTARG. Run with -h for help." error >&2; exit 1;;
-                : ) log_cl "Option -$OPTARG requires an argument. Run with -h for help." error >&2; exit 1;;
+                \? ) log_cl "Invalid option: -$OPTARG. Run with -h for help." error >&2; exit "${amboso_exit_codes[invalid_arg]}";;
+                : ) log_cl "Option -$OPTARG requires an argument. Run with -h for help." error >&2; exit "${amboso_exit_codes[invalid_arg]}";;
                 -)
                   case "${OPTARG}" in
                     kern) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); handle_kern_arg "$val";;
@@ -4995,7 +5018,7 @@ amboso_main() {
                       log_cl "Unknown option --${OPTARG}" error
                       amboso_usage
                       log_cl "Run with -h, --help to see available long options" info
-                      exit 1
+                      exit "${amboso_exit_codes[invalid_arg]}"
                     fi
                     ;;
                   esac;;
@@ -5241,7 +5264,7 @@ echo_najlo_splash() {
 lex_makefile() {
     local lvl_regex='^[0-9]+$'
     local input="$1"
-    [[ -f "$input" ]] || { printf "{%s} was not a valid file.\n" "$input"; exit 1 ; }
+    [[ -f "$input" ]] || { printf "{%s} was not a valid file.\n" "$input"; exit "${amboso_exit_codes[invalid_file]}" ; }
     local dbg_print="$2"
     if ! [[ "$dbg_print" =~ $lvl_regex ]] ; then {
         [[ -n "$dbg_print" ]] && printf "Invalid arg: {%s}. Using 0\n" "$2"
@@ -5385,7 +5408,7 @@ lex_makefile() {
             } else {
                 printf "ERROR: matched ruleline regex but slipped the leading tab removal.\n" >&2
                 printf "Current line: {%s}\n." "$current_line" >&2
-                exit 1
+                exit "${amboso_exit_codes[assertion_fail]}"
             }
             fi
             # We found an expression inside a rule (rule scope)
@@ -5520,7 +5543,7 @@ if [[ "${BASH_SOURCE[0]}" = "${0}" ]]; then {
     amboso_start_time=$(date +%s.%N)
     if [ "$(id -u)" -eq 0 ] ; then {
       printf "[AMBOSO]    Please don't run me as root.\n"
-      exit 3
+      exit "${amboso_exit_codes[refuse_root]}"
     }
     fi
     prog_name="$(readlink -f "$0")"
