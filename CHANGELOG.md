@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.1.5] - Unreleased
+
+### Changed
+
+- Move `amboso_exit_codes` to top-level
+
 ## [2.1.4] - 2026-08-12
 
 ### Added
