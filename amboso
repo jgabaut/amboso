@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="2.1.4"
+AMBOSO_API_LVL="2.1.5"
 at() {
     #printf -- "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] -> {\n"
     log_cl "{ call: [" debug white
@@ -4877,29 +4877,6 @@ lex_legacy_stego() {
 }
 
 amboso_main() {
-  declare -gA amboso_exit_codes
-  amboso_exit_codes[amboso_fail_conf_parse]=10
-  amboso_exit_codes[missing_autoconf_vers]=5
-  amboso_exit_codes[missing_tests_dir]=6
-  amboso_exit_codes[missing_source_name]=2
-  amboso_exit_codes[refuseTi]=2
-  amboso_exit_codes[failed_parsing_stego]=7
-  amboso_exit_codes[missing_make_vers]=3
-  amboso_exit_codes[refuse_root]=3
-  amboso_exit_codes[missing_kazoj_in_test_mode]=3
-  amboso_exit_codes[missing_awk_dep]=9
-  amboso_exit_codes[try_parsing_anvil_conf_except]=9
-  amboso_exit_codes[exceeded_recursion_level]=69
-  amboso_exit_codes[missing_automake_vers]=4
-  amboso_exit_codes[critical_error]=4
-  amboso_exit_codes[invalid_file]=8
-  amboso_exit_codes[missing_bc_dep]=8
-  amboso_exit_codes[invalid_arg]=1
-  amboso_exit_codes[outside_git_repo]=1
-  amboso_exit_codes[missing_binary_name]=1
-  amboso_exit_codes[failed_checkout]=1
-  amboso_exit_codes[unreachable]=1
-  amboso_exit_codes[assertion_fail]=1
   if [[ ! $# -eq 0 ]] ; then {
     local cmd="$(printf -- "$1" | cut -f1 -d'-')"
     if [[ ! -z $cmd ]] ; then {
@@ -5539,6 +5516,30 @@ fi
 return "$res"
 }
 
+declare -gA amboso_exit_codes
+amboso_exit_codes[amboso_fail_conf_parse]=10
+amboso_exit_codes[missing_autoconf_vers]=5
+amboso_exit_codes[missing_tests_dir]=6
+amboso_exit_codes[missing_source_name]=2
+amboso_exit_codes[refuseTi]=2
+amboso_exit_codes[failed_parsing_stego]=7
+amboso_exit_codes[missing_make_vers]=3
+amboso_exit_codes[refuse_root]=3
+amboso_exit_codes[missing_kazoj_in_test_mode]=3
+amboso_exit_codes[missing_awk_dep]=9
+amboso_exit_codes[try_parsing_anvil_conf_except]=9
+amboso_exit_codes[exceeded_recursion_level]=69
+amboso_exit_codes[missing_automake_vers]=4
+amboso_exit_codes[critical_error]=4
+amboso_exit_codes[invalid_file]=8
+amboso_exit_codes[missing_bc_dep]=8
+amboso_exit_codes[invalid_arg]=1
+amboso_exit_codes[outside_git_repo]=1
+amboso_exit_codes[missing_binary_name]=1
+amboso_exit_codes[failed_checkout]=1
+amboso_exit_codes[unreachable]=1
+amboso_exit_codes[assertion_fail]=1
+
 if [[ "${BASH_SOURCE[0]}" = "${0}" ]]; then {
     amboso_start_time=$(date +%s.%N)
     if [ "$(id -u)" -eq 0 ] ; then {
@@ -5552,7 +5553,7 @@ if [[ "${BASH_SOURCE[0]}" = "${0}" ]]; then {
     kernel_version="$(uname -v)"
     machine_name="$(uname -m)"
     os_name="$(uname -o)"
-    amboso_currvers="2.1.4"
+    amboso_currvers="2.1.5"
     std_amboso_kern_list=("amboso-C" "anvilPy" "custom")
     amboso_main "$@"
 }
