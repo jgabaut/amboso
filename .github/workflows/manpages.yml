@@ -1,0 +1,52 @@
+name: Build and publish manpages
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+# Required by GitHub Pages deployment.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Don't let multiple Pages deployments run at once.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install mandoc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mandoc
+
+      - name: Build manual site
+        run: python3 scripts/build-man.py
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
