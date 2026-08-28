@@ -146,6 +146,9 @@ a:hover {{
 
 {chr(10).join(sections)}
 
+<a href="https://github.com/jgabaut/amboso/wiki">
+Wiki
+</a>
 </body>
 </html>
 """
