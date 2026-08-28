@@ -149,6 +149,19 @@ a:hover {{
 <a href="https://github.com/jgabaut/amboso/wiki">
 Wiki
 </a>
+<br>
+<a href="https://github.com/jgabaut/amboso">
+amboso repo
+</a>
+<br>
+<a href="https://github.com/jgabaut/invil">
+invil repo
+</a>
+<br>
+<a href="https://github.com/jgabaut/canvil">
+canvil repo
+</a>
+
 </body>
 </html>
 """
