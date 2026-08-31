@@ -1770,6 +1770,9 @@ parse_lexed_stego() {
             local -n curr_arr="$arr_var"
             curr_arr["$arr_val_idx"]=\"$(printf '%q' "$arr_val")\"
             #"${arr_var}"["$arr_val_idx"]=\""$arr_val"\"
+            scopes+=("$current_scope")
+            variables+=("${arr_var}[${arr_val_idx}]")
+            values+=("$arr_val")
           else
             echo "Invalid array variable or index."
             return 1;
@@ -1790,6 +1793,9 @@ parse_lexed_stego() {
             local -n curr_struct="$struct_name"
             curr_struct[$struct_var_name]=\"$(printf '%q' "$struct_val")\"
             #"${struct_name}"["$struct_var_name"]=\""$struct_val"\"
+            scopes+=("$current_scope")
+            variables+=("${struct_name}_$struct_var_name")
+            values+=("$struct_val")
           else
             echo "Invalid struct name or variable."
             return 1
@@ -1810,6 +1816,9 @@ parse_lexed_stego() {
             local -n curr_struct="$struct_name"
             curr_struct[${struct_var_name}_${struct_arr_idx}]=\"$(printf '%q' "$struct_val")\"
             #"${struct_name}"["$struct_var_name"]=\""$struct_val"\"
+            scopes+=("$current_scope")
+            variables+=("${struct_name}_${struct_arr_idx}[${struct_var_name}]")
+            values+=("$struct_val")
           else
             echo "Invalid struct name or variable."
             return 1
@@ -2138,6 +2147,8 @@ print_amboso_stego_scopes() {
               printf "ANVIL_KERN: {$value}\n"
           }
           fi
+        } elif [[ $variable =~ ^anvil_recipe ]]; then {
+            printf "ANVIL_RECIPE: ($variable): {$value}\n"
         }
         fi
     }
