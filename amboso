@@ -3205,6 +3205,10 @@ custom_build_step () {
     if [[ ! -z "$custom_confer" ]]; then {
         if [[ ! -x "$custom_confer" ]]; then {
             if [[ "$prep_for_conf" ]] ; then {
+                [[ -x "$custom_prepper" ]] || {
+                    log_cl "[BUILD]    Prepper {$custom_prepper} is not an executable file." error
+                    return 1
+                }
                 log_cl "[BUILD]    Running prepper {$custom_prepper}" debug
                 "$custom_prepper"
                 if [[ ! -x "$custom_confer" ]] ; then {
@@ -3249,6 +3253,10 @@ custom_build_step () {
 
     if [[ ! -x "$custom_builder" ]]; then {
         if [[ "$prep_for_build" ]]; then {
+            [[ -x "$custom_prepper" ]] || {
+                log_cl "[BUILD]    Prepper {$custom_prepper} is not an executable file." error
+                return 1
+            }
             log_cl "[BUILD]    Running prepper {$custom_prepper}" debug
             "$custom_prepper"
             if [[ ! -x "$custom_builder" ]] ; then {
