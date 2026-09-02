@@ -1695,7 +1695,7 @@ sort_anvil_recipe() {
 	declare -ga anvil_recipe_versions_keys
     for item in "${sorted_list[@]}"; do
         local old_idx="${item#*:}"
-        for field in vers build conf; do
+        for field in vers build conf prep; do
             local old_key="${field}_$old_idx"
             local new_key="${field}_$new_idx"
 			if [[ "$field" = vers ]] ; then {
