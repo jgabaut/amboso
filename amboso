@@ -3129,13 +3129,27 @@ custom_build_step () {
         }
         fi
 
+        local prepper="${anvil_recipe[prep_$recipe_idx]#\"}"
+        prepper="${prepper%\"}"
+        if [[ -z "$prepper" ]] ; then {
+            local recipe_vers="${anvil_recipe[vers_$recipe_idx]}"
+            log_cl "Prepper for $recipe_vers is empty" debug
+        } else {
+            log_cl "Using prepper {$prepper}" debug
+        }
+        fi
+
         local confer="${anvil_recipe[conf_$recipe_idx]#\"}"
         confer="${confer%\"}"
         if [[ -z "$confer" ]] ; then {
             local recipe_vers="${anvil_recipe[vers_$recipe_idx]}"
             log_cl "Configurer for $recipe_vers is empty" debug
         } else {
-           log_cl "Using configurer {$confer}" debug
+            log_cl "Using configurer {$confer}" debug
+            if [[ ! -z "$prepper" ]] ; then {
+                log_cl "Expecting {$prepper} to produce {$confer}" debug
+            }
+            fi
         }
         fi
         custom_confer="$confer"
@@ -3149,6 +3163,10 @@ custom_build_step () {
         }
         fi
         log_cl "Using builder {$builder}" debug
+        if [[ -z "$confer" && ! -z "$prepper" ]] ; then {
+            log_cl "Expecting {$prepper} to produce {$builder}" debug
+        }
+        fi
         custom_builder="$builder"
     } else {
         if [[ -z "$custom_builder" ]]; then {
