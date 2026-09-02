@@ -3138,7 +3138,9 @@ custom_build_step () {
             log_cl "Using prepper {$prepper}" debug
         }
         fi
+        custom_prepper="$prepper"
 
+        local prep_for_conf=1
         local confer="${anvil_recipe[conf_$recipe_idx]#\"}"
         confer="${confer%\"}"
         if [[ -z "$confer" ]] ; then {
@@ -3148,12 +3150,14 @@ custom_build_step () {
             log_cl "Using configurer {$confer}" debug
             if [[ ! -z "$prepper" ]] ; then {
                 log_cl "Expecting {$prepper} to produce {$confer}" debug
+                prep_for_conf=0
             }
             fi
         }
         fi
         custom_confer="$confer"
 
+        local prep_for_build=1
         local builder="${anvil_recipe[build_$recipe_idx]#\"}"
         builder="${builder%\"}"
         if [[ -z "$builder" ]] ; then {
@@ -3165,6 +3169,7 @@ custom_build_step () {
         log_cl "Using builder {$builder}" debug
         if [[ -z "$confer" && ! -z "$prepper" ]] ; then {
             log_cl "Expecting {$prepper} to produce {$builder}" debug
+            prep_for_build=0
         }
         fi
         custom_builder="$builder"
@@ -3199,9 +3204,21 @@ custom_build_step () {
 
     if [[ ! -z "$custom_confer" ]]; then {
         if [[ ! -x "$custom_confer" ]]; then {
-            log_cl "[BUILD]    Configurer {$custom_confer} is not an executable file." error
-            anvilPy_git_restore "$q_tag" "$head_detached"
-            return 1
+            if [[ "$prep_for_conf" ]] ; then {
+                log_cl "[BUILD]    Running prepper {$custom_prepper}" debug
+                "$custom_prepper"
+                if [[ ! -x "$custom_confer" ]] ; then {
+                    log_cl "[BUILD]    Configurer {$custom_confer} is not an executable file." error
+                    anvilPy_git_restore "$q_tag" "$head_detached"
+                    return 1
+                }
+                fi
+            } else {
+                log_cl "[BUILD]    Configurer {$custom_confer} is not an executable file." error
+                anvilPy_git_restore "$q_tag" "$head_detached"
+                return 1
+            }
+            fi
         }
         fi
         log_cl "[BUILD]    Running custom configurer for tag {$q_tag}" info
@@ -3231,9 +3248,21 @@ custom_build_step () {
     fi
 
     if [[ ! -x "$custom_builder" ]]; then {
-        log_cl "[BUILD]    Builder {$custom_builder} is not an executable file." error
-        anvilPy_git_restore "$q_tag" "$head_detached"
-        return 1
+        if [[ "$prep_for_build" ]]; then {
+            log_cl "[BUILD]    Running prepper {$custom_prepper}" debug
+            "$custom_prepper"
+            if [[ ! -x "$custom_builder" ]] ; then {
+                log_cl "[BUILD]    Builder {$custom_builder} is not an executable file." error
+                anvilPy_git_restore "$q_tag" "$head_detached"
+                return 1
+            }
+            fi
+        } else {
+            log_cl "[BUILD]    Builder {$custom_builder} is not an executable file." error
+            anvilPy_git_restore "$q_tag" "$head_detached"
+            return 1
+        }
+        fi
     } else {
         if [[ ! -d "$target_d" ]] ; then
           if compare_semver "$std_amboso_version" ">=" "${amboso_v2_0_guards[treegen]}" ; then {
