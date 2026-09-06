@@ -5,6 +5,7 @@
 ### Added
 
 - Add support for `anvil_recipe` with `custom` kern
+- Add support for `genC` subcommand
 
 ## [2.1.5] - 2026-08-24
 

@@ -5239,6 +5239,16 @@ amboso_main() {
         return
       }
       fi
+      if [[ $cmd = "gen" ]] ; then {
+        shift
+        (amboso_parse_args "-XG" "$@")
+        unset AMBOSO_LVL_REC
+        unset AMBOSO_COLOR
+        unset AMBOSO_LOGGED
+        unset AMBOSO_AWK_NAME
+        return
+      }
+      fi
       if [[ $cmd = "test" ]] ; then {
         shift
         local build_flg=0
