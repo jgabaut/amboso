@@ -929,6 +929,7 @@ amboso_usage() {
   test [-b|-l] [TESTNAME]           Run all tests or the passed TESTNAME
   build                             Tries building latest tag
   init [-k <KERN>] [TEMPLATE]       Prepare a new anvil project
+  gen-c [DIRNAME] [TAG]             Generates C header + impl for supported project
   version                           Prints invil version
   help                              Print this message or the help of the given subcommand(s)\n"
 
