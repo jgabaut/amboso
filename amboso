@@ -4633,7 +4633,7 @@ amboso_parse_args() {
   fi
 
   #If we don't have init or purge flag, we bail on a missing version argument
-  if [[ $tot_left_args -lt 1 && $purge_flag -eq 0 && $init_flag -eq 0 && $test_mode_flag -eq 0 ]]; then {
+  if [[ $tot_left_args -lt 1 && $purge_flag -eq 0 && $init_flag -eq 0 && $test_mode_flag -eq 0 && $gen_headers_flag -eq 0 ]]; then {
     case "$std_amboso_kern" in
         "amboso-C")
             try_doing_make
