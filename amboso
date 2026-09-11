@@ -930,6 +930,7 @@ amboso_usage() {
   build                             Tries building latest tag
   init [-k <KERN>] [TEMPLATE]       Prepare a new anvil project
   gen-c [DIRNAME] [TAG]             Generates C header + impl for supported project
+  stego <MODE> <FILE>               Parses a stego file
   version                           Prints invil version
   help                              Print this message or the help of the given subcommand(s)\n"
 
@@ -5248,6 +5249,36 @@ amboso_main() {
         unset AMBOSO_LOGGED
         unset AMBOSO_AWK_NAME
         return
+      }
+      fi
+      if [[ $cmd = "stego" ]] ; then {
+          shift
+          if [[ $# -lt 2 ]] ; then {
+              log_cl "Missing arguments for stego subcommand" error
+              exit "${amboso_exit_codes[invalid_arg]}"
+          }
+          fi
+          if [[ $1 = "parse" ]] ; then {
+              shift
+              local file="$1"
+              log_cl "TODO: implement stego subcommand: parse {$file}" error
+              exit 1
+          } elif [[ $1 = "lex" ]] ; then {
+              shift
+              local file="$1"
+              log_cl "TODO: implement stego subcommand: lex {$file}" error
+              exit 1
+          } elif [[ $1 = "lint" ]] ; then {
+              shift
+              local file="$1"
+              log_cl "TODO: implement stego subcommand: lint {$file}" error
+              exit 1
+          } else {
+              log_cl "Unexpected mode: $1" error
+              log_cl "Try one of these:\n  parse\n  lex\n  lint" info
+              exit "${amboso_exit_codes[invalid_arg]}"
+          }
+          fi
       }
       fi
       if [[ $cmd = "test" ]] ; then {
