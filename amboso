@@ -5260,19 +5260,28 @@ amboso_main() {
           fi
           if [[ $1 = "parse" ]] ; then {
               shift
-              local file="$1"
-              log_cl "TODO: implement stego subcommand: parse {$file}" error
-              exit 1
+              (amboso_parse_args "-x" "$@")
+              unset AMBOSO_LVL_REC
+              unset AMBOSO_COLOR
+              unset AMBOSO_LOGGED
+              unset AMBOSO_AWK_NAME
+              return
           } elif [[ $1 = "lex" ]] ; then {
               shift
-              local file="$1"
-              log_cl "TODO: implement stego subcommand: lex {$file}" error
-              exit 1
+              (amboso_parse_args "-Lx" "$@")
+              unset AMBOSO_LVL_REC
+              unset AMBOSO_COLOR
+              unset AMBOSO_LOGGED
+              unset AMBOSO_AWK_NAME
+              return
           } elif [[ $1 = "lint" ]] ; then {
               shift
-              local file="$1"
-              log_cl "TODO: implement stego subcommand: lint {$file}" error
-              exit 1
+              (amboso_parse_args "-lx" "$@")
+              unset AMBOSO_LVL_REC
+              unset AMBOSO_COLOR
+              unset AMBOSO_LOGGED
+              unset AMBOSO_AWK_NAME
+              return
           } else {
               log_cl "Unexpected mode: $1" error
               log_cl "Try one of these:\n  parse\n  lex\n  lint" info
