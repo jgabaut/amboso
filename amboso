@@ -5402,12 +5402,14 @@ amboso_main() {
       fi
       if [[ $cmd = "help" ]] ; then {
         log_cl "[AMBOSO-MAIN]    Quick commands:\n" info
-        printf "    test [TESTNAME]    Run all tests or the passed TESTNAME\n\n"
-        printf "    build              Build latest version\n\n"
-        printf "    init               Prepare current dir for an amboso project\n\n"
-        printf "    version            Print amboso version\n\n"
-        printf "    quit               Quit amboso\n\n"
-        printf "    help               Print this message\n\n"
+        printf "    test [TESTNAME]          Run all tests or the passed TESTNAME\n\n"
+        printf "    build                    Build latest version\n\n"
+        printf "    gen-c [DIRNAME] [TAG]    Generates C header + impl for supported project\n\n"
+        printf "    stego <MODE> <FILE>      Parses a stego file\n\n"
+        printf "    init                     Prepare current dir for an amboso project\n\n"
+        printf "    version                  Print amboso version\n\n"
+        printf "    quit                     Quit amboso\n\n"
+        printf "    help                     Print this message\n\n"
         log_cl "[AMBOSO-MAIN]    Amboso help (-h):\n" info
         (amboso_parse_args "-Xh")
         unset AMBOSO_LVL_REC
