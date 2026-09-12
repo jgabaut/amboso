@@ -929,7 +929,7 @@ amboso_usage() {
   test [-b|-l] [TESTNAME]           Run all tests or the passed TESTNAME
   build                             Tries building latest tag
   init [-k <KERN>] [TEMPLATE]       Prepare a new anvil project
-  gen-c [DIRNAME] [TAG]             Generates C header + impl for supported project
+  cgen [DIRNAME] [TAG]              Generates C header + impl for supported project
   stego <MODE> <FILE>               Parses a stego file
   version                           Prints invil version
   help                              Print this message or the help of the given subcommand(s)\n"
@@ -5241,7 +5241,7 @@ amboso_main() {
         return
       }
       fi
-      if [[ $cmd = "gen" ]] ; then {
+      if [[ $cmd = "cgen" ]] ; then {
         shift
         (amboso_parse_args "-XG" "$@")
         unset AMBOSO_LVL_REC
@@ -5413,7 +5413,7 @@ amboso_main() {
         log_cl "[AMBOSO-MAIN]    Quick commands:\n" info
         printf "    test [TESTNAME]          Run all tests or the passed TESTNAME\n\n"
         printf "    build                    Build latest version\n\n"
-        printf "    gen-c [DIRNAME] [TAG]    Generates C header + impl for supported project\n\n"
+        printf "    cgen [DIRNAME] [TAG]     Generates C header + impl for supported project\n\n"
         printf "    stego <MODE> <FILE>      Parses a stego file\n\n"
         printf "    init                     Prepare current dir for an amboso project\n\n"
         printf "    version                  Print amboso version\n\n"
