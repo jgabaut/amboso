@@ -5,7 +5,7 @@
 ### Added
 
 - Add support for `anvil_recipe` with `custom` kern
-- Add support for `stego`, `genC` subcommands
+- Add support for `stego`, `cgen` subcommands
 
 ## [2.1.5] - 2026-08-24
 
