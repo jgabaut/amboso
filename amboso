@@ -929,7 +929,8 @@ amboso_usage() {
   test [-b|-l] [TESTNAME]           Run all tests or the passed TESTNAME
   build                             Tries building latest tag
   init [-k <KERN>] [TEMPLATE]       Prepare a new anvil project
-  cgen [DIRNAME] [TAG]              Generates C header + impl for supported project
+  delete <TAG>                      Deletes binary for a built tag
+  cgen <DIRNAME> <TAG>              Generates C header + impl for supported project
   stego <MODE> <FILE>               Parses a stego file
   version                           Prints invil version
   help                              Print this message or the help of the given subcommand(s)\n"
@@ -5290,6 +5291,21 @@ amboso_main() {
           fi
       }
       fi
+      if [[ $cmd = "delete" ]] ; then {
+        shift
+        if [[ $# -lt 1 ]] ; then {
+            log_cl "Missing arguments for delete subcommand" error
+            exit "${amboso_exit_codes[invalid_arg]}"
+        }
+        fi
+        (amboso_parse_args "-d" "$@")
+        unset AMBOSO_LVL_REC
+        unset AMBOSO_COLOR
+        unset AMBOSO_LOGGED
+        unset AMBOSO_AWK_NAME
+        return
+      }
+      fi
       if [[ $cmd = "test" ]] ; then {
         shift
         local build_flg=0
@@ -5413,6 +5429,7 @@ amboso_main() {
         log_cl "[AMBOSO-MAIN]    Quick commands:\n" info
         printf "    test [TESTNAME]          Run all tests or the passed TESTNAME\n\n"
         printf "    build                    Build latest version\n\n"
+        printf "    delete <TAG>             Deletes binary for a built tag\n\n"
         printf "    cgen [DIRNAME] [TAG]     Generates C header + impl for supported project\n\n"
         printf "    stego <MODE> <FILE>      Parses a stego file\n\n"
         printf "    init                     Prepare current dir for an amboso project\n\n"
