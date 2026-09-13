@@ -927,7 +927,7 @@ amboso_usage() {
   printf "    Run with -H for more info about options.\n\n"
   printf "Commands:
   test [-b|-l] [TESTNAME]           Run all tests or the passed TESTNAME
-  build                             Tries building latest tag
+  build                             Tries building provided or latest tag
   init [-k <KERN>] [TEMPLATE]       Prepare a new anvil project
   delete <TAG>                      Deletes binary for a built tag
   purge                             Deletes all binaries for built tags
@@ -5235,7 +5235,13 @@ amboso_main() {
       }
       fi
       if [[ $cmd = "build" ]] ; then {
-        (amboso_parse_args "-Xb" "latest")
+        shift
+        if [[ $# -lt 1 ]] ; then {
+            (amboso_parse_args "-Xb" "latest")
+        } else {
+            (amboso_parse_args "-Xb" "$@")
+        }
+        fi
         unset AMBOSO_LVL_REC
         unset AMBOSO_COLOR
         unset AMBOSO_LOGGED
@@ -5439,7 +5445,7 @@ amboso_main() {
       if [[ $cmd = "help" ]] ; then {
         log_cl "[AMBOSO-MAIN]    Quick commands:\n" info
         printf "    test [TESTNAME]          Run all tests or the passed TESTNAME\n\n"
-        printf "    build                    Build latest version\n\n"
+        printf "    build                    Build provided or latest version\n\n"
         printf "    delete <TAG>             Deletes binary for a built tag\n\n"
         printf "    purge                    Deletes all binaries for built tags\n\n"
         printf "    cgen [DIRNAME] [TAG]     Generates C header + impl for supported project\n\n"
