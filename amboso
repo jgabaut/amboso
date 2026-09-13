@@ -930,6 +930,7 @@ amboso_usage() {
   build                             Tries building provided or latest tag
   init [-k <KERN>] [TEMPLATE]       Prepare a new anvil project
   delete <TAG>                      Deletes binary for a built tag
+  run <TAG>                         Runs binary for a built tag
   purge                             Deletes all binaries for built tags
   cgen <DIRNAME> <TAG>              Generates C header + impl for supported project
   stego <MODE> <FILE>               Parses a stego file
@@ -5249,6 +5250,16 @@ amboso_main() {
         return
       }
       fi
+      if [[ $cmd = "run" ]] ; then {
+        shift
+        (amboso_parse_args "-Xr" "$@")
+        unset AMBOSO_LVL_REC
+        unset AMBOSO_COLOR
+        unset AMBOSO_LOGGED
+        unset AMBOSO_AWK_NAME
+        return
+      }
+      fi
       if [[ $cmd = "cgen" ]] ; then {
         shift
         (amboso_parse_args "-XG" "$@")
@@ -5447,6 +5458,7 @@ amboso_main() {
         printf "    test [TESTNAME]          Run all tests or the passed TESTNAME\n\n"
         printf "    build                    Build provided or latest version\n\n"
         printf "    delete <TAG>             Deletes binary for a built tag\n\n"
+        printf "    run <TAG>                Runs binary for a built tag\n\n"
         printf "    purge                    Deletes all binaries for built tags\n\n"
         printf "    cgen [DIRNAME] [TAG]     Generates C header + impl for supported project\n\n"
         printf "    stego <MODE> <FILE>      Parses a stego file\n\n"
