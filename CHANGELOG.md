@@ -7,6 +7,10 @@
 - Add support for `anvil_recipe` with `custom` kern
 - Add support for `stego`, `cgen`, `delete`, `run`, `purge` subcommands
 
+### Changed
+
+- Refactor subcommands to be handled after `getopts`
+
 ## [2.1.5] - 2026-08-24
 
 ### Changed
