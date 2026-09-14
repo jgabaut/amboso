@@ -4089,6 +4089,28 @@ amboso_parse_args() {
       } elif [[ $1 = "init" ]] ; then {
           log_cl "Doing init subcommand" debug
           shift
+          while getopts "k:-:" opt; do
+              case $opt in
+                k ) handle_kern_arg "$OPTARG";;
+                \? ) log_cl "Invalid option: -$OPTARG. Run with -h for help." error >&2; exit "${amboso_exit_codes[invalid_arg]}";;
+                : ) log_cl "Option -$OPTARG requires an argument. Run with -h for help." error >&2; exit "${amboso_exit_codes[invalid_arg]}";;
+                -)
+                  case "${OPTARG}" in
+                    kern) val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )); handle_kern_arg "$val";;
+                    kern=*) val=${OPTARG#*=}; opt=${OPTARG%=$val}; handle_kern_arg "$val";;
+                  *)
+                    if [ "$OPTERR" = 1 ] && [ "${optspec:0:1}" != ":" ]; then
+                      log_cl "Unknown option --${OPTARG}" error
+                      amboso_usage
+                      log_cl "Run with -h, --help to see available long options" info
+                      exit "${amboso_exit_codes[invalid_arg]}"
+                    fi
+                    ;;
+                  esac;;
+              esac
+              local tot_opts=$OPTIND
+              shift $(( $tot_opts -1 ))
+          done
           local kern=""
           if [[ -z "$queried_amboso_kern" ]] ; then {
               kern="amboso-C"
