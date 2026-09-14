@@ -4057,6 +4057,29 @@ amboso_parse_args() {
       } elif [[ $1 = "test" ]] ; then {
           log_cl "Doing test subcommand" debug
           shift
+          while getopts "bl-:" opt; do
+            case $opt in
+              b ) build_flag=1; log_cl "Passed  build flag" info;;
+              l ) small_list_flag=1; log_cl "Passed  list flag" info;;
+              \? ) log_cl "Invalid option: -$OPTARG. Run with -h for help." error >&2; exit "${amboso_exit_codes[invalid_arg]}";;
+              : ) log_cl "Option -$OPTARG requires an argument. Run with -h for help." error >&2; exit "${amboso_exit_codes[invalid_arg]}";;
+              -)
+                case "${OPTARG}" in
+                  build) build_flag=1;;
+                  list) small_list_flag=1;;
+                *)
+                  if [ "$OPTERR" = 1 ] && [ "${optspec:0:1}" != ":" ]; then
+                    log_cl "Unknown option --${OPTARG}" error
+                    amboso_usage
+                    log_cl "Run with -h, --help to see available long options" info
+                    exit "${amboso_exit_codes[invalid_arg]}"
+                  fi
+                  ;;
+                esac;;
+            esac
+            local tot_opts=$OPTIND
+            shift $(( $tot_opts -1 ))
+          done
           if [[ $# -ge 1 ]] ; then {
               test_mode_flag=1
           } else {
