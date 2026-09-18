@@ -3151,19 +3151,22 @@ custom_build_step () {
         local prep_for_conf=1
         local confer="${anvil_recipe[conf_$recipe_idx]#\"}"
         confer="${confer%\"}"
-        if [[ -z "$confer" ]] ; then {
+        local confer_words=($confer)
+        local confer_cmd="${confer_words[0]}"
+        local confer_args=("${confer_words[@]:1}")
+        if [[ -z "$confer_cmd" ]] ; then {
             local recipe_vers="${anvil_recipe[vers_$recipe_idx]}"
             log_cl "Configurer for $recipe_vers is empty" debug
         } else {
-            log_cl "Using configurer {$confer}" debug
+            log_cl "Using configurer {$confer_cmd}" debug
             if [[ ! -z "$prepper_cmd" ]] ; then {
-                log_cl "Expecting {$prepper_cmd} to produce {$confer}" debug
+                log_cl "Expecting {$prepper_cmd} to produce {$confer_cmd}" debug
                 prep_for_conf=0
             }
             fi
         }
         fi
-        custom_confer="$confer"
+        custom_confer="$confer_cmd"
 
         local prep_for_build=1
         local builder="${anvil_recipe[build_$recipe_idx]#\"}"
@@ -3250,11 +3253,23 @@ custom_build_step () {
                 confer_arg="$config_script_arg"
             }
             fi
-            log_cl "[CONF]    Running \"$custom_confer $confer_arg\"" debug
-            "$custom_confer" "$confer_arg"
+            if [[ "${#confer_args[@]}" -gt 0 ]] ; then {
+                log_cl "[BUILD]    Running confer {$custom_confer} {${confer_args[@]}} {$confer_arg}" debug
+                "$custom_confer" "${confer_args[@]}" "$confer_arg"
+            } else {
+                log_cl "[CONF]    Running \"$custom_confer $confer_arg\"" debug
+                "$custom_confer" "$confer_arg"
+            }
+            fi
         } else {
-            log_cl "[CONF]    Running {$custom_confer}" info magenta
-            "$custom_confer"
+            if [[ "${#confer_args[@]}" -gt 0 ]] ; then {
+                log_cl "[BUILD]    Running confer {$custom_confer} {${confer_args[@]}}" debug
+                "$custom_confer" "${confer_args[@]}"
+            } else {
+                log_cl "[CONF]    Running {$custom_confer}" info magenta
+                "$custom_confer"
+            }
+            fi
         }
         fi
         local cs_conf_res="$?"

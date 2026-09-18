@@ -5,7 +5,6 @@
 ### Added
 
 - Support for word splitting arguments for `custom` kern
-  - `prepper`, `builder`
 
 ### Changed
 
