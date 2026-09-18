@@ -3168,19 +3168,22 @@ custom_build_step () {
         local prep_for_build=1
         local builder="${anvil_recipe[build_$recipe_idx]#\"}"
         builder="${builder%\"}"
-        if [[ -z "$builder" ]] ; then {
+        local builder_words=($builder)
+        local builder_cmd="${builder_words[0]}"
+        local builder_args=("${builder_words[@]:1}")
+        if [[ -z "$builder_cmd" ]] ; then {
             local recipe_vers="${anvil_recipe[vers_$recipe_idx]}"
             log_cl "Builder for $recipe_vers is empty" error
             return 1
         }
         fi
-        log_cl "Using builder {$builder}" debug
+        log_cl "Using builder {$builder_cmd}" debug
         if [[ -z "$confer" && ! -z "$prepper_cmd" ]] ; then {
-            log_cl "Expecting {$prepper_cmd} to produce {$builder}" debug
+            log_cl "Expecting {$prepper_cmd} to produce {$builder_cmd}" debug
             prep_for_build=0
         }
         fi
-        custom_builder="$builder"
+        custom_builder="$builder_cmd"
     } else {
         if [[ -z "$custom_builder" ]]; then {
             log_cl "[BUILD]    anvil_custombuilder was not set. Check your stego file." error
@@ -3304,13 +3307,20 @@ custom_build_step () {
         fi
         log_cl "[BUILD]    Running custom builder for tag {$q_tag}, output file expected at: {./$bin_name}" info
         log_cl "[BUILD]    $prog_name will try to mv {$builds_dir/$bin_name} to {$target_d/$bin_name}" debug
-        log_cl "[BUILD]    Running : {$custom_builder $target_d $builds_dir $bin_name $q_tag $stego_dir}" info magenta
+        if [[ "${#builder_args[@]}" -gt 0 ]] ; then {
+            log_cl "[BUILD]    Running builder {$custom_builder} {${builder_args[@]}}" debug
+        } else {
+            log_cl "[BUILD]    Running builder {$custom_builder}" debug
+        }
+        fi
         if [[ -z "$extra_args" ]] ; then {
-            "$custom_builder" "$target_d" "$builds_dir" "$bin_name" "$q_tag" "$stego_dir"
+            #"$custom_builder" "$target_d" "$builds_dir" "$bin_name" "$q_tag" "$stego_dir"
+            "$custom_builder" "${builder_args[@]}"
         } else {
             # Convert string into an array
             read -r -a args_array <<< "$extra_args"
-            "$custom_builder" "$target_d" "$builds_dir" "$bin_name" "$q_tag" "$stego_dir" "${args_array[@]}"
+            #"$custom_builder" "$target_d" "$builds_dir" "$bin_name" "$q_tag" "$stego_dir" "${args_array[@]}"
+            "$custom_builder" "${builder_args[@]}" "${args_array[@]}"
         }
         fi
         local cs_build_res="$?"

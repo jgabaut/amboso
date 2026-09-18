@@ -2,9 +2,15 @@
 
 ## [2.2.1] - Unreleased
 
+### Added
+
+- Support for word splitting arguments for `custom` kern
+  - `prepper`, `builder`
+
 ### Changed
 
 - Use `custom_build_step` with `latest_version` for no-op run with `custom` kern
+- Do not pass amboso arguments to `custom_build_step`
 
 ## [2.2.0] - 2026-09-15
 
