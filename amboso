@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AMBOSO_API_LVL="2.2.0"
+AMBOSO_API_LVL="2.2.1"
 at() {
     #printf -- "{ call: [$(( ${#BASH_LINENO[@]} - 1 ))] -> {\n"
     log_cl "{ call: [" debug white
@@ -4796,63 +4796,9 @@ amboso_parse_args() {
             python -m build
             ;;
         "custom")
-            local custom_builder="$amboso_custom_builder"
-            if compare_semver "$std_amboso_version" ">=" "2.2.0" ; then {
-                local confer="${anvil_recipe[conf_0]#\"}"
-                confer="${confer%\"}"
-                if [[ -z "$confer" ]] ; then {
-                    local recipe_vers="${anvil_recipe[vers_0]}"
-                    log_cl "Configurer for $recipe_vers is empty" debug
-                } else {
-                   log_cl "Using configurer {$confer}" debug
-                }
-                fi
-                custom_confer="$confer"
-
-                local builder="${anvil_recipe[build_0]#\"}"
-                builder="${builder%\"}"
-                if [[ -z "$builder" ]] ; then {
-                    local recipe_vers="${anvil_recipe[vers_0]}"
-                    log_cl "Builder for $recipe_vers is empty" error
-                    return 1
-                }
-                fi
-                log_cl "Using builder {$builder}" debug
-                custom_builder="$builder"
-            }
-            fi
-            if [[ ! -z "$custom_confer" ]]; then {
-                local confer_arg=""
-                if [[ "$pass_autoconf_arg_flag" -eq 1 ]]; then {
-                    if [[ "${AMBOSO_CONFIG_FLAG_ARG_ISFILE:-1}" -ne 0 ]]; then { #Isfile defaults to 1 to start with backwards compatibility
-                        confer_arg="$(cat "$passed_autoconf_arg")"
-                    } else {
-                        confer_arg="$passed_autoconf_arg"
-                    }
-                    fi
-                    log_cl "[CONF]    Running \"$custom_confer $confer_arg\"" debug
-                    "$custom_confer" "$confer_arg"
-                } else {
-                    log_cl "[CONF]    Running {$custom_confer}" info magenta
-                    "$custom_confer"
-                }
-                fi
-            }
-            fi
-            if [[ -z "$extra_args" ]] ; then {
-                "$custom_builder" "" "$builds_dir" "$exec_entrypoint" "" "$stego_dir"
-            } else {
-                # Convert string into an array
-                read -r -a args_array <<< "$extra_args"
-                "$custom_builder" "" "$builds_dir" "$exec_entrypoint" "" "$stego_dir" "${args_array[@]}"
-            }
-            fi
-            ;;
-            *)
-            log_cl "Missing query." error
-            log_cl "           Run with -h for help." info
-            echo_timer "$amboso_start_time"  "Missing query" "1"
-            return 1
+            script_path="${scripts_dir}v${latest_version}"
+            log_cl "script_path: {$script_path}" info
+            custom_build_step "$script_path" "$latest_version" "$exec_entrypoint" "$stego_dir" "$amboso_custom_builder" "$pass_autoconf_arg_flag" "$passed_autoconf_arg" "$*"
             ;;
         *)
             log_cl "[BUILD]    Invalid kern: {$std_amboso_kern}" error

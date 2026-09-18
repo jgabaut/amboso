@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.2.1] - Unreleased
+
+### Changed
+
+- Use `custom_build_step` with `latest_version` for no-op run with `custom` kern
+
 ## [2.2.0] - 2026-09-15
 
 ### Added
