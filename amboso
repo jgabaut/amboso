@@ -1819,7 +1819,7 @@ parse_lexed_stego() {
             fi
             # Safe assignment using eval after validation
             local -n curr_struct="$struct_name"
-            curr_struct[${struct_var_name}_${struct_arr_idx}]=\"$(printf '%q' "$struct_val")\"
+            curr_struct[${struct_var_name}_${struct_arr_idx}]=\"$(printf "$struct_val")\"
             #"${struct_name}"["$struct_var_name"]=\""$struct_val"\"
             scopes+=("$current_scope")
             variables+=("${struct_name}_${struct_arr_idx}[${struct_var_name}]")
@@ -3136,14 +3136,17 @@ custom_build_step () {
 
         local prepper="${anvil_recipe[prep_$recipe_idx]#\"}"
         prepper="${prepper%\"}"
-        if [[ -z "$prepper" ]] ; then {
+        local prepper_words=($prepper)
+        local prepper_cmd="${prepper_words[0]}"
+        local prepper_args=("${prepper_words[@]:1}")
+        if [[ -z "$prepper_cmd" ]] ; then {
             local recipe_vers="${anvil_recipe[vers_$recipe_idx]}"
             log_cl "Prepper for $recipe_vers is empty" debug
         } else {
-            log_cl "Using prepper {$prepper}" debug
+            log_cl "Using prepper {$prepper_cmd}" debug
         }
         fi
-        custom_prepper="$prepper"
+        custom_prepper="$prepper_cmd"
 
         local prep_for_conf=1
         local confer="${anvil_recipe[conf_$recipe_idx]#\"}"
@@ -3153,8 +3156,8 @@ custom_build_step () {
             log_cl "Configurer for $recipe_vers is empty" debug
         } else {
             log_cl "Using configurer {$confer}" debug
-            if [[ ! -z "$prepper" ]] ; then {
-                log_cl "Expecting {$prepper} to produce {$confer}" debug
+            if [[ ! -z "$prepper_cmd" ]] ; then {
+                log_cl "Expecting {$prepper_cmd} to produce {$confer}" debug
                 prep_for_conf=0
             }
             fi
@@ -3172,8 +3175,8 @@ custom_build_step () {
         }
         fi
         log_cl "Using builder {$builder}" debug
-        if [[ -z "$confer" && ! -z "$prepper" ]] ; then {
-            log_cl "Expecting {$prepper} to produce {$builder}" debug
+        if [[ -z "$confer" && ! -z "$prepper_cmd" ]] ; then {
+            log_cl "Expecting {$prepper_cmd} to produce {$builder}" debug
             prep_for_build=0
         }
         fi
@@ -3208,15 +3211,20 @@ custom_build_step () {
     fi
 
     if [[ ! -z "$custom_confer" ]]; then {
-        if [[ ! -x "$custom_confer" ]]; then {
+        if [[ ! "$(command -v "$custom_confer")" ]]; then {
             if [[ "$prep_for_conf" ]] ; then {
-                [[ -x "$custom_prepper" ]] || {
+                [[ "$(command -v "$custom_prepper")" ]] || {
                     log_cl "[BUILD]    Prepper {$custom_prepper} is not an executable file." error
                     return 1
                 }
-                log_cl "[BUILD]    Running prepper {$custom_prepper}" debug
-                "$custom_prepper"
-                if [[ ! -x "$custom_confer" ]] ; then {
+                if [[ "${#prepper_args[@]}" -gt 0 ]] ; then {
+                    log_cl "[BUILD]    Running prepper {$custom_prepper} {${prepper_args[@]}}" debug
+                } else {
+                    log_cl "[BUILD]    Running prepper {$custom_prepper}" debug
+                }
+                fi
+                "$custom_prepper" "${prepper_args[@]}"
+                if [[ ! "$(command -v "$custom_confer")" ]] ; then {
                     log_cl "[BUILD]    Configurer {$custom_confer} is not an executable file." error
                     anvilPy_git_restore "$q_tag" "$head_detached"
                     return 1
@@ -3256,15 +3264,20 @@ custom_build_step () {
     }
     fi
 
-    if [[ ! -x "$custom_builder" ]]; then {
+    if [[ ! "$(command -v "$custom_builder")" ]]; then {
         if [[ "$prep_for_build" ]]; then {
-            [[ -x "$custom_prepper" ]] || {
+            [[ "$(command -v "$custom_prepper")" ]] || {
                 log_cl "[BUILD]    Prepper {$custom_prepper} is not an executable file." error
                 return 1
             }
-            log_cl "[BUILD]    Running prepper {$custom_prepper}" debug
-            "$custom_prepper"
-            if [[ ! -x "$custom_builder" ]] ; then {
+            if [[ "${#prepper_args[@]}" -gt 0 ]] ; then {
+                log_cl "[BUILD]    Running prepper {$custom_prepper} {${prepper_args[@]}}" debug
+            } else {
+                log_cl "[BUILD]    Running prepper {$custom_prepper}" debug
+            }
+            fi
+            "$custom_prepper" "${prepper_args[@]}"
+            if [[ ! "$(command -v "$custom_builder")" ]] ; then {
                 log_cl "[BUILD]    Builder {$custom_builder} is not an executable file." error
                 anvilPy_git_restore "$q_tag" "$head_detached"
                 return 1
